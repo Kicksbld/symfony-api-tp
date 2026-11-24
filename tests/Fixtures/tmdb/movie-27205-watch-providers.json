@@ -1,0 +1,35 @@
+{
+  "id": 27205,
+  "results": {
+    "FR": {
+      "link": "https://www.themoviedb.org/movie/27205-inception/watch?locale=FR",
+      "flatrate": [
+        {
+          "logo_path": "/rK1KljqmbvO9HQa1PBFLILWah72.png",
+          "provider_id": 8,
+          "provider_name": "Netflix",
+          "display_priority": 0
+        }
+      ],
+      "rent": [
+        {
+          "logo_path": "/qdEGArH3lKfFnAtYXMkSYk5wxuG.png",
+          "provider_id": 2,
+          "provider_name": "Apple TV Store",
+          "display_priority": 7
+        }
+      ]
+    },
+    "CH": {
+      "link": "https://www.themoviedb.org/movie/27205-inception/watch?locale=CH",
+      "flatrate": [
+        {
+          "logo_path": "/rK1KljqmbvO9HQa1PBFLILWah72.png",
+          "provider_id": 8,
+          "provider_name": "Netflix",
+          "display_priority": 0
+        }
+      ]
+    }
+  }
+}
