@@ -1,0 +1,13 @@
+when@test:
+    zenstruck_foundry:
+        persistence:
+            flush_once: true
+        orm:
+            reset:
+                mode: migrate
+
+    services:
+        App\Tests\Factory\:
+            resource: '%kernel.project_dir%/tests/Factory/'
+            autowire: true
+            autoconfigure: true
