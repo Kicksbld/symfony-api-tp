@@ -8,6 +8,16 @@ framework:
     #esi: true
     #fragments: true
 
+    http_client:
+        scoped_clients:
+            tmdb.client:
+                base_uri: 'https://api.themoviedb.org/3/'
+                headers:
+                    Accept: 'application/json'
+                # Relance les requêtes refusées par la limite de débit de TMDB (429) ou en erreur serveur.
+                retry_failed:
+                    max_retries: 3
+
 when@test:
     framework:
         test: true

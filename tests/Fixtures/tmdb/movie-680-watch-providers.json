@@ -1,0 +1,32 @@
+{
+  "id": 680,
+  "results": {
+    "US": {
+      "link": "https://www.themoviedb.org/movie/680-pulp-fiction/watch?locale=US",
+      "free": [
+        {
+          "logo_path": "/cltb8XKan9ierp23ItPmCOcVLRa.png",
+          "provider_id": 191,
+          "provider_name": "Kanopy",
+          "display_priority": 40
+        }
+      ],
+      "flatrate": [
+        {
+          "logo_path": "/v9SnyvYt0U3KGgBH3Sbh3z4yODe.png",
+          "provider_id": 350,
+          "provider_name": "Apple TV",
+          "display_priority": 7
+        }
+      ],
+      "rent": [
+        {
+          "logo_path": "/blAEhvx3XX8sV0fFVFk88FFjubs.png",
+          "provider_id": 538,
+          "provider_name": "Plex",
+          "display_priority": 129
+        }
+      ]
+    }
+  }
+}

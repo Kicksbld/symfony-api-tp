@@ -9,6 +9,7 @@ Le projet ne contient que l'API : pas de front, toutes les routes renvoient du J
 - PHP 8.4 ou plus et Symfony 8.1
 - Doctrine ORM avec une base SQLite (aucun serveur de base de données à installer)
 - LexikJWTAuthenticationBundle pour l'authentification par token JWT
+- HttpClient pour l'import du catalogue depuis [TMDB](https://www.themoviedb.org)
 - PHPUnit, dama/doctrine-test-bundle et Foundry pour les tests
 
 ## Prérequis
@@ -29,7 +30,47 @@ php bin/console lexik:jwt:generate-keypair
 
 # Création de la base SQLite (var/data_dev.db)
 php bin/console doctrine:migrations:migrate -n
+
+# Chargement du catalogue de films depuis data/movies.jsonl, sans clé TMDB
+php bin/console app:tmdb:import --from-file
 ```
+
+## Catalogue de films
+
+Les films, genres, studios, pays, personnes, crédits et plateformes de streaming viennent de [TMDB](https://www.themoviedb.org). Le catalogue est en lecture seule dans l'API : il est rempli uniquement par les commandes ci-dessous.
+
+### Sans clé TMDB
+
+Le dépôt contient un export du catalogue dans [`data/movies.jsonl`](data/movies.jsonl) (un film par ligne, au format des réponses TMDB). Pour le charger :
+
+```bash
+php bin/console app:tmdb:import --from-file
+```
+
+Aucune requête n'est envoyée à TMDB. On peut aussi passer un autre fichier : `--from-file=chemin/vers/fichier.jsonl`.
+
+### Avec une clé TMDB
+
+1. Créer un compte sur [themoviedb.org](https://www.themoviedb.org/signup).
+2. Dans [Paramètres > API](https://www.themoviedb.org/settings/api), demander une clé (usage personnel ou éducatif).
+3. Copier le « Jeton d'accès en lecture à l'API » (le long jeton qui commence par `eyJ`, pas la « Clé d'API » courte).
+4. Le coller dans un fichier `.env.local` à la racine du projet (non versionné) :
+
+```dotenv
+TMDB_API_TOKEN=eyJ...
+```
+
+### Commandes
+
+| Commande | Description |
+| --- | --- |
+| `php bin/console app:tmdb:import` | Importe les films populaires et les mieux notés depuis TMDB, avec leurs détails, la distribution (15 premiers acteurs), l'équipe (réalisateur, scénariste, chef opérateur, compositeur, monteur), les studios, les pays de production et les plateformes pour FR, BE, CH, CA et US. |
+| `php bin/console app:tmdb:import --pages=5` | Même chose en limitant le nombre de pages lues dans chaque liste TMDB (20 films par page, 50 pages par défaut). |
+| `php bin/console app:tmdb:import --from-file` | Charge `data/movies.jsonl` sans appeler TMDB. |
+| `php bin/console app:tmdb:export` | Écrit le catalogue de la base dans `data/movies.jsonl` (ou dans le fichier donné avec `--output`). |
+| `php bin/console app:tmdb:refresh-providers` | Met à jour uniquement les plateformes de streaming des films déjà en base. |
+
+Les films sont retrouvés par leur identifiant TMDB : relancer un import met à jour les films existants au lieu de créer des doublons. Seules les commandes qui appellent TMDB demandent `TMDB_API_TOKEN`.
 
 ## Lancement
 
@@ -79,7 +120,7 @@ Codes de retour utilisés : `200` lecture et modification, `201` création, `401
 php bin/phpunit
 ```
 
-Les tests fonctionnels envoient de vraies requêtes HTTP à l'API. Ils utilisent une base SQLite séparée (`var/data_test.db`), créée automatiquement au premier lancement, et chaque test tourne dans une transaction annulée à la fin.
+Les tests fonctionnels envoient de vraies requêtes HTTP à l'API. Ils utilisent une base SQLite séparée (`var/data_test.db`), créée automatiquement au premier lancement, et chaque test tourne dans une transaction annulée à la fin. Les commandes TMDB sont testées sans réseau : les appels à TMDB sont remplacés par des réponses enregistrées dans [`tests/Fixtures/tmdb`](tests/Fixtures/tmdb).
 
 ## Qualité du code
 
