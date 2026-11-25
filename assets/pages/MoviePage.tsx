@@ -1,0 +1,139 @@
+import { useQuery } from "@tanstack/react-query";
+import { Link, useParams } from "react-router";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import { MoviePoster } from "@/features/movies/MoviePoster";
+import { WatchlistButton } from "@/features/movie-relationships/WatchlistButton";
+import { formatRating, formatRuntime, releaseYear } from "@/features/movies/format";
+import { movieQuery } from "@/features/movies/queries";
+import { ApiError } from "@/lib/api";
+import { parsePositiveInteger } from "@/lib/numbers";
+import type { MovieDetail } from "@/lib/types";
+
+// La fiche ne montre que les têtes d'affiche, TMDB en fournit jusqu'à 15.
+const MAIN_CAST_SIZE = 8;
+// Les postes de l'équipe sont ceux de TMDB, en anglais.
+const DIRECTOR_JOB = "Director";
+
+export function MoviePage() {
+    const { id = "" } = useParams();
+    const movieId = parsePositiveInteger(id);
+
+    if (movieId === null) {
+        return <MovieNotFound />;
+    }
+
+    return <MovieDetails movieId={movieId} />;
+}
+
+function MovieDetails({ movieId }: { movieId: number }) {
+    const { data: movie, error, isFetching, refetch } = useQuery(movieQuery(movieId));
+
+    if (error instanceof ApiError && error.status === 404) {
+        return <MovieNotFound />;
+    }
+    if (error !== null) {
+        return (
+            <Alert variant="destructive">
+                <AlertDescription>Impossible de charger le film. {error.message}</AlertDescription>
+                <Button variant="outline" size="sm" className="mt-2 justify-self-start" onClick={() => void refetch()} disabled={isFetching}>
+                    Réessayer
+                </Button>
+            </Alert>
+        );
+    }
+    if (movie === undefined) {
+        return (
+            <div className="grid gap-8 md:grid-cols-[16rem_1fr]" aria-busy="true">
+                <p role="status" className="sr-only">
+                    Chargement du film…
+                </p>
+                <Skeleton className="aspect-[2/3] w-full max-w-64" aria-hidden="true" />
+                <div className="space-y-4" aria-hidden="true">
+                    <Skeleton className="h-9 w-2/3" />
+                    <Skeleton className="h-5 w-1/3" />
+                    <Skeleton className="h-24 w-full" />
+                </div>
+            </div>
+        );
+    }
+
+    return <MovieSheet movie={movie} />;
+}
+
+function MovieSheet({ movie }: { movie: MovieDetail }) {
+    const year = releaseYear(movie.releaseDate);
+    const directors = movie.crew.filter((credit) => credit.job === DIRECTOR_JOB);
+    const mainCast = movie.cast.slice(0, MAIN_CAST_SIZE);
+    const facts = [movie.runtime !== null && formatRuntime(movie.runtime), ...movie.genres.map((genre) => genre.name)].filter(Boolean);
+
+    return (
+        <article className="grid gap-8 md:grid-cols-[16rem_1fr]">
+            <MoviePoster movie={movie} alt={`Affiche de ${movie.title}`} className="max-w-64 rounded-xl" />
+            <div className="space-y-6">
+                <header className="space-y-2">
+                    <h1 className="text-3xl font-semibold">
+                        {movie.title}
+                        {year !== undefined && <span className="ml-3 text-xl font-normal text-muted-foreground">{year}</span>}
+                    </h1>
+                    {movie.originalTitle !== movie.title && <p className="text-muted-foreground">Titre original : {movie.originalTitle}</p>}
+                    {facts.length > 0 && <p className="text-sm text-muted-foreground">{facts.join(" · ")}</p>}
+                </header>
+                <p className="text-sm">
+                    {movie.averageRating === null ? (
+                        <span className="text-muted-foreground">Pas encore noté par les membres.</span>
+                    ) : (
+                        <>
+                            <span className="text-lg font-semibold">{formatRating(movie.averageRating)}</span>{" "}
+                            <span className="text-muted-foreground">
+                                moyenne des membres sur {movie.ratingCount} {movie.ratingCount > 1 ? "notes" : "note"}
+                            </span>
+                        </>
+                    )}
+                </p>
+                <WatchlistButton movieId={movie.id} />
+                {movie.overview !== null && movie.overview !== "" && (
+                    <section className="space-y-2">
+                        <h2 className="text-lg font-semibold">Synopsis</h2>
+                        <p className="leading-relaxed text-muted-foreground">{movie.overview}</p>
+                    </section>
+                )}
+                {directors.length > 0 && (
+                    <section className="space-y-2">
+                        <h2 className="text-lg font-semibold">{directors.length > 1 ? "Réalisateurs" : "Réalisation"}</h2>
+                        <p>{directors.map((credit) => credit.person.name).join(", ")}</p>
+                    </section>
+                )}
+                {mainCast.length > 0 && (
+                    <section className="space-y-2">
+                        <h2 className="text-lg font-semibold">Distribution</h2>
+                        <ul className="grid gap-x-6 gap-y-2 sm:grid-cols-2">
+                            {/* Un acteur peut avoir deux rôles dans le même film : son id ne suffit pas comme clé. */}
+                            {mainCast.map((credit, index) => (
+                                <li key={index} className="text-sm">
+                                    <span className="font-medium">{credit.person.name}</span>
+                                    {credit.character !== null && credit.character !== "" && (
+                                        <span className="text-muted-foreground"> : {credit.character}</span>
+                                    )}
+                                </li>
+                            ))}
+                        </ul>
+                    </section>
+                )}
+            </div>
+        </article>
+    );
+}
+
+function MovieNotFound() {
+    return (
+        <section className="space-y-4 text-center">
+            <h1 className="text-2xl font-semibold">Film introuvable</h1>
+            <p className="text-muted-foreground">Ce film n'existe pas ou n'est plus dans le catalogue.</p>
+            <Button asChild variant="outline">
+                <Link to="/">Retour au catalogue</Link>
+            </Button>
+        </section>
+    );
+}
