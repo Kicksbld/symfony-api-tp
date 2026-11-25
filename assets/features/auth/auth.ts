@@ -1,8 +1,8 @@
 import { createContext, useContext } from "react";
-import type { CurrentUser } from "@/lib/types";
+import type { Session } from "@/lib/session";
 
 export type Auth = {
-    user: CurrentUser | null;
+    session: Session | null;
     login: (email: string, password: string) => Promise<void>;
     logout: () => void;
 };

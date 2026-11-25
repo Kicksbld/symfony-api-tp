@@ -6,17 +6,17 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ApiError } from "@/lib/api";
-import { useAuth } from "@/lib/auth";
+import { useAuth } from "@/features/auth/auth";
 
 export function LoginPage() {
-    const { user, login } = useAuth();
+    const { session, login } = useAuth();
     const navigate = useNavigate();
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [error, setError] = useState<string | null>(null);
     const [submitting, setSubmitting] = useState(false);
 
-    if (user !== null) {
+    if (session !== null) {
         return <Navigate to="/" replace />;
     }
 

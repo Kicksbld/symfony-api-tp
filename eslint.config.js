@@ -7,7 +7,7 @@ import tseslint from "typescript-eslint";
 export default tseslint.config(
     { ignores: ["public/build", "vendor", "var"] },
     {
-        files: ["assets/**/*.{ts,tsx}"],
+        files: ["assets/**/*.{ts,tsx}", "tests/Browser/**/*.ts"],
         extends: [js.configs.recommended, ...tseslint.configs.recommended, reactHooks.configs.flat.recommended, reactRefresh.configs.vite],
         languageOptions: {
             globals: globals.browser,

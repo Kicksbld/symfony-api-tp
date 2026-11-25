@@ -1,4 +1,4 @@
-import { clearSession, loadSession } from "@/lib/session";
+import { clearSession, getSession, isCurrentSession, type Session } from "@/lib/session";
 
 export class ApiError extends Error {
     constructor(
@@ -9,6 +9,8 @@ export class ApiError extends Error {
     }
 }
 
+type ApiRequestInit = RequestInit & { session?: Session | null };
+
 type ErrorBody = {
     message?: string;
     detail?: string;
@@ -16,10 +18,10 @@ type ErrorBody = {
 
 /**
  * Appelle l'API en JSON avec le token du membre connecté. Une 401 sur une requête authentifiée veut dire que le
- * token a expiré : la session est oubliée et le membre renvoyé vers la connexion.
+ * token a expiré si la requête appartient toujours à la session active.
  */
-export async function apiFetch<T>(path: string, init: RequestInit = {}): Promise<T> {
-    const session = loadSession();
+export async function apiFetch<T>(path: string, { session = getSession(), ...init }: ApiRequestInit = {}): Promise<T> {
+    assertCurrentSession(session);
     const headers = new Headers(init.headers);
     headers.set("Accept", "application/json");
     if (init.body !== undefined) {
@@ -31,8 +33,8 @@ export async function apiFetch<T>(path: string, init: RequestInit = {}): Promise
 
     const response = await fetch(`/api${path}`, { ...init, headers });
 
-    if (response.status === 401 && session !== null) {
-        clearSession();
+    assertCurrentSession(session);
+    if (response.status === 401 && session !== null && clearSession(session)) {
         window.location.assign("/login");
     }
     if (!response.ok) {
@@ -43,5 +45,14 @@ export async function apiFetch<T>(path: string, init: RequestInit = {}): Promise
         return undefined as T;
     }
 
-    return response.json();
+    const data: T = await response.json();
+    assertCurrentSession(session);
+
+    return data;
+}
+
+function assertCurrentSession(session: Session | null): void {
+    if (session !== null && !isCurrentSession(session)) {
+        throw new DOMException("Session is no longer active.", "AbortError");
+    }
 }

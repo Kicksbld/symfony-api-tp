@@ -124,12 +124,26 @@ Le code est dans [`assets/`](assets) :
 
 | Dossier | Contenu |
 | --- | --- |
-| `pages/` | Une page par adresse : accueil (`/`, films populaires paginés), connexion (`/login`) |
-| `components/` | Mise en page, carte d'un film, fournisseur de la session |
+| `pages/` | Composition des écrans par route et lecture des filtres ou de la page dans l’URL |
+| `features/` | Composants, requêtes et mutations propres à chaque fonctionnalité |
+| `components/` | Mise en page partagée |
 | `components/ui/` | Composants [shadcn/ui](https://ui.shadcn.com), ajoutés avec `npx shadcn add <composant>` |
-| `lib/` | Client HTTP de l'API, session du membre connecté, types des réponses |
+| `lib/` | Client HTTP de l'API, configuration de TanStack Query, état de la session et types partagés |
 
-Toutes les requêtes passent par `apiFetch()` ([`assets/lib/api.ts`](assets/lib/api.ts)), qui ajoute le token JWT du membre connecté. Le token est gardé dans le `localStorage` avec sa date d'expiration : la session survit à un rechargement et est oubliée au bout d'une heure, ou dès que l'API répond `401`.
+#### Requêtes et cache
+
+- Définir les lectures avec `queryOptions` dans le dossier de la fonctionnalité. La clé contient la ressource et les paramètres de la requête, par exemple `["movies", { sort: "popular", page: "1", limit: "24" }]`. Passer le `signal` de TanStack Query à `apiFetch` pour annuler la requête.
+- Une lecture publique identique pour tous, comme les films populaires, appelle `apiFetch` avec `session: null`. Si la réponse dépend du membre, préfixer la clé par `sessionKey(session)` et passer cette même session à `apiFetch`, comme pour `/api/me`. Une déconnexion, une expiration ou un changement de compte annule les lectures de la session précédente et efface ses entrées du cache.
+- Afficher des squelettes au premier chargement. Pour une pagination ou un filtre, garder les données visibles avec `placeholderData: keepPreviousData` et signaler la mise à jour. Limiter cette conservation à la même session pour les lectures personnalisées. En cas d'erreur, garder les résultats déjà affichés et proposer de relancer la requête avec `refetch`.
+- Précharger à l'intention de navigation, par exemple au survol ou à la prise de focus d'un lien vers une fiche. Appeler `queryClient.prefetchQuery` avec les mêmes options que l'écran de destination pour réutiliser son cache.
+
+#### Mutations
+
+- Pour une action simple et réversible comme un ajout à la watchlist, préfixer la `mutationKey` avec `sessionKey(session)` et passer cette même session à `apiFetch`. Dans `onMutate`, annuler les lectures concernées, garder une copie des données et appliquer le changement optimiste au cache.
+- En cas d'erreur, restaurer la copie dans `onError` et afficher l'erreur. Dans `onSettled`, attendre l'invalidation des clés concernées pour les resynchroniser avec le serveur après un succès ou un échec. Vérifier `isCurrentSession(session)` avant d'écrire dans le cache, y compris après une attente, pour que les callbacks d'une ancienne session ne recréent pas ses données.
+- Pour une action avec plusieurs effets côté serveur, comme journaliser un visionnage, attendre la réponse avant d'afficher le succès. En cas d'erreur, garder le brouillon.
+
+Le client partagé [`apiFetch`](assets/lib/api.ts) ajoute le JWT pour les requêtes authentifiées. Le token et sa date d'expiration sont gardés dans le `localStorage` pour restaurer la session après un rechargement. La session expire au bout d'une heure. Une réponse `401` à une requête de la session active efface aussi la session et renvoie vers la connexion.
 
 Si le serveur démarre en HTTPS (certificat local installé avec `symfony server:ca:install`), il faut changer la `baseURL` dans [`http/http-client.env.json`](http/http-client.env.json).
 
@@ -476,6 +490,17 @@ php bin/phpunit
 ```
 
 Les tests fonctionnels envoient de vraies requêtes HTTP à l'API. Ils utilisent une base SQLite séparée (`var/data_test.db`), créée automatiquement au premier lancement, et chaque test tourne dans une transaction annulée à la fin. Les commandes TMDB sont testées sans réseau : les appels à TMDB sont remplacés par des réponses enregistrées dans [`tests/Fixtures/tmdb`](tests/Fixtures/tmdb).
+
+### Tests du front au navigateur
+
+Démarrer Symfony sur `http://127.0.0.1:8000` avec le catalogue et les comptes de démonstration. Servir le front avec `npm run dev` ou le construire avec `npm run build`, puis lancer les tests.
+
+```bash
+npm exec playwright install chromium
+npm run test:browser
+```
+
+Les tests vérifient la pagination pendant une réponse lente, la relance après une erreur, puis la connexion avec Jane et Arthur. Ils vérifient aussi l'annulation d'une lecture du premier compte, une réponse de connexion tardive entre deux onglets et l'expiration de la session.
 
 ## Qualité du code
 

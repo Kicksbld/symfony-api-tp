@@ -18,5 +18,5 @@
             "@/*": ["./assets/*"]
         }
     },
-    "include": ["assets"]
+    "include": ["assets", "tests/Browser"]
 }

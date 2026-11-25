@@ -1,9 +1,10 @@
 import { Link, Outlet } from "react-router";
 import { Button } from "@/components/ui/button";
-import { useAuth } from "@/lib/auth";
+import { AccountControls } from "@/features/auth/AccountControls";
+import { useAuth } from "@/features/auth/auth";
 
 export function Layout() {
-    const { user, logout } = useAuth();
+    const { session, logout } = useAuth();
 
     return (
         <div className="min-h-screen bg-background text-foreground">
@@ -12,17 +13,12 @@ export function Layout() {
                     <Link to="/" className="text-lg font-semibold">
                         Letterboxd
                     </Link>
-                    {user === null ? (
+                    {session === null ? (
                         <Button asChild variant="outline" size="sm">
                             <Link to="/login">Connexion</Link>
                         </Button>
                     ) : (
-                        <div className="flex items-center gap-3 text-sm">
-                            <span>{user.username}</span>
-                            <Button variant="outline" size="sm" onClick={logout}>
-                                Déconnexion
-                            </Button>
-                        </div>
+                        <AccountControls session={session} logout={logout} />
                     )}
                 </div>
             </header>
