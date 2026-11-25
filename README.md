@@ -130,6 +130,18 @@ Le code est dans [`assets/`](assets) :
 | `components/ui/` | Composants [shadcn/ui](https://ui.shadcn.com), ajoutés avec `npx shadcn add <composant>` |
 | `lib/` | Client HTTP de l'API, configuration de TanStack Query, état de la session et types partagés |
 
+#### Thème et navigation
+
+Les couleurs, polices et rayons viennent d'un thème [TweakCN](https://tweakcn.com), appliqué dans [`assets/app.css`](assets/app.css) avec :
+
+```bash
+npx shadcn@latest add https://tweakcn.com/r/themes/cmww4uejt000104l52cis7jqp
+```
+
+Le thème fournit une variante claire et une variante sombre. Le front est toujours affiché en sombre grâce à la classe `dark` posée sur `<html>` dans [`templates/front.html.twig`](templates/front.html.twig). Après une nouvelle application du thème, vérifier `assets/app.css` : la commande remet l'import de police et des variables propres à l'éditeur de TweakCN, et écrit les ombres avec une syntaxe de couleur invalide. Les autres variables du thème (ombres, polices serif et mono, espacement des lettres) sont gardées telles quelles pour les composants shadcn à venir. La variante claire n'est pas utilisée et n'a pas été vérifiée : son texte blanc sur les couleurs vert, bleu et orange est sous le contraste AA.
+
+La navigation ([`MainNavigation`](assets/components/MainNavigation.tsx)) s'affiche dans l'en-tête sur desktop et dans un menu dépliant sur mobile, avec des entrées de 44 px de haut. Échap ferme le menu et rend le focus au bouton, et un lien « Aller au contenu » apparaît à la première tabulation. Une nouvelle page s'y ajoute avec un `NavLink`, qui marque l'entrée active avec `aria-current="page"`.
+
 #### Requêtes et cache
 
 - Définir les lectures avec `queryOptions` dans le dossier de la fonctionnalité. La clé contient la ressource et les paramètres de la requête, par exemple `["movies", { sort: "popular", page: "1", limit: "24" }]`. Passer le `signal` de TanStack Query à `apiFetch` pour annuler la requête.
