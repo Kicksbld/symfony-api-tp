@@ -15,9 +15,16 @@ Content-Type: application/json
   client.global.set("likedLogEntryId", response.body.id);
 %}
 
-### Liker une critique, la réponse est la critique avec son nombre de likes (201)
+### Liker une critique, la réponse contient le nouveau likeCount et likedByMe à true (201)
 POST {{baseURL}}/api/log-entries/{{likedLogEntryId}}/like
 Authorization: Bearer {{token}}
+
+### Lire la critique après le like avec token, likedByMe vaut true (200)
+GET {{baseURL}}/api/log-entries/{{likedLogEntryId}}
+Authorization: Bearer {{token}}
+
+### Lire la même critique sans token, likedByMe vaut false (200)
+GET {{baseURL}}/api/log-entries/{{likedLogEntryId}}
 
 ### Liker la même critique une seconde fois (409)
 POST {{baseURL}}/api/log-entries/{{likedLogEntryId}}/like
@@ -41,8 +48,12 @@ Authorization: Bearer {{token}}
 ### Retirer un like sans token (401)
 DELETE {{baseURL}}/api/log-entries/{{likedLogEntryId}}/like
 
-### Liker une liste, la réponse est la liste avec son nombre de likes (201)
+### Liker une liste, la réponse contient le nouveau likeCount et likedByMe à true (201)
 POST {{baseURL}}/api/lists/{{movieListId}}/like
+Authorization: Bearer {{token}}
+
+### Lire la liste après le like avec token, likedByMe vaut true (200)
+GET {{baseURL}}/api/lists/{{movieListId}}
 Authorization: Bearer {{token}}
 
 ### Liker la même liste une seconde fois (409)
@@ -56,7 +67,7 @@ Authorization: Bearer {{token}}
 ### Liker une liste sans token (401)
 POST {{baseURL}}/api/lists/{{movieListId}}/like
 
-### Listes publiques les plus likées d'abord (200)
+### Listes publiques les plus likées d'abord, sans token et avec likedByMe à false (200)
 GET {{baseURL}}/api/lists?sort=popular
 
 ### Retirer son like de la liste (204)

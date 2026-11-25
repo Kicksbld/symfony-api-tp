@@ -44,8 +44,12 @@ Content-Type: application/json
   "name": "Ma liste"
 }
 
-### Listes publiques, des plus récentes aux plus anciennes (200)
+### Listes publiques sans token, likedByMe vaut false pour chaque liste (200)
 GET {{baseURL}}/api/lists
+
+### Listes publiques avec token, likedByMe indique mes likes pour chaque liste (200)
+GET {{baseURL}}/api/lists
+Authorization: Bearer {{token}}
 
 ### Recherche par nom (200)
 GET {{baseURL}}/api/lists?q=top
@@ -56,7 +60,7 @@ GET {{baseURL}}/api/lists?user=jane_doe&movie=1&page=2&limit=10
 ### Filtres invalides : username en majuscules, film à 0 (422)
 GET {{baseURL}}/api/lists?user=Jane%20Doe&movie=0
 
-### Lire ma liste, même privée (200)
+### Lire ma liste, même privée, avec mon état likedByMe (200)
 GET {{baseURL}}/api/lists/{{movieListId}}
 Authorization: Bearer {{token}}
 
@@ -75,6 +79,9 @@ Content-Type: application/json
   "name": "Tout Nolan",
   "public": true
 }
+
+### Lire la liste devenue publique sans token, likedByMe vaut false (200)
+GET {{baseURL}}/api/lists/{{movieListId}}
 
 ### Effacer la description avec null (200)
 PATCH {{baseURL}}/api/lists/{{movieListId}}

@@ -22,6 +22,34 @@ final readonly class LikeService
     ) {
     }
 
+    /**
+     * @return array<int, true>
+     */
+    public function getLikedLogEntryIdSet(?User $user, LogEntry ...$logEntries): array
+    {
+        if (null === $user || [] === $logEntries) {
+            return [];
+        }
+
+        $ids = array_map(static fn (LogEntry $entry): int => $entry->getId(), $logEntries);
+
+        return array_fill_keys($this->logEntryLikeRepository->findLikedIds($user, $ids), true);
+    }
+
+    /**
+     * @return array<int, true>
+     */
+    public function getLikedMovieListIdSet(?User $user, MovieList ...$movieLists): array
+    {
+        if (null === $user || [] === $movieLists) {
+            return [];
+        }
+
+        $ids = array_map(static fn (MovieList $list): int => $list->getId(), $movieLists);
+
+        return array_fill_keys($this->movieListLikeRepository->findLikedIds($user, $ids), true);
+    }
+
     public function likeLogEntry(User $user, LogEntry $logEntry): void
     {
         if (null !== $this->logEntryLikeRepository->findOneBy(['user' => $user, 'logEntry' => $logEntry])) {

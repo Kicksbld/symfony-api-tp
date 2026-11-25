@@ -1,9 +1,16 @@
 # Lancer d'abord la connexion de auth.http pour récupérer le token de jane_doe.
 # Dans les données de démo, jane_doe ne suit pas encore leo.
 
-### Suivre leo, la réponse est le membre suivi (201)
+### Suivre leo, la réponse contient followedByMe à true (201)
 POST {{baseURL}}/api/users/leo/followers
 Authorization: Bearer {{token}}
+
+### Lire le profil après l'abonnement avec token, followedByMe vaut true (200)
+GET {{baseURL}}/api/users/leo
+Authorization: Bearer {{token}}
+
+### Lire le même profil sans token, followedByMe vaut false (200)
+GET {{baseURL}}/api/users/leo
 
 ### Suivre leo une seconde fois (409)
 POST {{baseURL}}/api/users/leo/followers

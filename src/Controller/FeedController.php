@@ -6,6 +6,8 @@ use App\Dto\PaginationDto;
 use App\Entity\User;
 use App\Model\Paginator;
 use App\Repository\LogEntryRepository;
+use App\Serializer\SocialStateNormalizer;
+use App\Service\LikeService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
@@ -18,8 +20,10 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 #[IsGranted('IS_AUTHENTICATED')]
 final class FeedController extends AbstractController
 {
-    public function __construct(private readonly LogEntryRepository $logEntryRepository)
-    {
+    public function __construct(
+        private readonly LogEntryRepository $logEntryRepository,
+        private readonly LikeService $likeService,
+    ) {
     }
 
     #[Route('', name: 'list', methods: ['GET'])]
@@ -29,6 +33,9 @@ final class FeedController extends AbstractController
     ): JsonResponse {
         $logEntries = new Paginator()->paginate($this->logEntryRepository->createFeedQueryBuilder($user), $paginationDto);
 
-        return $this->json($logEntries, context: ['groups' => ['paginate', 'logEntry:read']]);
+        return $this->json($logEntries, context: [
+            'groups' => ['paginate', 'logEntry:read'],
+            SocialStateNormalizer::LIKED_IDS => $this->likeService->getLikedLogEntryIdSet($user, ...$logEntries->items),
+        ]);
     }
 }

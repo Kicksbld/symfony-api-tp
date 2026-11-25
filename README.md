@@ -297,6 +297,7 @@ Chaque visionnage est une entrée de journal. Une critique est simplement une en
   "review": "Un rêve dans un rêve.",
   "containsSpoilers": false,
   "likeCount": 4,
+  "likedByMe": true,
   "commentCount": 2,
   "createdAt": "2026-11-25T09:12:00+00:00"
 }
@@ -308,6 +309,8 @@ Seul `movie` est obligatoire à la création. Journaliser un film met à jour mo
 
 Le texte de la critique est toujours renvoyé, même quand `containsSpoilers` vaut `true` : c'est au client de le masquer.
 
+`likedByMe` indique si le membre connecté a liké l'entrée. Il apparaît dans le fil public, le détail d'une entrée, le journal d'un membre et le feed. Sans token, les routes publiques renvoient `false`. Le champ `liked` indique le coup de coeur de l'auteur pour le film.
+
 Paramètres de `GET /api/log-entries`, tous facultatifs et combinables :
 
 | Paramètre | Exemple | Description |
@@ -318,7 +321,27 @@ Paramètres de `GET /api/log-entries`, tous facultatifs et combinables :
 
 ### Listes
 
-Une liste a un nom, une description facultative, et peut être classée (`ranked`, un top) ou non, publique ou privée (`public`). Par défaut, une nouvelle liste est publique et non classée. La fiche d'une liste donne son nombre de films (`itemCount`), de likes (`likeCount`) et de commentaires (`commentCount`), les films eux-mêmes sont dans `GET /api/lists/{id}/items` :
+Une liste a un nom, une description facultative, et peut être classée (`ranked`, un top) ou non, publique ou privée (`public`). Par défaut, une nouvelle liste est publique et non classée. `GET /api/lists/{id}` renvoie par exemple cette fiche.
+
+```json
+{
+  "id": 7,
+  "user": { "id": 3, "username": "jane_doe" },
+  "name": "Tout Nolan",
+  "description": null,
+  "ranked": false,
+  "public": true,
+  "itemCount": 1,
+  "likeCount": 4,
+  "commentCount": 2,
+  "createdAt": "2026-11-25T09:12:00+00:00",
+  "likedByMe": false
+}
+```
+
+`likedByMe` indique si le membre connecté a liké la liste. Le champ apparaît aussi sur chaque liste de `GET /api/lists` et `GET /api/users/{username}/lists`. Sans token, il vaut `false`.
+
+Les films de la liste sont dans `GET /api/lists/{id}/items`.
 
 ```json
 {
@@ -354,7 +377,7 @@ Paramètres de `GET /api/lists`, tous facultatifs et combinables :
 
 Les entrées de journal (et donc les critiques) et les listes se likent et se commentent. Une liste privée ne peut être likée ou commentée que par son auteur : les autres reçoivent une `404`, comme pour la liste elle-même.
 
-`POST /api/log-entries/{id}/like` et `POST /api/lists/{id}/like` renvoient une `201` avec l'entrée ou la liste likée, pour avoir son nouveau `likeCount`. `DELETE` sur la même route retire le like et renvoie une `204`. Liker deux fois renvoie une `409`, retirer un like absent une `404`.
+`POST /api/log-entries/{id}/like` et `POST /api/lists/{id}/like` renvoient une `201` avec l'entrée ou la liste, son nouveau `likeCount` et `"likedByMe": true`. `DELETE` sur la même route retire le like et renvoie une `204`. Liker deux fois renvoie une `409`, retirer un like absent une `404`.
 
 Un commentaire contient de 1 à 1000 caractères. `updatedAt` permet de savoir qu'il a été modifié :
 
@@ -372,7 +395,7 @@ Seul l'auteur d'un commentaire peut le modifier. Il peut aussi le supprimer, tou
 
 ### Profils
 
-`GET /api/users/{username}` renvoie le profil public d'un membre. `GET /api/me` renvoie le même profil avec l'email en plus :
+`GET /api/users/{username}` renvoie le profil public d'un membre. `followedByMe` indique si le membre connecté suit ce profil. Sans token ou sur son propre profil, il vaut `false`.
 
 ```json
 {
@@ -384,9 +407,12 @@ Seul l'auteur d'un commentaire peut le modifier. Il peut aussi le supprimer, tou
   ],
   "watchedCount": 128,
   "followersCount": 42,
-  "followingCount": 17
+  "followingCount": 17,
+  "followedByMe": true
 }
 ```
+
+`GET /api/me` inclut l'email du compte connecté.
 
 `PUT /api/me/favorites` remplace tous les favoris d'un coup avec `{ "movies": [1, 2, 3, 4] }` : 4 films au plus, sans doublon, dans l'ordre d'affichage. Une liste vide retire tous les favoris. La réponse est la nouvelle liste des favoris.
 
@@ -414,7 +440,7 @@ Le journal (`/diary`) ne contient que les entrées datées (`watchedOn`), de la 
 
 ### Abonnements et feed
 
-`POST /api/users/{username}/followers` suit un membre et renvoie une `201` avec le membre suivi (`id` et `username`). `DELETE` sur la même route arrête de le suivre et renvoie une `204` sans contenu. Suivre un membre déjà suivi renvoie une `409`, se suivre soi-même une `422`, et ne plus suivre un membre qu'on ne suit pas une `404`.
+`POST /api/users/{username}/followers` suit un membre et renvoie une `201`, par exemple `{ "id": 3, "username": "jane_doe", "followedByMe": true }`. `DELETE` sur la même route arrête de le suivre et renvoie une `204` sans contenu. Suivre un membre déjà suivi renvoie une `409`, se suivre soi-même une `422`, et ne plus suivre un membre qu'on ne suit pas une `404`.
 
 `/followers` et `/following` renvoient des membres au même format que `GET /api/users` (`id` et `username`).
 

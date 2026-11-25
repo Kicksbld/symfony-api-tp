@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Entity\LogEntry;
 use App\Entity\User;
+use App\Serializer\SocialStateNormalizer;
 use App\Service\LikeService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -26,7 +27,10 @@ final class LogEntryLikeController extends AbstractController
     {
         $this->likeService->likeLogEntry($user, $logEntry);
 
-        return $this->json($logEntry, Response::HTTP_CREATED, context: ['groups' => ['logEntry:read']]);
+        return $this->json($logEntry, Response::HTTP_CREATED, context: [
+            'groups' => ['logEntry:read'],
+            SocialStateNormalizer::LIKED_IDS => [$logEntry->getId() => true],
+        ]);
     }
 
     #[Route('', name: 'delete', methods: ['DELETE'])]

@@ -13,15 +13,29 @@ final class MovieListLikeControllerTest extends ApiTestCase
         $movieListId = $this->createList();
         $this->loginAs(UserFactory::createOne());
 
+        $listUri = '/api/lists/'.$movieListId;
+        self::assertFalse($this->requestJson('GET', $listUri)['likedByMe']);
+
         $data = $this->requestJson('POST', $this->likeUri($movieListId));
 
         self::assertResponseStatusCodeSame(Response::HTTP_CREATED);
         self::assertSame($movieListId, $data['id']);
         self::assertSame(1, $data['likeCount']);
+        self::assertTrue($data['likedByMe']);
+        self::assertTrue($this->requestJson('GET', $listUri)['likedByMe']);
+        foreach (['/api/lists', '/api/users/cobb/lists'] as $uri) {
+            self::assertTrue($this->requestJson('GET', $uri)['items'][0]['likedByMe']);
+        }
 
+        $this->loginAs(UserFactory::createOne());
+        self::assertFalse($this->requestJson('GET', $listUri)['likedByMe']);
         $this->client->setServerParameter('HTTP_AUTHORIZATION', '');
-        $data = $this->requestJson('GET', '/api/lists/'.$movieListId);
+        $data = $this->requestJson('GET', $listUri);
         self::assertSame(1, $data['likeCount']);
+        self::assertFalse($data['likedByMe']);
+        foreach (['/api/lists', '/api/users/cobb/lists'] as $uri) {
+            self::assertFalse($this->requestJson('GET', $uri)['items'][0]['likedByMe']);
+        }
     }
 
     public function testLikingTheSameListTwiceReturnsConflict(): void
@@ -56,6 +70,7 @@ final class MovieListLikeControllerTest extends ApiTestCase
 
         $data = $this->requestJson('GET', '/api/lists/'.$movieListId);
         self::assertSame(0, $data['likeCount']);
+        self::assertFalse($data['likedByMe']);
     }
 
     public function testUnlikeAListNotLikedReturnsNotFound(): void
@@ -85,7 +100,7 @@ final class MovieListLikeControllerTest extends ApiTestCase
      */
     private function createList(array $payload = []): int
     {
-        $this->loginAs(UserFactory::createOne());
+        $this->loginAs(UserFactory::createOne(['username' => 'cobb']));
         $data = $this->requestJson('POST', '/api/lists', $payload + ['name' => 'Tout Nolan']);
         self::assertResponseStatusCodeSame(Response::HTTP_CREATED);
 

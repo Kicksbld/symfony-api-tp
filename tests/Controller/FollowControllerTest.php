@@ -22,17 +22,24 @@ final class FollowControllerTest extends ApiTestCase
         $this->loginAs(UserFactory::createOne(['username' => 'cobb']));
         $arthur = UserFactory::createOne(['username' => 'arthur']);
 
+        self::assertFalse($this->requestJson('GET', '/api/users/arthur')['followedByMe']);
+
         $followed = $this->requestJson('POST', '/api/users/arthur/followers');
         self::assertResponseStatusCodeSame(Response::HTTP_CREATED);
-        self::assertSame(['id' => $arthur->getId(), 'username' => 'arthur'], $followed);
+        self::assertSame(['id' => $arthur->getId(), 'username' => 'arthur', 'followedByMe' => true], $followed);
 
         $arthur = $this->requestJson('GET', '/api/users/arthur');
         self::assertSame(1, $arthur['followersCount']);
         self::assertSame(0, $arthur['followingCount']);
+        self::assertTrue($arthur['followedByMe']);
 
         $cobb = $this->requestJson('GET', '/api/users/cobb');
         self::assertSame(0, $cobb['followersCount']);
         self::assertSame(1, $cobb['followingCount']);
+        self::assertFalse($cobb['followedByMe']);
+
+        $this->client->setServerParameter('HTTP_AUTHORIZATION', '');
+        self::assertFalse($this->requestJson('GET', '/api/users/arthur')['followedByMe']);
     }
 
     public function testFollowingTheSameMemberTwiceReturnsConflict(): void
@@ -76,6 +83,7 @@ final class FollowControllerTest extends ApiTestCase
 
         $arthur = $this->requestJson('GET', '/api/users/arthur');
         self::assertSame(0, $arthur['followersCount']);
+        self::assertFalse($arthur['followedByMe']);
     }
 
     public function testUnfollowAMemberNotFollowedReturnsNotFound(): void

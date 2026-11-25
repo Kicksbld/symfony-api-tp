@@ -11,6 +11,8 @@ use App\Repository\LogEntryRepository;
 use App\Repository\MovieListRepository;
 use App\Repository\MovieRelationshipRepository;
 use App\Repository\UserRepository;
+use App\Serializer\SocialStateNormalizer;
+use App\Service\LikeService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
@@ -28,6 +30,7 @@ final class UserController extends AbstractController
         private readonly LogEntryRepository $logEntryRepository,
         private readonly MovieRelationshipRepository $movieRelationshipRepository,
         private readonly MovieListRepository $movieListRepository,
+        private readonly LikeService $likeService,
     ) {
     }
 
@@ -42,20 +45,27 @@ final class UserController extends AbstractController
     }
 
     #[Route('/{username:user}', name: 'show', methods: ['GET'])]
-    public function show(User $user): JsonResponse
+    public function show(User $user, #[CurrentUser] ?User $viewer): JsonResponse
     {
-        return $this->json($user, context: ['groups' => ['user:read']]);
+        return $this->json($user, context: [
+            'groups' => ['user:read'],
+            SocialStateNormalizer::FOLLOWED_BY_ME => null !== $viewer && $viewer !== $user && $viewer->isFollowing($user),
+        ]);
     }
 
     #[Route('/{username:user}/diary', name: 'diary', methods: ['GET'])]
     public function diary(
         User $user,
+        #[CurrentUser] ?User $viewer,
         #[MapQueryString(validationFailedStatusCode: Response::HTTP_UNPROCESSABLE_ENTITY)] DiaryFilterDto $diaryFilterDto = new DiaryFilterDto(),
         #[MapQueryString(validationFailedStatusCode: Response::HTTP_UNPROCESSABLE_ENTITY)] PaginationDto $paginationDto = new PaginationDto(),
     ): JsonResponse {
         $logEntries = new Paginator()->paginate($this->logEntryRepository->createDiaryQueryBuilder($user, $diaryFilterDto), $paginationDto);
 
-        return $this->json($logEntries, context: ['groups' => ['paginate', 'logEntry:read']]);
+        return $this->json($logEntries, context: [
+            'groups' => ['paginate', 'logEntry:read'],
+            SocialStateNormalizer::LIKED_IDS => $this->likeService->getLikedLogEntryIdSet($viewer, ...$logEntries->items),
+        ]);
     }
 
     #[Route('/{username:user}/watched', name: 'watched', methods: ['GET'])]
@@ -97,7 +107,10 @@ final class UserController extends AbstractController
         $queryBuilder = $this->movieListRepository->createByUserQueryBuilder($user, withPrivate: $user === $currentUser);
         $movieLists = new Paginator()->paginate($queryBuilder, $paginationDto);
 
-        return $this->json($movieLists, context: ['groups' => ['paginate', 'movieList:read']]);
+        return $this->json($movieLists, context: [
+            'groups' => ['paginate', 'movieList:read'],
+            SocialStateNormalizer::LIKED_IDS => $this->likeService->getLikedMovieListIdSet($currentUser, ...$movieLists->items),
+        ]);
     }
 
     #[Route('/{username:user}/followers', name: 'followers', methods: ['GET'])]

@@ -57,8 +57,12 @@ Content-Type: application/json
   "movie": 1
 }
 
-### Fil public de l'activité récente (200)
+### Fil public sans token, likedByMe vaut false pour chaque entrée (200)
 GET {{baseURL}}/api/log-entries
+
+### Fil public avec token, likedByMe indique mes likes pour chaque entrée (200)
+GET {{baseURL}}/api/log-entries
+Authorization: Bearer {{token}}
 
 ### Critiques récentes d'un film (200)
 GET {{baseURL}}/api/log-entries?movie=1&withReview=true
@@ -72,8 +76,12 @@ GET {{baseURL}}/api/log-entries?movie=0&user=Jane%20Doe
 ### withReview qui n'est pas un booléen (422)
 GET {{baseURL}}/api/log-entries?withReview=maybe
 
-### Lire une entrée (200)
+### Lire une entrée sans token, likedByMe vaut false (200)
 GET {{baseURL}}/api/log-entries/{{logEntryId}}
+
+### Lire une entrée avec token, likedByMe indique mon like (200)
+GET {{baseURL}}/api/log-entries/{{logEntryId}}
+Authorization: Bearer {{token}}
 
 ### Lire une entrée qui n'existe pas (404)
 GET {{baseURL}}/api/log-entries/999999
