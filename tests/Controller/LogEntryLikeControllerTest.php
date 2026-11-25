@@ -20,6 +20,7 @@ final class LogEntryLikeControllerTest extends ApiTestCase
         $data = $this->requestJson('POST', '/api/log-entries', [
             'movie' => $this->findId(Movie::class, ['title' => 'Inception']),
             'review' => 'Un rêve dans un rêve.',
+            'watchedOn' => '2026-11-20',
         ]);
         $this->logEntryId = $data['id'];
     }
@@ -28,15 +29,28 @@ final class LogEntryLikeControllerTest extends ApiTestCase
     {
         $this->loginAs(UserFactory::createOne());
 
+        $entryUri = '/api/log-entries/'.$this->logEntryId;
+        self::assertFalse($this->requestJson('GET', $entryUri)['likedByMe']);
+
         $data = $this->requestJson('POST', $this->likeUri());
 
         self::assertResponseStatusCodeSame(Response::HTTP_CREATED);
         self::assertSame($this->logEntryId, $data['id']);
         self::assertSame(1, $data['likeCount']);
+        self::assertTrue($data['likedByMe']);
+        self::assertTrue($this->requestJson('GET', $entryUri)['likedByMe']);
+
+        foreach (['/api/log-entries', '/api/users/cobb/diary'] as $uri) {
+            self::assertTrue($this->requestJson('GET', $uri)['items'][0]['likedByMe']);
+        }
 
         $this->client->setServerParameter('HTTP_AUTHORIZATION', '');
-        $data = $this->requestJson('GET', '/api/log-entries/'.$this->logEntryId);
+        $data = $this->requestJson('GET', $entryUri);
         self::assertSame(1, $data['likeCount']);
+        self::assertFalse($data['likedByMe']);
+        foreach (['/api/log-entries', '/api/users/cobb/diary'] as $uri) {
+            self::assertFalse($this->requestJson('GET', $uri)['items'][0]['likedByMe']);
+        }
     }
 
     public function testLikingTheSameLogEntryTwiceReturnsConflict(): void
@@ -60,6 +74,7 @@ final class LogEntryLikeControllerTest extends ApiTestCase
 
         $data = $this->requestJson('GET', '/api/log-entries/'.$this->logEntryId);
         self::assertSame(0, $data['likeCount']);
+        self::assertFalse($data['likedByMe']);
     }
 
     public function testUnlikeALogEntryNotLikedReturnsNotFound(): void

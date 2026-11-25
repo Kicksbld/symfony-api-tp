@@ -11,6 +11,8 @@ use App\Entity\User;
 use App\Model\Paginator;
 use App\Repository\MovieListRepository;
 use App\Security\Voter\MovieListVoter;
+use App\Serializer\SocialStateNormalizer;
+use App\Service\LikeService;
 use App\Service\MovieListService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -35,17 +37,22 @@ final class MovieListController extends AbstractController
     public function __construct(
         private readonly MovieListService $movieListService,
         private readonly MovieListRepository $movieListRepository,
+        private readonly LikeService $likeService,
     ) {
     }
 
     #[Route('', name: 'list', methods: ['GET'])]
     public function list(
+        #[CurrentUser] ?User $viewer,
         #[MapQueryString(validationFailedStatusCode: Response::HTTP_UNPROCESSABLE_ENTITY)] MovieListSearchDto $movieListSearchDto = new MovieListSearchDto(),
         #[MapQueryString(validationFailedStatusCode: Response::HTTP_UNPROCESSABLE_ENTITY)] PaginationDto $paginationDto = new PaginationDto(),
     ): JsonResponse {
         $movieLists = new Paginator()->paginate($this->movieListRepository->createSearchQueryBuilder($movieListSearchDto), $paginationDto);
 
-        return $this->json($movieLists, context: ['groups' => ['paginate', ...self::GROUPS]]);
+        return $this->json($movieLists, context: [
+            'groups' => ['paginate', ...self::GROUPS],
+            SocialStateNormalizer::LIKED_IDS => $this->likeService->getLikedMovieListIdSet($viewer, ...$movieLists->items),
+        ]);
     }
 
     #[Route('', name: 'create', methods: ['POST'])]
@@ -61,9 +68,12 @@ final class MovieListController extends AbstractController
 
     #[Route('/{id}', name: 'show', requirements: ['id' => Requirement::DIGITS], methods: ['GET'])]
     #[IsGranted(MovieListVoter::VIEW, subject: 'movieList', message: 'List not found.', statusCode: Response::HTTP_NOT_FOUND)]
-    public function show(MovieList $movieList): JsonResponse
+    public function show(MovieList $movieList, #[CurrentUser] ?User $viewer): JsonResponse
     {
-        return $this->json($movieList, context: ['groups' => self::GROUPS]);
+        return $this->json($movieList, context: [
+            'groups' => self::GROUPS,
+            SocialStateNormalizer::LIKED_IDS => $this->likeService->getLikedMovieListIdSet($viewer, $movieList),
+        ]);
     }
 
     #[Route('/{id}', name: 'update', requirements: ['id' => Requirement::DIGITS], methods: ['PATCH'])]

@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Entity\MovieList;
 use App\Entity\User;
 use App\Security\Voter\MovieListVoter;
+use App\Serializer\SocialStateNormalizer;
 use App\Service\LikeService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -28,7 +29,10 @@ final class MovieListLikeController extends AbstractController
     {
         $this->likeService->likeMovieList($user, $movieList);
 
-        return $this->json($movieList, Response::HTTP_CREATED, context: ['groups' => ['movieList:read']]);
+        return $this->json($movieList, Response::HTTP_CREATED, context: [
+            'groups' => ['movieList:read'],
+            SocialStateNormalizer::LIKED_IDS => [$movieList->getId() => true],
+        ]);
     }
 
     #[Route('', name: 'delete', methods: ['DELETE'])]

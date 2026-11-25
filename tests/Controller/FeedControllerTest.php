@@ -35,12 +35,14 @@ final class FeedControllerTest extends ApiTestCase
         $this->logMovie($inceptionId);
         $this->requestJson('POST', '/api/users/arthur/followers');
         $this->requestJson('POST', '/api/users/ariadne/followers');
+        $this->requestJson('POST', '/api/log-entries/'.$arthurEntry.'/like');
 
         $data = $this->requestJson('GET', '/api/feed?limit=20');
 
         self::assertResponseIsSuccessful();
         self::assertSame(2, $data['total']);
         self::assertSame([$ariadneEntry, $arthurEntry], array_column($data['items'], 'id'));
+        self::assertSame([false, true], array_column($data['items'], 'likedByMe'));
         self::assertSame('ariadne', $data['items'][0]['user']['username']);
     }
 

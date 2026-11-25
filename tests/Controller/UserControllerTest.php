@@ -25,6 +25,7 @@ final class UserControllerTest extends ApiTestCase
             'watchedCount' => 0,
             'followersCount' => 0,
             'followingCount' => 0,
+            'followedByMe' => false,
         ], $data);
     }
 

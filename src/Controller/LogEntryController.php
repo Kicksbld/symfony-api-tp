@@ -11,6 +11,8 @@ use App\Entity\User;
 use App\Model\Paginator;
 use App\Repository\LogEntryRepository;
 use App\Security\Voter\LogEntryVoter;
+use App\Serializer\SocialStateNormalizer;
+use App\Service\LikeService;
 use App\Service\LogEntryService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -31,17 +33,22 @@ final class LogEntryController extends AbstractController
     public function __construct(
         private readonly LogEntryService $logEntryService,
         private readonly LogEntryRepository $logEntryRepository,
+        private readonly LikeService $likeService,
     ) {
     }
 
     #[Route('', name: 'list', methods: ['GET'])]
     public function list(
+        #[CurrentUser] ?User $viewer,
         #[MapQueryString(validationFailedStatusCode: Response::HTTP_UNPROCESSABLE_ENTITY)] LogEntrySearchDto $logEntrySearchDto = new LogEntrySearchDto(),
         #[MapQueryString(validationFailedStatusCode: Response::HTTP_UNPROCESSABLE_ENTITY)] PaginationDto $paginationDto = new PaginationDto(),
     ): JsonResponse {
         $logEntries = new Paginator()->paginate($this->logEntryRepository->createSearchQueryBuilder($logEntrySearchDto), $paginationDto);
 
-        return $this->json($logEntries, context: ['groups' => ['paginate', ...self::GROUPS]]);
+        return $this->json($logEntries, context: [
+            'groups' => ['paginate', ...self::GROUPS],
+            SocialStateNormalizer::LIKED_IDS => $this->likeService->getLikedLogEntryIdSet($viewer, ...$logEntries->items),
+        ]);
     }
 
     #[Route('', name: 'create', methods: ['POST'])]
@@ -56,9 +63,12 @@ final class LogEntryController extends AbstractController
     }
 
     #[Route('/{id}', name: 'show', requirements: ['id' => Requirement::DIGITS], methods: ['GET'])]
-    public function show(LogEntry $logEntry): JsonResponse
+    public function show(LogEntry $logEntry, #[CurrentUser] ?User $viewer): JsonResponse
     {
-        return $this->json($logEntry, context: ['groups' => self::GROUPS]);
+        return $this->json($logEntry, context: [
+            'groups' => self::GROUPS,
+            SocialStateNormalizer::LIKED_IDS => $this->likeService->getLikedLogEntryIdSet($viewer, $logEntry),
+        ]);
     }
 
     #[Route('/{id}', name: 'update', requirements: ['id' => Requirement::DIGITS], methods: ['PATCH'])]

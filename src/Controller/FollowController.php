@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Entity\User;
+use App\Serializer\SocialStateNormalizer;
 use App\Service\FollowService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -24,7 +25,10 @@ final class FollowController extends AbstractController
     {
         $this->followService->follow($user, $followed);
 
-        return $this->json($followed, Response::HTTP_CREATED, context: ['groups' => ['user:list']]);
+        return $this->json($followed, Response::HTTP_CREATED, context: [
+            'groups' => ['user:list'],
+            SocialStateNormalizer::FOLLOWED_BY_ME => true,
+        ]);
     }
 
     #[Route('', name: 'delete', methods: ['DELETE'])]
