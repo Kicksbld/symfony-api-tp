@@ -1,4 +1,4 @@
-import { authPath, currentTarget } from "@/features/auth/redirect";
+import { authPath, returnPathFor } from "@/lib/redirect";
 import { clearSession, getSession, isCurrentSession, type Session } from "@/lib/session";
 
 export type Violation = {
@@ -43,7 +43,7 @@ export async function apiFetch<T>(path: string, { session = getSession(), ...ini
 
     assertCurrentSession(session);
     if (response.status === 401 && session !== null && clearSession(session)) {
-        window.location.assign(authPath("/login", currentTarget(window.location)));
+        window.location.assign(authPath("/login", returnPathFor(window.location)));
     }
     if (!response.ok) {
         const body: ErrorBody = await response.json().catch(() => ({}));

@@ -7,14 +7,15 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ApiError } from "@/lib/api";
 import { useAuth } from "@/features/auth/auth";
-import { authPath, redirectTarget } from "@/features/auth/redirect";
+import { authPath, redirectTarget } from "@/lib/redirect";
 
 export function LoginPage() {
     const { session, login } = useAuth();
     const [searchParams] = useSearchParams();
     const location = useLocation();
     const target = redirectTarget(searchParams);
-    const [email, setEmail] = useState<string>(location.state?.email ?? "");
+    // L'inscription transmet l'email du compte créé quand l'ouverture de session a échoué.
+    const [email, setEmail] = useState(typeof location.state?.email === "string" ? location.state.email : "");
     const [password, setPassword] = useState("");
     const [error, setError] = useState<string | null>(null);
     const [submitting, setSubmitting] = useState(false);
