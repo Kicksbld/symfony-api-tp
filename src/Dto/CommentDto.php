@@ -6,7 +6,7 @@ use App\Entity\AbstractComment;
 use Symfony\Component\Validator\Constraints as Assert;
 
 /**
- * Même corps pour écrire et pour modifier un commentaire : le contenu est son seul champ.
+ * Même corps pour écrire et pour modifier : un PATCH sans contenu n'aurait rien à modifier.
  */
 final readonly class CommentDto
 {

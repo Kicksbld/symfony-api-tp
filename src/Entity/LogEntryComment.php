@@ -24,7 +24,7 @@ class LogEntryComment extends AbstractComment
         return $this->logEntry;
     }
 
-    public function getCommentedAuthor(): ?User
+    public function getCommentedResourceAuthor(): ?User
     {
         return $this->logEntry->getUser();
     }

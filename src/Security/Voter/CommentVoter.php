@@ -32,6 +32,6 @@ final class CommentVoter extends Voter
             return false;
         }
 
-        return $subject->getUser() === $user || (self::DELETE === $attribute && $subject->getCommentedAuthor() === $user);
+        return $subject->getUser() === $user || (self::DELETE === $attribute && $subject->getCommentedResourceAuthor() === $user);
     }
 }

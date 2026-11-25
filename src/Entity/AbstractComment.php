@@ -42,7 +42,7 @@ abstract class AbstractComment
     /**
      * Auteur de la critique ou de la liste commentée : il peut supprimer les commentaires faits chez lui.
      */
-    abstract public function getCommentedAuthor(): ?User;
+    abstract public function getCommentedResourceAuthor(): ?User;
 
     public function getId(): ?int
     {

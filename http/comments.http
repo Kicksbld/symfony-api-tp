@@ -93,6 +93,10 @@ Content-Type: application/json
   "content": "À moi"
 }
 
+### Supprimer le commentaire d'un autre membre sur l'entrée d'un autre, l'identifiant 1 s'ils ne sont pas à moi (403)
+DELETE {{baseURL}}/api/log-entries/1/comments/1
+Authorization: Bearer {{token}}
+
 ### Supprimer sans token (401)
 DELETE {{baseURL}}/api/log-entries/{{commentedLogEntryId}}/comments/{{logEntryCommentId}}
 
@@ -141,6 +145,23 @@ Content-Type: application/json
 
 {
   "content": "Il manque Memento et Le Prestige."
+}
+
+### Modification de commentaire de liste invalide (422)
+PATCH {{baseURL}}/api/lists/{{movieListId}}/comments/{{movieListCommentId}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "content": " "
+}
+
+### Modifier un commentaire de liste sans token (401)
+PATCH {{baseURL}}/api/lists/{{movieListId}}/comments/{{movieListCommentId}}
+Content-Type: application/json
+
+{
+  "content": "À moi"
 }
 
 ### Supprimer le commentaire d'un autre membre sur la liste d'un autre, l'identifiant 1 s'ils ne sont pas à moi (403)

@@ -24,7 +24,7 @@ class MovieListComment extends AbstractComment
         return $this->movieList;
     }
 
-    public function getCommentedAuthor(): ?User
+    public function getCommentedResourceAuthor(): ?User
     {
         return $this->movieList->getUser();
     }
