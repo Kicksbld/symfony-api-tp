@@ -1,6 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
-import { useState, type ReactNode } from "react";
+import { useState } from "react";
 import { Link, Navigate, useLocation, useNavigate, useSearchParams } from "react-router";
+import { EmptyState } from "@/components/EmptyState";
+import { Pagination } from "@/components/Pagination";
+import { QueryError } from "@/components/QueryError";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -65,12 +68,7 @@ export function HomePage() {
                 </Alert>
             )}
             {error !== null && (
-                <Alert variant="destructive">
-                    <AlertDescription>Impossible de charger les films. {error.message}</AlertDescription>
-                    <Button variant="outline" size="sm" className="mt-2 justify-self-start" onClick={() => void refetch()} disabled={isFetching}>
-                        Réessayer
-                    </Button>
-                </Alert>
+                <QueryError message="Impossible de charger les films." error={error} onRetry={() => void refetch()} retrying={isFetching} />
             )}
             {result === undefined && isPending ? (
                 <div className="grid grid-cols-2 gap-4 sm:grid-cols-4 lg:grid-cols-6">
@@ -130,38 +128,13 @@ function CatalogResults({ result, isStale }: { result: CatalogResult; isStale: b
                     <MovieCard key={movie.id} movie={movie} />
                 ))}
             </div>
-            <nav className="flex items-center justify-center gap-4 text-sm" aria-label="Pagination des films">
-                <PageLink search={search} page={search.page - 1} disabled={isStale || search.page <= 1} label="Précédent" />
-                <span>
-                    Page {search.page} sur {movies.lastPage}
-                </span>
-                <PageLink search={search} page={search.page + 1} disabled={isStale || search.page >= movies.lastPage} label="Suivant" />
-            </nav>
+            <Pagination
+                page={search.page}
+                lastPage={movies.lastPage}
+                pathForPage={(page) => catalogPath({ ...search, page })}
+                label="Pagination des films"
+                disabled={isStale}
+            />
         </>
-    );
-}
-
-function EmptyState({ message, children }: { message: string; children?: ReactNode }) {
-    return (
-        <div className="flex flex-col items-center gap-3 rounded-lg border border-dashed p-10 text-center text-sm text-muted-foreground">
-            <p>{message}</p>
-            {children}
-        </div>
-    );
-}
-
-function PageLink({ search, page, disabled, label }: { search: CatalogSearch; page: number; disabled: boolean; label: string }) {
-    if (disabled) {
-        return (
-            <Button variant="outline" size="sm" disabled>
-                {label}
-            </Button>
-        );
-    }
-
-    return (
-        <Button asChild variant="outline" size="sm">
-            <Link to={catalogPath({ ...search, page })}>{label}</Link>
-        </Button>
     );
 }
