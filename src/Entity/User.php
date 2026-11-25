@@ -71,11 +71,31 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\OneToMany(targetEntity: MovieRelationship::class, mappedBy: 'user', fetch: 'EXTRA_LAZY')]
     private Collection $movieRelationships;
 
+    /**
+     * Membres que ce membre suit. EXTRA_LAZY pour compter les abonnements et tester un abonnement sans charger
+     * toute la collection.
+     *
+     * @var Collection<int, User>
+     */
+    #[ORM\ManyToMany(targetEntity: self::class, inversedBy: 'followers', fetch: 'EXTRA_LAZY')]
+    #[ORM\JoinTable(name: 'user_follow')]
+    #[ORM\JoinColumn(name: 'follower_id', onDelete: 'CASCADE')]
+    #[ORM\InverseJoinColumn(name: 'followed_id', onDelete: 'CASCADE')]
+    private Collection $following;
+
+    /**
+     * @var Collection<int, User>
+     */
+    #[ORM\ManyToMany(targetEntity: self::class, mappedBy: 'following', fetch: 'EXTRA_LAZY')]
+    private Collection $followers;
+
     public function __construct()
     {
         $this->logEntries = new ArrayCollection();
         $this->favoriteMovies = new ArrayCollection();
         $this->movieRelationships = new ArrayCollection();
+        $this->following = new ArrayCollection();
+        $this->followers = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -178,5 +198,36 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function getWatchedCount(): int
     {
         return $this->movieRelationships->matching(Criteria::create()->andWhere(Criteria::expr()->eq('watched', true)))->count();
+    }
+
+    public function isFollowing(User $user): bool
+    {
+        return $this->following->contains($user);
+    }
+
+    public function follow(User $user): static
+    {
+        $this->following->add($user);
+
+        return $this;
+    }
+
+    public function unfollow(User $user): static
+    {
+        $this->following->removeElement($user);
+
+        return $this;
+    }
+
+    #[Groups(['user:read'])]
+    public function getFollowersCount(): int
+    {
+        return $this->followers->count();
+    }
+
+    #[Groups(['user:read'])]
+    public function getFollowingCount(): int
+    {
+        return $this->following->count();
     }
 }

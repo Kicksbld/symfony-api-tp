@@ -76,6 +76,20 @@ class LogEntryRepository extends ServiceEntityRepository
         return $this->orderByMostRecent($queryBuilder->orderBy('logEntry.watchedOn', 'DESC'));
     }
 
+    public function createFeedQueryBuilder(User $user): QueryBuilder
+    {
+        // La jointure sur les abonnés de l'auteur, filtrée sur le membre connecté, ne garde que les membres qu'il suit.
+        $queryBuilder = $this->createQueryBuilder('logEntry')
+            ->addSelect('user', 'movie')
+            ->innerJoin('logEntry.user', 'user')
+            ->innerJoin('logEntry.movie', 'movie')
+            ->innerJoin('user.followers', 'follower')
+            ->andWhere('follower = :follower')
+            ->setParameter('follower', $user);
+
+        return $this->orderByMostRecent($queryBuilder);
+    }
+
     public function findLatestByUserAndMovie(User $user, Movie $movie): ?LogEntry
     {
         $queryBuilder = $this->createQueryBuilder('logEntry')

@@ -1,0 +1,12 @@
+# Lancer d'abord la connexion de auth.http, puis suivre un membre avec follows.http.
+
+### Entrées de journal des membres suivis, de la plus récente à la plus ancienne (200)
+GET {{baseURL}}/api/feed?page=1&limit=20
+Authorization: Bearer {{token}}
+
+### Feed avec une limite trop grande (422)
+GET {{baseURL}}/api/feed?limit=101
+Authorization: Bearer {{token}}
+
+### Feed sans être connecté (401)
+GET {{baseURL}}/api/feed

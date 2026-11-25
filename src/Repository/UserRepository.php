@@ -44,4 +44,22 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
 
         return $queryBuilder;
     }
+
+    public function createFollowersQueryBuilder(User $user): QueryBuilder
+    {
+        return $this->createQueryBuilder('user')
+            ->innerJoin('user.following', 'followed')
+            ->andWhere('followed = :user')
+            ->setParameter('user', $user)
+            ->orderBy('user.username', 'ASC');
+    }
+
+    public function createFollowingQueryBuilder(User $user): QueryBuilder
+    {
+        return $this->createQueryBuilder('user')
+            ->innerJoin('user.followers', 'follower')
+            ->andWhere('follower = :user')
+            ->setParameter('user', $user)
+            ->orderBy('user.username', 'ASC');
+    }
 }

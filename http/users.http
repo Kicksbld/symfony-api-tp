@@ -7,7 +7,7 @@ GET {{baseURL}}/api/users?q=jane&page=1&limit=20
 ### Recherche trop longue, un username fait 20 caractères au plus (422)
 GET {{baseURL}}/api/users?q=aaaaaaaaaaaaaaaaaaaaa
 
-### Profil public : bio, 4 favoris et nombre de films vus (200)
+### Profil public : bio, 4 favoris, nombre de films vus, d'abonnés et d'abonnements (200)
 GET {{baseURL}}/api/users/jane_doe
 
 ### Profil d'un membre inconnu (404)
@@ -70,3 +70,21 @@ GET {{baseURL}}/api/users/jane_doe/lists?page=0
 
 ### Listes d'un membre inconnu (404)
 GET {{baseURL}}/api/users/nobody/lists
+
+### Abonnés du membre, triés par username (200)
+GET {{baseURL}}/api/users/jane_doe/followers?page=1&limit=20
+
+### Abonnés avec une page invalide (422)
+GET {{baseURL}}/api/users/jane_doe/followers?page=0
+
+### Abonnés d'un membre inconnu (404)
+GET {{baseURL}}/api/users/nobody/followers
+
+### Membres suivis, triés par username (200)
+GET {{baseURL}}/api/users/jane_doe/following
+
+### Membres suivis avec une limite trop grande (422)
+GET {{baseURL}}/api/users/jane_doe/following?limit=101
+
+### Membres suivis d'un membre inconnu (404)
+GET {{baseURL}}/api/users/nobody/following
