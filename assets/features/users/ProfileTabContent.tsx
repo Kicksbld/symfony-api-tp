@@ -1,16 +1,16 @@
 import { useQuery, type QueryKey, type UseQueryOptions } from "@tanstack/react-query";
 import type { ReactNode } from "react";
-import { Link, Navigate, useSearchParams } from "react-router";
+import { Link } from "react-router";
 import { EmptyState } from "@/components/EmptyState";
 import { Pagination } from "@/components/Pagination";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { QueryError } from "@/components/QueryError";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { parsePositiveInteger } from "@/lib/numbers";
 import type { Paginated } from "@/lib/types";
 
 type ProfileTabContentProps<T, TKey extends QueryKey> = {
-    query: (page: number) => UseQueryOptions<Paginated<T>, Error, Paginated<T>, TKey>;
+    query: UseQueryOptions<Paginated<T>, Error, Paginated<T>, TKey>;
+    page: number;
     label: string;
     emptyMessage: string;
     children: (items: T[]) => ReactNode;
@@ -21,28 +21,12 @@ function pagePath(page: number): { search: string } {
     return { search: page === 1 ? "" : `?page=${page}` };
 }
 
-/**
- * Lit la page dans l'URL et gère les états communs aux onglets du profil : chargement, erreur, liste vide et page
- * au-delà de la dernière. Chaque onglet ne s'occupe que de l'affichage de ses éléments.
- */
-export function ProfileTabContent<T, TKey extends QueryKey>({ query, label, emptyMessage, children }: ProfileTabContentProps<T, TKey>) {
-    const [searchParams] = useSearchParams();
-    const pageParam = searchParams.get("page");
-    const page = pageParam === null ? 1 : parsePositiveInteger(pageParam);
-    const { data, error, isFetching, refetch } = useQuery({ ...query(page ?? 1), enabled: page !== null });
+// La clé de requête reste générique : TanStack Query refuse une clé élargie à « readonly unknown[] ».
+export function ProfileTabContent<T, TKey extends QueryKey>({ query, page, label, emptyMessage, children }: ProfileTabContentProps<T, TKey>) {
+    const { data, error, isFetching, refetch } = useQuery(query);
 
-    if (page === null) {
-        return <Navigate to={pagePath(1)} replace />;
-    }
     if (error !== null) {
-        return (
-            <Alert variant="destructive">
-                <AlertDescription>Impossible de charger cet onglet. {error.message}</AlertDescription>
-                <Button variant="outline" size="sm" className="mt-2 justify-self-start" onClick={() => void refetch()} disabled={isFetching}>
-                    Réessayer
-                </Button>
-            </Alert>
-        );
+        return <QueryError message="Impossible de charger cet onglet." error={error} onRetry={() => void refetch()} retrying={isFetching} />;
     }
     if (data === undefined) {
         return (

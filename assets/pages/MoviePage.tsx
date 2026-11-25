@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link, useParams } from "react-router";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { QueryError } from "@/components/QueryError";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { MoviePoster } from "@/features/movies/MoviePoster";
@@ -34,14 +34,7 @@ function MovieDetails({ movieId }: { movieId: number }) {
         return <MovieNotFound />;
     }
     if (error !== null) {
-        return (
-            <Alert variant="destructive">
-                <AlertDescription>Impossible de charger le film. {error.message}</AlertDescription>
-                <Button variant="outline" size="sm" className="mt-2 justify-self-start" onClick={() => void refetch()} disabled={isFetching}>
-                    Réessayer
-                </Button>
-            </Alert>
-        );
+        return <QueryError message="Impossible de charger le film." error={error} onRetry={() => void refetch()} retrying={isFetching} />;
     }
     if (movie === undefined) {
         return (

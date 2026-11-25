@@ -1,15 +1,15 @@
 import { MovieCard } from "@/features/movies/MovieCard";
 import type { UserProfile } from "@/lib/types";
 
-function plural(count: number, singular: string, pluralForm: string): string {
+function formatCount(count: number, singular: string, pluralForm: string): string {
     return `${count.toLocaleString("fr-FR")} ${count > 1 ? pluralForm : singular}`;
 }
 
 export function ProfileHeader({ profile }: { profile: UserProfile }) {
     const counts = [
-        plural(profile.watchedCount, "film vu", "films vus"),
-        plural(profile.followersCount, "abonné", "abonnés"),
-        plural(profile.followingCount, "abonnement", "abonnements"),
+        formatCount(profile.watchedCount, "film vu", "films vus"),
+        formatCount(profile.followersCount, "abonné", "abonnés"),
+        formatCount(profile.followingCount, "abonnement", "abonnements"),
     ];
 
     return (

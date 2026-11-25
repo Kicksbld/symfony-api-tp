@@ -2,7 +2,7 @@ import { queryOptions } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/api";
 import type { LogEntry, MovieRelationshipItem, Paginated, UserProfile } from "@/lib/types";
 
-export const PROFILE_PAGE_SIZE = 20;
+const PROFILE_PAGE_SIZE = 20;
 
 type MovieRelationshipList = "watched" | "watchlist";
 

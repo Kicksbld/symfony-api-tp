@@ -3,6 +3,7 @@ import { useState } from "react";
 import { Link, Navigate, useLocation, useNavigate, useSearchParams } from "react-router";
 import { EmptyState } from "@/components/EmptyState";
 import { Pagination } from "@/components/Pagination";
+import { QueryError } from "@/components/QueryError";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -67,12 +68,7 @@ export function HomePage() {
                 </Alert>
             )}
             {error !== null && (
-                <Alert variant="destructive">
-                    <AlertDescription>Impossible de charger les films. {error.message}</AlertDescription>
-                    <Button variant="outline" size="sm" className="mt-2 justify-self-start" onClick={() => void refetch()} disabled={isFetching}>
-                        Réessayer
-                    </Button>
-                </Alert>
+                <QueryError message="Impossible de charger les films." error={error} onRetry={() => void refetch()} retrying={isFetching} />
             )}
             {result === undefined && isPending ? (
                 <div className="grid grid-cols-2 gap-4 sm:grid-cols-4 lg:grid-cols-6">
