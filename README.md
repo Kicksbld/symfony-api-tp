@@ -115,6 +115,15 @@ Commencer par [`http/auth.http`](http/auth.http) : la requête de connexion enre
 | `GET` | `/api/log-entries/{id}` | Une entrée de journal | Non |
 | `PATCH` | `/api/log-entries/{id}` | Modifie une de mes entrées | Oui, auteur |
 | `DELETE` | `/api/log-entries/{id}` | Supprime une de mes entrées | Oui, auteur |
+| `GET` | `/api/lists` | Liste paginée des listes publiques, des plus récentes aux plus anciennes, avec recherche par nom et filtres par membre et par film | Non |
+| `POST` | `/api/lists` | Crée une liste : nom, description, classée ou non, publique ou privée | Oui |
+| `GET` | `/api/lists/{id}` | Une liste (une liste privée n'est visible que par son auteur) | Non |
+| `PATCH` | `/api/lists/{id}` | Modifie une de mes listes | Oui, auteur |
+| `DELETE` | `/api/lists/{id}` | Supprime une de mes listes avec ses films | Oui, auteur |
+| `GET` | `/api/lists/{id}/items` | Liste paginée des films d'une liste, dans l'ordre | Non |
+| `POST` | `/api/lists/{id}/items` | Ajoute un film à la fin d'une de mes listes, avec une note facultative | Oui, auteur |
+| `PATCH` | `/api/lists/{id}/items/{itemId}` | Change la position ou la note d'un film dans une de mes listes | Oui, auteur |
+| `DELETE` | `/api/lists/{id}/items/{itemId}` | Retire un film d'une de mes listes | Oui, auteur |
 | `GET` | `/api/people` | Liste paginée des personnes (acteurs et équipe), avec recherche par nom (`?q=`) | Non |
 | `GET` | `/api/people/{id}` | Fiche d'une personne : rôles joués (`cast`) et films par poste (`crew`) | Non |
 | `GET` | `/api/people/{id}/movies` | Liste paginée des films d'une personne, filtrable par poste (`?job=Director`, `?job=Actor`) | Non |
@@ -225,6 +234,39 @@ Paramètres de `GET /api/log-entries`, tous facultatifs et combinables :
 | `user` | `user=jane_doe` | Entrées d'un membre, par son username |
 | `withReview` | `withReview=true` | Seulement les critiques |
 
+### Listes
+
+Une liste a un nom, une description facultative, et peut être classée (`ranked`, un top) ou non, publique ou privée (`public`). Par défaut, une nouvelle liste est publique et non classée. La fiche d'une liste donne son nombre de films (`itemCount`), les films eux-mêmes sont dans `GET /api/lists/{id}/items` :
+
+```json
+{
+  "items": [
+    {
+      "id": 7,
+      "movie": { "id": 1, "title": "Inception", "originalTitle": "Inception", "releaseDate": "2010-07-15", "averageRating": 4.2, "posterUrl": "https://image.tmdb.org/t/p/w500/..." },
+      "position": 1,
+      "note": "Le plus abouti."
+    }
+  ],
+  "total": 1,
+  "lastPage": 1
+}
+```
+
+Un film ne peut être qu'une fois dans une liste. Il est ajouté à la fin, et `PATCH` sur l'élément le déplace : les autres films se décalent pour que les positions restent continues de 1 au nombre de films. Une position au-delà de la fin place le film en dernier. Retirer un film fait remonter ceux qui le suivent. Les positions existent aussi pour une liste non classée : elles donnent l'ordre d'affichage.
+
+Une liste privée n'est visible que par son auteur : tous les autres reçoivent une `404` sur la liste et ses films, comme si elle n'existait pas, et elle n'apparaît jamais dans `GET /api/lists`. Seul l'auteur peut modifier ou supprimer sa liste et ses films, les autres membres reçoivent une `403` sur une liste publique.
+
+`PATCH /api/lists/{id}` ne modifie que les champs envoyés, et `null` efface la description. De même, `null` efface la note d'un film.
+
+Paramètres de `GET /api/lists`, tous facultatifs et combinables :
+
+| Paramètre | Exemple | Description |
+| --- | --- | --- |
+| `q` | `q=nolan` | Cherche dans le nom de la liste |
+| `user` | `user=jane_doe` | Listes publiques d'un membre, par son username |
+| `movie` | `movie=1` | Listes qui contiennent ce film |
+
 ### Validation
 
 Règles de validation :
@@ -235,9 +277,14 @@ Règles de validation :
 - `bio` : 500 caractères maximum, une chaîne vide efface la bio.
 - `rating` : de `0.5` à `5` par pas de `0.5`, ou `null`.
 - `watched`, `liked`, `inWatchlist`, `rewatch`, `containsSpoilers` : booléens.
-- `movie` : identifiant d'un film existant.
+- `movie` : identifiant d'un film existant, une seule fois par liste.
 - `watchedOn` : date au format `AAAA-MM-JJ`, pas dans le futur, ou `null`.
 - `review` : texte non vide de 10 000 caractères maximum, ou `null`.
+- `name` (liste) : texte non vide de 100 caractères maximum.
+- `description` (liste) : texte non vide de 1 000 caractères maximum, ou `null`.
+- `ranked`, `public` : booléens.
+- `note` (film d'une liste) : texte non vide de 1 000 caractères maximum, ou `null`.
+- `position` : entier à partir de 1.
 
 Codes de retour utilisés : `200` lecture et modification, `201` création, `204` suppression, `401` non connecté ou mauvais identifiants, `403` ressource d'un autre membre, `404` ressource introuvable, `422` données invalides, dans le corps de la requête comme dans les paramètres de l'URL (avec la liste des champs en erreur dans `violations`). Toutes les erreurs sont renvoyées en JSON.
 

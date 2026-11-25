@@ -1,0 +1,124 @@
+# Lancer d'abord la connexion de auth.http, puis la création de liste de lists.http pour récupérer movieListId.
+# Les identifiants des films dépendent de la base : les récupérer avec GET /api/movies.
+
+### Ajouter un film avec une note, il se place à la fin de la liste (201)
+POST {{baseURL}}/api/lists/{{movieListId}}/items
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "movie": 1,
+  "note": "Le plus abouti."
+}
+
+> {%
+  client.global.set("movieListItemId", response.body.id);
+%}
+
+### Ajouter un deuxième film sans note (201)
+POST {{baseURL}}/api/lists/{{movieListId}}/items
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "movie": 2
+}
+
+### Ajouter un film déjà dans la liste (422)
+POST {{baseURL}}/api/lists/{{movieListId}}/items
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "movie": 1
+}
+
+### Film qui n'existe pas et note vide (422)
+POST {{baseURL}}/api/lists/{{movieListId}}/items
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "movie": 999999,
+  "note": " "
+}
+
+### Ajouter un film à la liste publique d'un autre membre, l'identifiant 1 si elle n'est pas à moi (403)
+POST {{baseURL}}/api/lists/1/items
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "movie": 1
+}
+
+### Ajouter sans token (401)
+POST {{baseURL}}/api/lists/{{movieListId}}/items
+Content-Type: application/json
+
+{
+  "movie": 1
+}
+
+### Films de la liste dans l'ordre, le token est nécessaire si la liste est privée (200)
+GET {{baseURL}}/api/lists/{{movieListId}}/items
+Authorization: Bearer {{token}}
+
+### Films d'une liste qui n'existe pas (404)
+GET {{baseURL}}/api/lists/999999/items
+
+### Passer le premier film en deuxième position, l'autre film remonte (200)
+PATCH {{baseURL}}/api/lists/{{movieListId}}/items/{{movieListItemId}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "position": 2
+}
+
+### Effacer la note avec null (200)
+PATCH {{baseURL}}/api/lists/{{movieListId}}/items/{{movieListItemId}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "note": null
+}
+
+### Position à 0 et note vide (422)
+PATCH {{baseURL}}/api/lists/{{movieListId}}/items/{{movieListItemId}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "position": 0,
+  "note": ""
+}
+
+### Élément qui n'est pas dans cette liste (404)
+PATCH {{baseURL}}/api/lists/{{movieListId}}/items/999999
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "position": 1
+}
+
+### Modifier sans token (401)
+PATCH {{baseURL}}/api/lists/{{movieListId}}/items/{{movieListItemId}}
+Content-Type: application/json
+
+{
+  "position": 1
+}
+
+### Retirer sans token (401)
+DELETE {{baseURL}}/api/lists/{{movieListId}}/items/{{movieListItemId}}
+
+### Retirer le film, les suivants remontent d'une position (204)
+DELETE {{baseURL}}/api/lists/{{movieListId}}/items/{{movieListItemId}}
+Authorization: Bearer {{token}}
+
+### Retirer un film déjà retiré (404)
+DELETE {{baseURL}}/api/lists/{{movieListId}}/items/{{movieListItemId}}
+Authorization: Bearer {{token}}
