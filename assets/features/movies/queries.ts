@@ -1,6 +1,6 @@
 import { keepPreviousData, queryOptions } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/api";
-import type { Genre, MovieSummary, Paginated } from "@/lib/types";
+import type { Genre, MovieDetail, MovieSummary, Paginated } from "@/lib/types";
 import { catalogSearchParams, type CatalogSearch } from "@/features/movies/catalog-search";
 
 export const CATALOG_PAGE_SIZE = 24;
@@ -40,5 +40,12 @@ export function genresQuery() {
             return genres.items;
         },
         staleTime: Infinity,
+    });
+}
+
+export function movieQuery(id: number) {
+    return queryOptions({
+        queryKey: ["movies", id],
+        queryFn: ({ signal }) => apiFetch<MovieDetail>(`/movies/${id}`, { signal, session: null }),
     });
 }

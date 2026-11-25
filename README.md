@@ -142,6 +142,12 @@ L'accueil `/` liste les films avec `GET /api/movies`, triés par popularité par
 
 Un paramètre invalide (titre vide ou trop long, genre inconnu, décennie hors liste, tri ou page non reconnus) est retiré de l'adresse avec un message, au lieu d'envoyer une requête que l'API refuserait en `422`. Une page au-delà de la dernière propose d'aller à la dernière page, et une recherche sans résultat propose d'effacer les filtres.
 
+#### Fiche film et watchlist
+
+Chaque carte du catalogue ouvre la fiche `/movies/{id}`, lue avec `GET /api/movies/{id}`. La fiche est préchargée dès le survol ou la prise de focus de la carte, elle s'affiche donc sans attente au clic. Elle montre l'affiche, le synopsis, la durée, les genres, la réalisation, les têtes d'affiche et la moyenne des membres (ou « Pas encore noté » sans note). Un identifiant invalide ou un film absent (`404`) affiche « Film introuvable ».
+
+Un membre connecté voit son état avec `GET /api/movies/{id}/relationship`, et le bouton envoie `PATCH /api/movies/{id}/relationship` avec seulement `{ "inWatchlist": true }` ou `false`. Le bouton change tout de suite, un clic pendant l'envoi est ignoré, puis mon état sur le film et la watchlist du profil sont relus. En cas d'erreur, le bouton revient à son état précédent et un message s'affiche. Un visiteur est envoyé vers la connexion, puis revient sur la fiche.
+
 #### Thème et navigation
 
 Les couleurs, polices et rayons viennent d'un thème [TweakCN](https://tweakcn.com), appliqué dans [`assets/app.css`](assets/app.css) avec :

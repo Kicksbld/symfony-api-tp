@@ -1,3 +1,5 @@
+import { parsePositiveInteger } from "@/lib/numbers";
+
 export const MOVIE_SORTS = [
     { value: "popular", label: "Populaires" },
     { value: "trending", label: "Tendances de la semaine" },
@@ -109,14 +111,4 @@ function parseTitle(value: string): string | null {
     const title = value.trim();
 
     return title !== "" && title.length <= MAX_TITLE_LENGTH ? title : null;
-}
-
-function parsePositiveInteger(value: string): number | null {
-    if (!/^\d+$/.test(value)) {
-        return null;
-    }
-
-    const number = Number(value);
-
-    return Number.isSafeInteger(number) && number >= 1 ? number : null;
 }
