@@ -32,8 +32,28 @@ php bin/console lexik:jwt:generate-keypair
 php bin/console doctrine:migrations:migrate -n
 
 # Chargement du catalogue de films depuis data/movies.jsonl, sans clé TMDB
-php bin/console app:tmdb:import --from-file
+php bin/console app:tmdb:import --from-file --no-debug
+
+# Membres de démonstration et leur activité
+php bin/console app:seed-demo
 ```
+
+Aucune clé TMDB n'est nécessaire. L'option `--no-debug` est importante : en mode debug, Symfony garde en mémoire toutes les requêtes SQL pour le profiler, et l'import du catalogue complet dépasse alors la limite de mémoire de PHP.
+
+## Comptes de démonstration
+
+`app:seed-demo` crée 4 membres, qui ont tous le mot de passe `demo1234` :
+
+| Username | Email |
+| --- | --- |
+| `jane_doe` | `jane@example.com` |
+| `arthur` | `arthur@example.com` |
+| `camille` | `camille@example.com` |
+| `leo` | `leo@example.com` |
+
+Ils ont des abonnements, des entrées de journal et des critiques, des films vus, aimés et en watchlist, des favoris, des listes (dont une privée pour `jane_doe`), des likes et des commentaires. Les dates de visionnage sont calculées à partir du jour du lancement, pour que le tri des films tendances ait du contenu.
+
+La commande utilise les films les plus populaires du catalogue en base, qui doit donc être chargé avant. Si un des membres de démo existe déjà (même username ou même email), elle ne crée rien : on peut la relancer sans risque de doublon.
 
 ## Catalogue de films
 
@@ -44,10 +64,10 @@ Les films, genres, studios, pays, personnes, crédits et plateformes de streamin
 Le dépôt contient un export du catalogue dans [`data/movies.jsonl`](data/movies.jsonl) (un film par ligne, au format des réponses TMDB). Pour le charger :
 
 ```bash
-php bin/console app:tmdb:import --from-file
+php bin/console app:tmdb:import --from-file --no-debug
 ```
 
-Aucune requête n'est envoyée à TMDB. On peut aussi passer un autre fichier : `--from-file=chemin/vers/fichier.jsonl`.
+Aucune requête n'est envoyée à TMDB. On peut aussi passer un autre fichier : `--from-file=chemin/vers/fichier.jsonl`. L'import et l'export du catalogue complet se lancent avec `--no-debug` (voir [Installation](#installation)).
 
 ### Avec une clé TMDB
 
@@ -60,15 +80,16 @@ Aucune requête n'est envoyée à TMDB. On peut aussi passer un autre fichier : 
 TMDB_API_TOKEN=eyJ...
 ```
 
-### Commandes
+## Commandes
 
 | Commande | Description |
 | --- | --- |
-| `php bin/console app:tmdb:import` | Importe les films populaires et les mieux notés depuis TMDB, avec leurs détails, la distribution (15 premiers acteurs), l'équipe (réalisateur, scénariste, chef opérateur, compositeur, monteur), les studios, les pays de production et les plateformes pour FR, BE, CH, CA et US. |
-| `php bin/console app:tmdb:import --pages=5` | Même chose en limitant le nombre de pages lues dans chaque liste TMDB (20 films par page, 50 pages par défaut). |
-| `php bin/console app:tmdb:import --from-file` | Charge `data/movies.jsonl` sans appeler TMDB. |
-| `php bin/console app:tmdb:export` | Écrit le catalogue de la base dans `data/movies.jsonl` (ou dans le fichier donné avec `--output`). |
-| `php bin/console app:tmdb:refresh-providers` | Met à jour uniquement les plateformes de streaming des films déjà en base. |
+| `php bin/console app:tmdb:import --no-debug` | Importe les films populaires et les mieux notés depuis TMDB, avec leurs détails, la distribution (15 premiers acteurs), l'équipe (réalisateur, scénariste, chef opérateur, compositeur, monteur), les studios, les pays de production et les plateformes pour FR, BE, CH, CA et US. |
+| `php bin/console app:tmdb:import --pages=5 --no-debug` | Même chose en limitant le nombre de pages lues dans chaque liste TMDB (20 films par page, 50 pages par défaut). |
+| `php bin/console app:tmdb:import --from-file --no-debug` | Charge `data/movies.jsonl` sans appeler TMDB. |
+| `php bin/console app:tmdb:export --no-debug` | Écrit le catalogue de la base dans `data/movies.jsonl` (ou dans le fichier donné avec `--output`). |
+| `php bin/console app:tmdb:refresh-providers --no-debug` | Met à jour uniquement les plateformes de streaming des films déjà en base. |
+| `php bin/console app:seed-demo` | Crée les [membres de démonstration](#comptes-de-démonstration) et leur activité à partir du catalogue en base. |
 
 Les films sont retrouvés par leur identifiant TMDB : relancer un import met à jour les films existants au lieu de créer des doublons. Seules les commandes qui appellent TMDB demandent `TMDB_API_TOKEN`.
 
@@ -94,7 +115,11 @@ Il n'y a pas de refresh token : une fois le token expiré, il faut se reconnecte
 
 Le dossier [`http/`](http) contient un fichier `.http` par ressource, avec des requêtes valides et des cas d'erreur. Ils s'ouvrent dans PhpStorm (ou VS Code avec une extension compatible) en choisissant l'environnement `dev`.
 
-Commencer par [`http/auth.http`](http/auth.http) : la requête de connexion enregistre le token, qui est ensuite réutilisé automatiquement par les autres fichiers.
+Ils sont écrits pour une base fraîchement installée avec les commandes de la section [Installation](#installation) : les identifiants utilisés (films, personnes, studios...) sont ceux d'un premier import de `data/movies.jsonl`, et les requêtes en `403` visent les données de démo des autres membres. Le code attendu est indiqué entre parenthèses dans le titre de chaque requête.
+
+Commencer par [`http/auth.http`](http/auth.http) : la requête de connexion avec `jane_doe` enregistre le token, qui est ensuite réutilisé automatiquement par les autres fichiers. Les requêtes d'un fichier se lancent de haut en bas, et [`list-items.http`](http/list-items.http), [`likes.http`](http/likes.http) et [`comments.http`](http/comments.http) demandent d'avoir d'abord créé la liste de [`lists.http`](http/lists.http). Le token expire au bout d'une heure : il suffit alors de relancer la connexion.
+
+Pour repartir de zéro : supprimer `var/data_dev.db`, puis reprendre à partir de la migration.
 
 ## Routes
 
@@ -290,7 +315,7 @@ Paramètres de `GET /api/lists`, tous facultatifs et combinables :
 
 | Paramètre | Exemple | Description |
 | --- | --- | --- |
-| `q` | `q=nolan` | Cherche dans le nom de la liste |
+| `q` | `q=top` | Cherche dans le nom de la liste |
 | `user` | `user=jane_doe` | Listes publiques d'un membre, par son username |
 | `movie` | `movie=1` | Listes qui contiennent ce film |
 | `sort` | `sort=popular` | `recent` (par défaut, plus récentes d'abord) ou `popular` (plus likées d'abord, puis plus récentes à égalité) |

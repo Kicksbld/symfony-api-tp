@@ -17,6 +17,15 @@ Content-Type: application/json
   "bio": "Surtout des films d'horreur."
 }
 
+### Reprendre le username de démo, utilisé par les autres fichiers .http (200)
+PATCH {{baseURL}}/api/me
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "username": "jane_doe"
+}
+
 ### Modification de la bio seule, le username ne change pas (200)
 PATCH {{baseURL}}/api/me
 Authorization: Bearer {{token}}

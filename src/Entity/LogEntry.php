@@ -31,7 +31,7 @@ class LogEntry
     #[Groups(['logEntry:read'])]
     private ?int $id = null;
 
-    #[ORM\ManyToOne(inversedBy: 'logEntries')]
+    #[ORM\ManyToOne]
     #[ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]
     #[Groups(['logEntry:read'])]
     #[Context(normalizationContext: ['groups' => ['user:list']])]

@@ -1,4 +1,4 @@
-# Lancer d'abord la connexion de auth.http, puis suivre un membre avec follows.http.
+# Lancer d'abord la connexion de auth.http, jane_doe suit déjà arthur et camille dans les données de démo.
 
 ### Entrées de journal des membres suivis, de la plus récente à la plus ancienne (200)
 GET {{baseURL}}/api/feed?page=1&limit=20

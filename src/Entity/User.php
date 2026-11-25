@@ -51,12 +51,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     private ?string $bio = null;
 
     /**
-     * @var Collection<int, LogEntry>
-     */
-    #[ORM\OneToMany(targetEntity: LogEntry::class, mappedBy: 'user')]
-    private Collection $logEntries;
-
-    /**
      * @var Collection<int, FavoriteMovie>
      */
     #[ORM\OneToMany(targetEntity: FavoriteMovie::class, mappedBy: 'user', cascade: ['persist'], orphanRemoval: true)]
@@ -91,7 +85,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     public function __construct()
     {
-        $this->logEntries = new ArrayCollection();
         $this->favoriteMovies = new ArrayCollection();
         $this->movieRelationships = new ArrayCollection();
         $this->following = new ArrayCollection();
@@ -160,14 +153,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         $this->bio = $bio;
 
         return $this;
-    }
-
-    /**
-     * @return Collection<int, LogEntry>
-     */
-    public function getLogEntries(): Collection
-    {
-        return $this->logEntries;
     }
 
     /**

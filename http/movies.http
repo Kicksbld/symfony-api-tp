@@ -8,7 +8,7 @@ GET {{baseURL}}/api/movies
 GET {{baseURL}}/api/movies?page=2&limit=10
 
 ### Recherche sur le titre français ou original (200)
-GET {{baseURL}}/api/movies?q=dark knight
+GET {{baseURL}}/api/movies?q=dark%20knight
 
 ### Films d'un genre (200)
 GET {{baseURL}}/api/movies?genre=1
