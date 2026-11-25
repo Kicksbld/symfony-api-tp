@@ -7,11 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PersonCard } from "@/features/people/PersonCard";
-import { peopleQuery } from "@/features/people/queries";
+import { MAX_PERSON_NAME_LENGTH, peopleQuery } from "@/features/people/queries";
 import { pageSearch, parsePage } from "@/lib/pagination";
-
-// L'API refuse une recherche de plus de 255 caractères.
-const MAX_NAME_LENGTH = 255;
 
 export function PeoplePage() {
     const [searchParams] = useSearchParams();
@@ -21,8 +18,8 @@ export function PeoplePage() {
     const page = parsePage(searchParams);
 
     // On nettoie l'adresse (lien modifié à la main) plutôt que d'envoyer une requête que l'API refuserait en 422.
-    if (page === null || name !== rawName || name.length > MAX_NAME_LENGTH) {
-        const validName = name.length > MAX_NAME_LENGTH ? "" : name;
+    if (page === null || name !== rawName || name.length > MAX_PERSON_NAME_LENGTH) {
+        const validName = name.length > MAX_PERSON_NAME_LENGTH ? "" : name;
 
         return <Navigate to={pageSearch(1, validName === "" ? {} : { q: validName })} replace />;
     }
@@ -46,7 +43,7 @@ export function PeoplePage() {
                         name="q"
                         type="search"
                         defaultValue={name}
-                        maxLength={MAX_NAME_LENGTH}
+                        maxLength={MAX_PERSON_NAME_LENGTH}
                         placeholder="Rechercher un acteur, une réalisatrice…"
                     />
                 </div>

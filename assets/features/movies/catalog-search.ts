@@ -1,4 +1,6 @@
+import { isWatchRegion } from "@/features/movies/regions";
 import { parsePositiveInteger } from "@/lib/numbers";
+import { DEFAULT_WATCH_REGION, type WatchRegion } from "@/lib/types";
 
 export const MOVIE_SORTS = [
     { value: "popular", label: "Populaires" },
@@ -11,21 +13,46 @@ export const MOVIE_SORTS = [
 export type MovieSort = (typeof MOVIE_SORTS)[number]["value"];
 
 // Le catalogue importé depuis TMDB ne contient aucun film avant 1900.
-const FIRST_DECADE = 1900;
-const LAST_DECADE = Math.floor(new Date().getFullYear() / 10) * 10;
+const FIRST_YEAR = 1900;
+const LAST_YEAR = new Date().getFullYear();
+const LAST_DECADE = Math.floor(LAST_YEAR / 10) * 10;
 export const MAX_TITLE_LENGTH = 255;
 
-export const DECADES = Array.from({ length: (LAST_DECADE - FIRST_DECADE) / 10 + 1 }, (_, index) => LAST_DECADE - index * 10);
+export const DECADES = Array.from({ length: (LAST_DECADE - FIRST_YEAR) / 10 + 1 }, (_, index) => LAST_DECADE - index * 10);
 
 export type CatalogSearch = {
     q: string;
     genre: number | null;
     decade: number | null;
+    year: number | null;
+    // Code ISO du pays de production.
+    country: string | null;
+    company: number | null;
+    person: number | null;
+    provider: number | null;
+    // Pays de diffusion de la plateforme. On le garde même sans plateforme, c'est un choix de l'utilisateur.
+    region: WatchRegion;
     sort: MovieSort;
     page: number;
 };
 
-export const DEFAULT_CATALOG_SEARCH: CatalogSearch = { q: "", genre: null, decade: null, sort: "popular", page: 1 };
+export const DEFAULT_CATALOG_SEARCH: CatalogSearch = {
+    q: "",
+    genre: null,
+    decade: null,
+    year: null,
+    country: null,
+    company: null,
+    person: null,
+    provider: null,
+    region: DEFAULT_WATCH_REGION,
+    sort: "popular",
+    page: 1,
+};
+
+const CATALOG_FILTERS = ["q", "genre", "decade", "year", "country", "company", "person", "provider"] as const;
+
+export type CatalogFilter = (typeof CATALOG_FILTERS)[number];
 
 type ParsedCatalogSearch = {
     search: CatalogSearch;
@@ -56,11 +83,22 @@ export function parseCatalogSearch(searchParams: URLSearchParams): ParsedCatalog
 
     const search: CatalogSearch = {
         q: read("q", parseTitle, ""),
-        genre: read("genre", (value) => parsePositiveInteger(value), null),
+        genre: read("genre", parsePositiveInteger, null),
         decade: read("decade", (value) => DECADES.find((decade) => String(decade) === value) ?? null, null),
+        year: read("year", parseYear, null),
+        country: read("country", (value) => (/^[A-Z]{2}$/.test(value) ? value : null), null),
+        company: read("company", parsePositiveInteger, null),
+        person: read("person", parsePositiveInteger, null),
+        provider: read("provider", parsePositiveInteger, null),
+        region: read("region", (value) => (isWatchRegion(value) ? value : null), DEFAULT_CATALOG_SEARCH.region),
         sort: read("sort", findMovieSort, DEFAULT_CATALOG_SEARCH.sort),
-        page: read("page", (value) => parsePositiveInteger(value), 1),
+        page: read("page", parsePositiveInteger, 1),
     };
+
+    if (search.year !== null && !selectableYears(search.decade).includes(search.year)) {
+        hasInvalidParams = true;
+        search.year = null;
+    }
 
     return { search, hasInvalidParams };
 }
@@ -68,20 +106,10 @@ export function parseCatalogSearch(searchParams: URLSearchParams): ParsedCatalog
 // Seuls les critères différents des valeurs par défaut apparaissent dans l'URL, pour garder des liens courts.
 export function catalogSearchParams(search: CatalogSearch): URLSearchParams {
     const params = new URLSearchParams();
-    if (search.q !== "") {
-        params.set("q", search.q);
-    }
-    if (search.genre !== null) {
-        params.set("genre", String(search.genre));
-    }
-    if (search.decade !== null) {
-        params.set("decade", String(search.decade));
-    }
-    if (search.sort !== DEFAULT_CATALOG_SEARCH.sort) {
-        params.set("sort", search.sort);
-    }
-    if (search.page !== 1) {
-        params.set("page", String(search.page));
+    for (const [name, value] of Object.entries(search)) {
+        if (value !== DEFAULT_CATALOG_SEARCH[name as keyof CatalogSearch]) {
+            params.set(name, String(value));
+        }
     }
 
     return params;
@@ -93,13 +121,41 @@ export function catalogPath(search: CatalogSearch): string {
     return params === "" ? "/" : `/?${params}`;
 }
 
-export function hasCatalogFilters(search: CatalogSearch): boolean {
-    return search.q !== "" || search.genre !== null || search.decade !== null;
+// Lien partagé depuis une fiche (personne, studio, pays) : un seul filtre, le reste par défaut.
+export function catalogPathWith(filters: Partial<CatalogSearch>): string {
+    return catalogPath({ ...DEFAULT_CATALOG_SEARCH, ...filters });
 }
 
-// Le tri n'est pas un filtre : on le garde quand on efface les critères.
+export function activeFilters(search: CatalogSearch): CatalogFilter[] {
+    return CATALOG_FILTERS.filter((filter) => search[filter] !== DEFAULT_CATALOG_SEARCH[filter]);
+}
+
+export function hasCatalogFilters(search: CatalogSearch): boolean {
+    return activeFilters(search).length > 0;
+}
+
+export function withoutFilter(search: CatalogSearch, filter: CatalogFilter): CatalogSearch {
+    return { ...search, [filter]: DEFAULT_CATALOG_SEARCH[filter], page: 1 };
+}
+
+// Le tri et le pays de diffusion ne sont pas des filtres : on les garde quand on efface les critères.
 export function withoutFilters(search: CatalogSearch): CatalogSearch {
-    return { ...DEFAULT_CATALOG_SEARCH, sort: search.sort };
+    return { ...DEFAULT_CATALOG_SEARCH, sort: search.sort, region: search.region };
+}
+
+// Les années proposées suivent la décennie choisie, pour ne pas combiner deux critères sans résultat.
+export function selectableYears(decade: number | null): number[] {
+    const newest = decade === null ? LAST_YEAR : Math.min(decade + 9, LAST_YEAR);
+    const oldest = decade ?? FIRST_YEAR;
+
+    return Array.from({ length: newest - oldest + 1 }, (_, index) => newest - index);
+}
+
+// Une année hors de la nouvelle décennie ne donnerait aucun film : on la retire.
+export function withDecade(search: CatalogSearch, decade: number | null): CatalogSearch {
+    const keepsYear = search.year !== null && selectableYears(decade).includes(search.year);
+
+    return { ...search, decade, year: keepsYear ? search.year : null };
 }
 
 export function findMovieSort(value: string): MovieSort | null {
@@ -111,4 +167,10 @@ function parseTitle(value: string): string | null {
     const title = value.trim();
 
     return title !== "" && title.length <= MAX_TITLE_LENGTH ? title : null;
+}
+
+function parseYear(value: string): number | null {
+    const year = parsePositiveInteger(value);
+
+    return year !== null && year >= FIRST_YEAR && year <= LAST_YEAR ? year : null;
 }

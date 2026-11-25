@@ -4,6 +4,9 @@ import type { MovieSummary, Paginated, PersonDetail, PersonSummary } from "@/lib
 
 export const PEOPLE_PAGE_SIZE = 24;
 
+// L'API refuse une recherche de plus de 255 caractères.
+export const MAX_PERSON_NAME_LENGTH = 255;
+
 export function peopleQuery(q: string, page: number) {
     const params = new URLSearchParams({ q, page: String(page), limit: String(PEOPLE_PAGE_SIZE) });
 

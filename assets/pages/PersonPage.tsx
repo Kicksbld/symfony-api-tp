@@ -5,6 +5,8 @@ import { PaginatedList } from "@/components/PaginatedList";
 import { QueryError } from "@/components/QueryError";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { CatalogLink } from "@/features/movies/CatalogLink";
+import { catalogPathWith } from "@/features/movies/catalog-search";
 import { MovieGrid } from "@/features/movies/MovieGrid";
 import { releaseYear } from "@/features/movies/format";
 import { personJobs, personMovieCount, type PersonJob } from "@/features/people/jobs";
@@ -68,6 +70,7 @@ function PersonSheet({ person }: { person: PersonDetail }) {
                     <p className="text-sm text-muted-foreground">
                         {movieCount.toLocaleString("fr-FR")} {movieCount > 1 ? "films" : "film"} dans le catalogue
                     </p>
+                    {movieCount > 0 && <CatalogLink to={catalogPathWith({ person: person.id })} />}
                 </div>
             </header>
             {person.cast.length > 0 && (

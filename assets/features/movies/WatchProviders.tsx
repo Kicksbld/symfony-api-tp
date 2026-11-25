@@ -4,9 +4,8 @@ import { QueryError } from "@/components/QueryError";
 import { SectionSkeleton } from "@/components/SectionSkeleton";
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
 import { movieWatchProvidersQuery } from "@/features/movies/queries";
-import { WATCH_REGIONS, type WatchProvider, type WatchProvidersByType, type WatchRegion } from "@/lib/types";
-
-const REGION_NAMES = new Intl.DisplayNames("fr-FR", { type: "region" });
+import { countryName, isWatchRegion } from "@/features/movies/regions";
+import { DEFAULT_WATCH_REGION, WATCH_REGIONS, type WatchProvider, type WatchProvidersByType, type WatchRegion } from "@/lib/types";
 
 const OFFER_TYPES: { type: keyof WatchProvidersByType; label: string }[] = [
     { type: "flatrate", label: "Abonnement" },
@@ -14,16 +13,8 @@ const OFFER_TYPES: { type: keyof WatchProvidersByType; label: string }[] = [
     { type: "buy", label: "Achat" },
 ];
 
-function regionName(region: WatchRegion): string {
-    return REGION_NAMES.of(region) ?? region;
-}
-
-function isWatchRegion(value: string): value is WatchRegion {
-    return WATCH_REGIONS.some((region) => region === value);
-}
-
 export function WatchProviders({ movieId }: { movieId: number }) {
-    const [region, setRegion] = useState<WatchRegion>("FR");
+    const [region, setRegion] = useState<WatchRegion>(DEFAULT_WATCH_REGION);
     const { data: providers, error, isFetching, isPlaceholderData, refetch } = useQuery(movieWatchProvidersQuery(movieId, region));
     const selectId = useId();
 
@@ -49,7 +40,7 @@ export function WatchProviders({ movieId }: { movieId: number }) {
                     >
                         {WATCH_REGIONS.map((code) => (
                             <NativeSelectOption key={code} value={code}>
-                                {regionName(code)}
+                                {countryName(code)}
                             </NativeSelectOption>
                         ))}
                     </NativeSelect>
@@ -62,7 +53,7 @@ export function WatchProviders({ movieId }: { movieId: number }) {
                 error === null && <SectionSkeleton label="Chargement des plateformes…" className="h-16 w-full" />
             ) : (
                 <div className="transition-opacity aria-busy:opacity-60" aria-busy={isPlaceholderData}>
-                    <ProviderOffers providers={providers} regionLabel={regionName(region)} />
+                    <ProviderOffers providers={providers} regionLabel={countryName(region)} />
                 </div>
             )}
         </section>

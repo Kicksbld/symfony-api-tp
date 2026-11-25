@@ -5,6 +5,8 @@ import { QueryError } from "@/components/QueryError";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { companyMoviesQuery, companyQuery } from "@/features/companies/queries";
+import { CatalogLink } from "@/features/movies/CatalogLink";
+import { catalogPathWith } from "@/features/movies/catalog-search";
 import { MovieGrid } from "@/features/movies/MovieGrid";
 import { ApiError } from "@/lib/api";
 import { parsePositiveInteger } from "@/lib/numbers";
@@ -88,6 +90,7 @@ function CompanyHeader({ company }: { company: Company }) {
                 <p className="text-sm text-muted-foreground">Studio</p>
                 <h1 className="text-3xl font-semibold">{company.name}</h1>
             </div>
+            <CatalogLink to={catalogPathWith({ company: company.id })} />
         </header>
     );
 }

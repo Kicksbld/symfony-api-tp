@@ -41,10 +41,16 @@ export type Company = {
     logoUrl: string | null;
 };
 
+export type Country = {
+    code: string;
+    name: string;
+};
+
 export type MovieDetail = MovieSummary & {
     overview: string | null;
     runtime: number | null;
     genres: Genre[];
+    countries: Country[];
     companies: Company[];
     cast: CastCredit[];
     crew: CrewCredit[];
@@ -65,6 +71,8 @@ export type RatingDistribution = {
 export const WATCH_REGIONS = ["FR", "BE", "CH", "CA", "US"] as const;
 
 export type WatchRegion = (typeof WATCH_REGIONS)[number];
+
+export const DEFAULT_WATCH_REGION: WatchRegion = "FR";
 
 export type WatchProvider = {
     id: number;
