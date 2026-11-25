@@ -166,7 +166,7 @@ Le profil a trois onglets, chacun avec son adresse :
 
 Sur la fiche, le bouton « Journaliser » ouvre un formulaire : date de visionnage (obligatoire, préremplie avec le jour local du navigateur), note facultative de 0,5 à 5 par demi-étoile, coup de cœur, revisionnage, critique et case « spoilers » (active seulement avec une critique). Il envoie `POST /api/log-entries` avec tous les champs, une note ou une critique vide part à `null`. Un visiteur est envoyé vers la connexion, puis revient sur la fiche.
 
-Le succès n'est affiché qu'après la réponse de l'API, avec un lien « Voir mon journal ». Mon état sur le film, la moyenne du film et les onglets et compteurs de mon profil sont alors relus : le film sort de la watchlist, passe dans les films vus et l'entrée apparaît dans le journal. En cas d'erreur, le brouillon reste dans le formulaire, même après avoir fermé la fenêtre, et les erreurs de validation (`422`) s'affichent sous les champs concernés.
+Le succès n'est affiché qu'après la réponse de l'API, avec un lien « Voir mon journal ». Mon état sur le film, la moyenne du film et les onglets et compteurs de mon profil sont alors relus : le film sort de la watchlist, passe dans les films vus et l'entrée apparaît dans le journal. En cas d'erreur, le brouillon reste dans le formulaire, même après avoir fermé la fenêtre, et les erreurs de validation (`422`) s'affichent sous les champs concernés. Il est aussi gardé dans le `sessionStorage` de l'onglet, par membre et par film : si la session expire pendant la saisie, le membre se reconnecte et retrouve son brouillon sur la fiche. Il est effacé après l'enregistrement.
 
 Dans mon journal, chaque entrée a les boutons « Modifier » et « Supprimer ». Les autres visiteurs ne les voient pas, et l'API répond de toute façon `403` à un autre membre. La modification envoie `PATCH /api/log-entries/{id}` avec tous les champs. La suppression demande une confirmation puis envoie `DELETE /api/log-entries/{id}`. Le front ne calcule pas lui-même mon état sur le film : il relit les mêmes vues qu'à la création, et c'est l'API qui applique ses règles (seule la dernière entrée change la note et le coup de cœur, une suppression laisse le film vu).
 
@@ -523,7 +523,7 @@ Règles de validation :
 - `rating` : de `0.5` à `5` par pas de `0.5`, ou `null`.
 - `watched`, `liked`, `inWatchlist`, `rewatch`, `containsSpoilers` : booléens.
 - `movie` : identifiant d'un film existant, une seule fois par liste.
-- `watchedOn` : date au format `AAAA-MM-JJ`, pas dans le futur, ou `null`.
+- `watchedOn` : date au format `AAAA-MM-JJ` ou `null`. Le serveur est en UTC et accepte jusqu'au lendemain, pour qu'un membre en avance sur l'UTC (en France après minuit) puisse journaliser à la date de son jour.
 - `review` : texte non vide de 10 000 caractères maximum, ou `null`.
 - `name` (liste) : texte non vide de 100 caractères maximum.
 - `description` (liste) : texte non vide de 1 000 caractères maximum, ou `null`.

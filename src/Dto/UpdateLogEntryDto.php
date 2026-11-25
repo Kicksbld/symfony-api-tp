@@ -13,7 +13,8 @@ use Symfony\Component\Validator\Constraints as Assert;
 final readonly class UpdateLogEntryDto
 {
     public function __construct(
-        #[Assert\LessThanOrEqual('today')]
+        // Le serveur est en UTC : en France après minuit, le jour local est déjà « demain » pour lui.
+        #[Assert\LessThanOrEqual('tomorrow')]
         public ?\DateTimeImmutable $watchedOn = null,
 
         #[StarRating]

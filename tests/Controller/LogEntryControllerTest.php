@@ -98,6 +98,11 @@ final class LogEntryControllerTest extends ApiTestCase
         self::assertSame([$expectedPropertyPath], array_column($data['violations'], 'propertyPath'));
     }
 
+    public function testAcceptsTomorrowInUtcForMembersAheadOfTheServer(): void
+    {
+        $this->logMovie(['watchedOn' => new \DateTimeImmutable('tomorrow')->format('Y-m-d')]);
+    }
+
     public static function provideInvalidCreatePayloads(): iterable
     {
         yield 'missing movie' => [['movie' => null], 'movie'];

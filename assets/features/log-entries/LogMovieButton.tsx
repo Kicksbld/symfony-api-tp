@@ -35,7 +35,7 @@ export function LogMovieButton({ movie }: { movie: MovieSummary }) {
 
 function MemberLogMovieButton({ session, movie }: { session: Session; movie: MovieSummary }) {
     const [open, setOpen] = useState(false);
-    const { draft, setDraft, errors, reset, submit } = useLogEntryDraft(newDraft);
+    const { draft, change, errors, reset, submit } = useLogEntryDraft(newDraft, `log-entry-draft:${session.user.id}:${movie.id}`);
     const [logged, setLogged] = useState(false);
     const createLogEntry = useCreateLogEntryMutation(session, movie.id);
 
@@ -86,7 +86,7 @@ function MemberLogMovieButton({ session, movie }: { session: Session; movie: Mov
                         errors={errors}
                         submitting={createLogEntry.isPending}
                         submitLabel="Enregistrer le visionnage"
-                        onChange={setDraft}
+                        onChange={change}
                         onSubmit={() => void save()}
                     />
                 )}

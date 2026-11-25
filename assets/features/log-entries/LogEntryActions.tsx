@@ -43,7 +43,7 @@ export function LogEntryActions({ entry }: { entry: LogEntry }) {
 
 function EditLogEntryButton({ session, entry }: { session: Session; entry: LogEntry }) {
     const [open, setOpen] = useState(false);
-    const { draft, setDraft, errors, reset, submit } = useLogEntryDraft(() => draftFromEntry(entry));
+    const { draft, change, errors, reset, submit } = useLogEntryDraft(() => draftFromEntry(entry));
     const updateLogEntry = useUpdateLogEntryMutation(session, entry);
 
     // Chaque ouverture repart de l'entrée enregistrée, un brouillon abandonné n'est pas gardé.
@@ -77,7 +77,7 @@ function EditLogEntryButton({ session, entry }: { session: Session; entry: LogEn
                     errors={errors}
                     submitting={updateLogEntry.isPending}
                     submitLabel="Enregistrer les modifications"
-                    onChange={setDraft}
+                    onChange={change}
                     onSubmit={() => void save()}
                 />
             </LogEntryDialogContent>
