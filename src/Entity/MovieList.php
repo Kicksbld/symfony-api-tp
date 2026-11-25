@@ -128,7 +128,6 @@ class MovieList
         return $this->items->count();
     }
 
-    // Le film est ajouté à la fin de la liste.
     public function addItem(Movie $movie): MovieListItem
     {
         $item = new MovieListItem($this, $movie, $this->items->count() + 1);

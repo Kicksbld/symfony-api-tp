@@ -119,9 +119,22 @@ Authorization: Bearer {{token}}
 ### Supprimer sans token (401)
 DELETE {{baseURL}}/api/lists/{{movieListId}}
 
+### Créer une liste à supprimer, pour garder la première pour list-items.http (201)
+POST {{baseURL}}/api/lists
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "Liste temporaire"
+}
+
+> {%
+  client.global.set("movieListToDeleteId", response.body.id);
+%}
+
 ### Supprimer ma liste et ses films (204)
-DELETE {{baseURL}}/api/lists/{{movieListId}}
+DELETE {{baseURL}}/api/lists/{{movieListToDeleteId}}
 Authorization: Bearer {{token}}
 
 ### Lire la liste supprimée (404)
-GET {{baseURL}}/api/lists/{{movieListId}}
+GET {{baseURL}}/api/lists/{{movieListToDeleteId}}
