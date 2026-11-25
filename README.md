@@ -136,6 +136,12 @@ Le code est dans [`assets/`](assets) :
 
 La page d'origine passe d'un écran à l'autre dans le paramètre `redirect` (par exemple `/login?redirect=%2F%3Fpage%3D2`), avec son chemin et ses paramètres. Seuls les chemins du site sont acceptés : une adresse externe ou absente renvoie vers l'accueil. Quand l'API refuse le token (`401`), le membre est renvoyé vers `/login` et revient ensuite sur la page où il était. Le retour ne rejoue aucune action : le membre la relance lui-même.
 
+#### Catalogue
+
+L'accueil `/` liste les films avec `GET /api/movies`, triés par popularité par défaut. On peut chercher par titre, filtrer par genre (liste lue avec `GET /api/genres`) et par décennie, et changer le tri (populaires, tendances de la semaine, mieux notés, plus récents, titre). Les critères et la page vivent dans l'URL, par exemple `/?q=nuit&genre=18&decade=1990&sort=rating&page=2` : un rechargement, un lien partagé ou les boutons Précédent et Suivant du navigateur retrouvent la même recherche. Seuls les critères différents des valeurs par défaut sont écrits dans l'URL, et changer un critère revient à la page 1.
+
+Un paramètre invalide (genre inconnu, décennie hors liste, tri ou page qui ne sont pas reconnus) est retiré de l'adresse avec un message, au lieu d'envoyer une requête que l'API refuserait en `422`. Une page au-delà de la dernière propose d'aller à la dernière page, et une recherche sans résultat propose d'effacer les filtres.
+
 #### Thème et navigation
 
 Les couleurs, polices et rayons viennent d'un thème [TweakCN](https://tweakcn.com), appliqué dans [`assets/app.css`](assets/app.css) avec :
