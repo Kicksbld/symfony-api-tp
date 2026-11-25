@@ -509,17 +509,6 @@ php bin/phpunit
 
 Les tests fonctionnels envoient de vraies requêtes HTTP à l'API. Ils utilisent une base SQLite séparée (`var/data_test.db`), créée automatiquement au premier lancement, et chaque test tourne dans une transaction annulée à la fin. Les commandes TMDB sont testées sans réseau : les appels à TMDB sont remplacés par des réponses enregistrées dans [`tests/Fixtures/tmdb`](tests/Fixtures/tmdb).
 
-### Tests du front au navigateur
-
-Démarrer Symfony sur `http://127.0.0.1:8000` avec le catalogue et les comptes de démonstration. Servir le front avec `npm run dev` ou le construire avec `npm run build`, puis lancer les tests.
-
-```bash
-npm exec playwright install chromium
-npm run test:browser
-```
-
-Les tests vérifient la pagination pendant une réponse lente, la relance après une erreur, puis la connexion avec Jane et Arthur. Ils vérifient aussi l'annulation d'une lecture du premier compte, une réponse de connexion tardive entre deux onglets et l'expiration de la session. Pour l'inscription et la connexion, ils vérifient le retour à la page d'origine, le refus des destinations externes, les erreurs de validation et le repli quand la connexion échoue après l'inscription. Ces tests créent de vrais comptes dans la base de développement, avec un pseudo différent à chaque lancement.
-
 ## Qualité du code
 
 ```bash
