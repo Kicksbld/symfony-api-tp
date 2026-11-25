@@ -25,6 +25,9 @@ export function MainNavigation({ layout, id, className, onNavigate }: MainNaviga
             <NavLink to="/" end className={navigationItemClassName(layout)} onClick={onNavigate}>
                 Films
             </NavLink>
+            <NavLink to="/people" className={navigationItemClassName(layout)} onClick={onNavigate}>
+                Personnes
+            </NavLink>
             {session === null ? (
                 <NavLink to={authPath("/login", returnPathFor(location))} className={navigationItemClassName(layout, "outline")} onClick={onNavigate}>
                     Connexion
