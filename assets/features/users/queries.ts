@@ -55,12 +55,17 @@ export function movieRelationshipsQuery(username: string, list: MovieRelationshi
     });
 }
 
-export function profileListsQuery(username: string, page: number, ownerSession: Session | null) {
-    const params = new URLSearchParams(pageParams(page));
+export function profileListsKey(username: string, ownerSession: Session | null) {
     const scope = ownerSession === null ? [] : sessionKey(ownerSession);
 
+    return [...scope, ...userKey(username, "lists")] as const;
+}
+
+export function profileListsQuery(username: string, page: number, ownerSession: Session | null) {
+    const params = new URLSearchParams(pageParams(page));
+
     return queryOptions({
-        queryKey: [...scope, ...userKey(username, "lists"), { page }],
+        queryKey: [...profileListsKey(username, ownerSession), { page }],
         queryFn: ({ signal }) =>
             apiFetch<Paginated<MovieList>>(`${userPath(username, "lists")}?${params}`, { signal, session: ownerSession }),
         placeholderData: keepPreviousData,

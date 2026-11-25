@@ -8,6 +8,7 @@ const MAX_PAGE_SIZE = 100;
 export type Violation = {
     propertyPath: string;
     title: string;
+    type?: string;
 };
 
 export class ApiError extends Error {

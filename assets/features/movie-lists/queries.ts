@@ -8,8 +8,12 @@ import type { Paginated } from "@/lib/types";
 
 const PAGE_SIZE = "20";
 
-function listScope(session: Session | null) {
-    return session === null ? [] : sessionKey(session);
+export const listDirectoryKey = ["lists", "directory"] as const;
+
+export function listDetailKey(id: number, session: Session | null) {
+    const scope = session === null ? [] : sessionKey(session);
+
+    return [...scope, "lists", id] as const;
 }
 
 function pageParams(page: number): Record<string, string> {
@@ -20,7 +24,7 @@ export function publicListsQuery(filters: ListFilters, page: number) {
     const params = new URLSearchParams({ ...listFilterParams(filters), ...pageParams(page), sort: filters.sort });
 
     return queryOptions({
-        queryKey: ["lists", "directory", { ...filters, page }],
+        queryKey: [...listDirectoryKey, { ...filters, page }],
         queryFn: ({ signal }) => apiFetch<Paginated<MovieList>>(`/lists?${params}`, { signal, session: null }),
         placeholderData: keepPreviousData,
     });
@@ -28,7 +32,7 @@ export function publicListsQuery(filters: ListFilters, page: number) {
 
 export function listDetailQuery(id: number, session: Session | null) {
     return queryOptions({
-        queryKey: [...listScope(session), "lists", id],
+        queryKey: listDetailKey(id, session),
         queryFn: ({ signal }) => apiFetch<MovieList>(`/lists/${id}`, { signal, session }),
     });
 }
@@ -37,7 +41,7 @@ export function listItemsQuery(id: number, page: number, session: Session | null
     const params = new URLSearchParams(pageParams(page));
 
     return queryOptions({
-        queryKey: [...listScope(session), "lists", id, "items", { page }],
+        queryKey: [...listDetailKey(id, session), "items", { page }],
         queryFn: ({ signal }) => apiFetch<Paginated<MovieListItem>>(`/lists/${id}/items?${params}`, { signal, session }),
         placeholderData: keepPreviousData,
     });

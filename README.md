@@ -193,6 +193,12 @@ Le lien « Listes » de la navigation ouvre l'annuaire public `/lists`, lu avec 
 
 La fiche `/lists/{id}` lit `GET /api/lists/{id}` et `GET /api/lists/{id}/items`. Elle affiche les films dans l'ordre renvoyé par l'API, avec leur position pour les listes classées et la note de l'auteur si elle existe. Les films et les listes sont paginés par 20. Le badge « Privée » apparaît sur le profil du propriétaire et sur la fiche qui lui est accessible. Pour les autres visiteurs, le lien direct d'une liste privée affiche « Liste introuvable », comme pour une liste absente.
 
+#### Gérer ses listes
+
+Une fois connecté, le bouton « Créer une liste » est disponible dans l’annuaire et dans l’onglet « Listes » de son profil. Le formulaire permet de choisir le nom, la description facultative, la visibilité et l’affichage du classement. Le propriétaire peut modifier ces réglages depuis la fiche ou supprimer la liste après confirmation.
+
+Sur la fiche, le propriétaire peut rechercher un film à ajouter, écrire une note de texte, l’effacer en laissant le champ vide ou retirer le film. Les boutons « Monter » et « Descendre » fonctionnent au clavier et déplacent le film d’une position dans la liste entière, y compris entre deux pages.
+
 #### Modification du profil
 
 Depuis son propre profil, le membre connecté peut ouvrir « Modifier mon profil » (`/settings/profile`). Le pseudo et la bio sont enregistrés avec `PATCH /api/me`. Une bio vide efface la bio existante. Si le pseudo change, la navigation et le lien « Voir mon profil public » utilisent la nouvelle adresse.

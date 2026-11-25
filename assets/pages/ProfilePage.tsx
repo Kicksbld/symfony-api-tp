@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/features/auth/auth";
 import { DiaryEntry } from "@/features/log-entries/DiaryEntry";
+import { CreateListButton } from "@/features/movie-lists/CreateListButton";
 import { ListResults } from "@/features/movie-lists/ListResults";
 import { MovieGrid } from "@/features/movies/MovieGrid";
 import { DiaryFilterControls } from "@/features/users/DiaryFilterControls";
@@ -153,17 +154,20 @@ export function ProfileListsTab() {
     }
 
     return (
-        <PaginatedList
-            key={`${username}:${ownerSession?.cacheId ?? "public"}`}
-            query={profileListsQuery(username, page, ownerSession)}
-            page={page}
-            pathForPage={pageSearch}
-            label="Pagination des listes du profil"
-            emptyMessage={ownerSession === null ? "Ce membre n’a aucune liste publique." : "Vous n’avez encore aucune liste."}
-            errorMessage={TAB_ERROR_MESSAGE}
-        >
-            {(lists) => <ListResults lists={lists} />}
-        </PaginatedList>
+        <div className="space-y-4">
+            {ownerSession !== null && <CreateListButton session={ownerSession} />}
+            <PaginatedList
+                key={`${username}:${ownerSession?.cacheId ?? "public"}`}
+                query={profileListsQuery(username, page, ownerSession)}
+                page={page}
+                pathForPage={pageSearch}
+                label="Pagination des listes du profil"
+                emptyMessage={ownerSession === null ? "Ce membre n’a aucune liste publique." : "Vous n’avez encore aucune liste."}
+                errorMessage={TAB_ERROR_MESSAGE}
+            >
+                {(lists) => <ListResults lists={lists} />}
+            </PaginatedList>
+        </div>
     );
 }
 
