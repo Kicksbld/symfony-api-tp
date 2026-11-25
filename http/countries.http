@@ -1,0 +1,5 @@
+### Pays de production des films, par ordre alphabétique (200)
+GET {{baseURL}}/api/countries?limit=100
+
+### Pagination invalide (422)
+GET {{baseURL}}/api/countries?page=-1

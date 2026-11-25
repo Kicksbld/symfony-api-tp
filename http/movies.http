@@ -1,0 +1,59 @@
+# Les identifiants (films, genres, studios, plateformes) dépendent de la base : les récupérer d'abord avec
+# GET /api/movies, GET /api/genres et GET /api/watch-providers, puis les reporter dans les requêtes.
+
+### Liste des films, les plus populaires d'abord (200)
+GET {{baseURL}}/api/movies
+
+### Deuxième page de 10 films (200)
+GET {{baseURL}}/api/movies?page=2&limit=10
+
+### Recherche sur le titre français ou original (200)
+GET {{baseURL}}/api/movies?q=dark knight
+
+### Films d'un genre (200)
+GET {{baseURL}}/api/movies?genre=1
+
+### Films des années 1990 (200)
+GET {{baseURL}}/api/movies?decade=1990
+
+### Films sortis en 2010 (200)
+GET {{baseURL}}/api/movies?year=2010
+
+### Films produits en France, du plus récent au plus ancien (200)
+GET {{baseURL}}/api/movies?country=FR&sort=releaseDate
+
+### Films d'un studio, par ordre alphabétique (200)
+GET {{baseURL}}/api/movies?company=1&sort=title
+
+### Films disponibles sur une plateforme en France (200)
+GET {{baseURL}}/api/movies?provider=1
+
+### Films disponibles sur une plateforme en Belgique (200)
+GET {{baseURL}}/api/movies?provider=1&region=BE
+
+### Pagination invalide : page à 0 et limite au-dessus de 100 (422)
+GET {{baseURL}}/api/movies?page=0&limit=101
+
+### Filtres invalides : décennie qui ne commence pas par 0, pays inconnu, pays de diffusion non importé (422)
+GET {{baseURL}}/api/movies?decade=1995&country=XX&region=JP
+
+### Tri inconnu (422)
+GET {{baseURL}}/api/movies?sort=random
+
+### Fiche complète d'un film (200)
+GET {{baseURL}}/api/movies/1
+
+### Fiche d'un film qui n'existe pas (404)
+GET {{baseURL}}/api/movies/999999
+
+### Où regarder un film en France, par type d'offre (200)
+GET {{baseURL}}/api/movies/1/watch-providers
+
+### Où regarder un film aux États-Unis (200)
+GET {{baseURL}}/api/movies/1/watch-providers?region=US
+
+### Où regarder dans un pays non importé (422)
+GET {{baseURL}}/api/movies/1/watch-providers?region=JP
+
+### Où regarder un film qui n'existe pas (404)
+GET {{baseURL}}/api/movies/999999/watch-providers

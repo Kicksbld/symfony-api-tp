@@ -12,6 +12,11 @@ use Doctrine\ORM\Mapping as ORM;
 #[ORM\Entity(repositoryClass: MovieWatchProviderRepository::class)]
 class MovieWatchProvider
 {
+    // Pays de diffusion importés depuis TMDB.
+    public const array REGIONS = ['FR', 'BE', 'CH', 'CA', 'US'];
+
+    public const string DEFAULT_REGION = 'FR';
+
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]

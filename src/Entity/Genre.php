@@ -4,6 +4,7 @@ namespace App\Entity;
 
 use App\Repository\GenreRepository;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Attribute\Groups;
 
 #[ORM\Entity(repositoryClass: GenreRepository::class)]
 class Genre
@@ -11,12 +12,14 @@ class Genre
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    #[Groups(['genre:read', 'movie:read'])]
     private ?int $id = null;
 
     #[ORM\Column(unique: true)]
     private ?int $tmdbId = null;
 
     #[ORM\Column(length: 100)]
+    #[Groups(['genre:read', 'movie:read'])]
     private ?string $name = null;
 
     public function getId(): ?int

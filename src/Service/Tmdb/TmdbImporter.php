@@ -21,8 +21,6 @@ use Doctrine\ORM\EntityManagerInterface;
  */
 final class TmdbImporter
 {
-    private const array WATCH_REGIONS = ['FR', 'BE', 'CH', 'CA', 'US'];
-
     private const int CAST_LIMIT = 15;
 
     // Postes importés, dans l'ordre d'affichage de l'équipe.
@@ -214,7 +212,7 @@ final class TmdbImporter
     {
         $movieWatchProviders = [];
 
-        foreach (self::WATCH_REGIONS as $region) {
+        foreach (MovieWatchProvider::REGIONS as $region) {
             foreach (WatchProviderType::cases() as $type) {
                 foreach ($watchProvidersByRegion[$region][$type->value] ?? [] as $watchProviderData) {
                     $movieWatchProviders[] = (new MovieWatchProvider())

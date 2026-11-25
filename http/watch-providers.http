@@ -1,0 +1,8 @@
+### Plateformes disponibles en France (200)
+GET {{baseURL}}/api/watch-providers
+
+### Plateformes disponibles au Canada, 50 par page (200)
+GET {{baseURL}}/api/watch-providers?region=CA&limit=50
+
+### Pays de diffusion non importé (422)
+GET {{baseURL}}/api/watch-providers?region=JP
