@@ -7,8 +7,6 @@ namespace App\Model;
  */
 final readonly class RatingDistribution
 {
-    private const int MAX_HALF_STARS = 10;
-
     /**
      * @var list<array{rating: float, count: int}>
      */
@@ -27,15 +25,15 @@ final readonly class RatingDistribution
         $count = 0;
         $halfStarsSum = 0;
 
-        foreach (range(1, self::MAX_HALF_STARS) as $halfStars) {
+        foreach (range(1, Rating::MAX_HALF_STARS) as $halfStars) {
             $ratingCount = $countsByHalfStars[$halfStars] ?? 0;
-            $histogram[] = ['rating' => $halfStars / 2, 'count' => $ratingCount];
+            $histogram[] = ['rating' => Rating::toStars($halfStars), 'count' => $ratingCount];
             $count += $ratingCount;
             $halfStarsSum += $halfStars * $ratingCount;
         }
 
         $this->histogram = $histogram;
         $this->count = $count;
-        $this->average = 0 === $count ? null : round($halfStarsSum / $count / 2, 2);
+        $this->average = 0 === $count ? null : round(Rating::toStars($halfStarsSum / $count), 2);
     }
 }

@@ -3,6 +3,7 @@
 namespace App\Entity;
 
 use App\Entity\Trait\TimestampableTrait;
+use App\Model\Rating;
 use App\Repository\MovieRelationshipRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
@@ -36,7 +37,6 @@ class MovieRelationship
     #[Groups(['movieRelationship:read'])]
     private bool $liked = false;
 
-    // Stockée en demi-étoiles (1 à 10) pour garder un entier en base, l'API parle en étoiles (0.5 à 5).
     #[ORM\Column(type: Types::SMALLINT, nullable: true)]
     private ?int $rating = null;
 
@@ -92,12 +92,12 @@ class MovieRelationship
     #[Groups(['movieRelationship:read'])]
     public function getRating(): ?float
     {
-        return null === $this->rating ? null : $this->rating / 2;
+        return null === $this->rating ? null : Rating::toStars($this->rating);
     }
 
     public function setRating(?float $rating): static
     {
-        $this->rating = null === $rating ? null : (int) round($rating * 2);
+        $this->rating = null === $rating ? null : Rating::toHalfStars($rating);
 
         return $this;
     }

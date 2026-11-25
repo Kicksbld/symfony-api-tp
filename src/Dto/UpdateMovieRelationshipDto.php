@@ -2,6 +2,7 @@
 
 namespace App\Dto;
 
+use App\Model\Rating;
 use Symfony\Component\Validator\Constraints as Assert;
 
 /**
@@ -15,8 +16,8 @@ final readonly class UpdateMovieRelationshipDto
 
         public ?bool $liked = null,
 
-        #[Assert\Range(min: 0.5, max: 5)]
-        #[Assert\DivisibleBy(0.5)]
+        #[Assert\Range(min: Rating::MIN_STARS, max: Rating::MAX_STARS)]
+        #[Assert\DivisibleBy(Rating::STEP)]
         public ?float $rating = null,
 
         public ?bool $inWatchlist = null,
