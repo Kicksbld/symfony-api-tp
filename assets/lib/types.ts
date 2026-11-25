@@ -13,6 +13,11 @@ export type MovieSummary = {
     posterUrl: string | null;
 };
 
+export type Genre = {
+    id: number;
+    name: string;
+};
+
 export type CurrentUser = {
     id: number;
     username: string;
