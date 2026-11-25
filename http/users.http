@@ -34,8 +34,20 @@ GET {{baseURL}}/api/users/nobody/diary
 ### Films vus, avec la note et le coup de coeur du membre (200)
 GET {{baseURL}}/api/users/jane_doe/watched
 
+### Films vus avec une page invalide (422)
+GET {{baseURL}}/api/users/jane_doe/watched?page=0
+
+### Films vus d'un membre inconnu (404)
+GET {{baseURL}}/api/users/nobody/watched
+
 ### Films aimés (200)
 GET {{baseURL}}/api/users/jane_doe/likes
+
+### Films aimés avec une limite trop grande (422)
+GET {{baseURL}}/api/users/jane_doe/likes?limit=101
+
+### Films aimés d'un membre inconnu (404)
+GET {{baseURL}}/api/users/nobody/likes
 
 ### Watchlist (200)
 GET {{baseURL}}/api/users/jane_doe/watchlist?page=1&limit=10
@@ -52,6 +64,9 @@ GET {{baseURL}}/api/users/jane_doe/lists
 ### Listes du membre vues par lui-même : les privées sont incluses (200)
 GET {{baseURL}}/api/users/jane_doe/lists
 Authorization: Bearer {{token}}
+
+### Listes avec une page invalide (422)
+GET {{baseURL}}/api/users/jane_doe/lists?page=0
 
 ### Listes d'un membre inconnu (404)
 GET {{baseURL}}/api/users/nobody/lists

@@ -88,7 +88,8 @@ class LogEntryRepository extends ServiceEntityRepository
         return $this->orderByMostRecent($queryBuilder)->getQuery()->getOneOrNullResult();
     }
 
-    // Plusieurs entrées peuvent être créées dans la même seconde : l'identifiant départage.
+    // Complète le tri déjà posé, s'il y en a un. Plusieurs entrées peuvent être créées dans la même seconde :
+    // l'identifiant départage.
     private function orderByMostRecent(QueryBuilder $queryBuilder): QueryBuilder
     {
         return $queryBuilder

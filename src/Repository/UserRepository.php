@@ -35,10 +35,11 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
     {
         $queryBuilder = $this->createQueryBuilder('user')->orderBy('user.username', 'ASC');
 
+        // _ est autorisé dans un username mais sert de joker à LIKE : on l'échappe pour le chercher tel quel.
         if (null !== $userSearchDto->q) {
             $queryBuilder
-                ->andWhere('user.username LIKE :q')
-                ->setParameter('q', '%'.$userSearchDto->q.'%');
+                ->andWhere("user.username LIKE :q ESCAPE '\\'")
+                ->setParameter('q', '%'.addcslashes($userSearchDto->q, '%_\\').'%');
         }
 
         return $queryBuilder;

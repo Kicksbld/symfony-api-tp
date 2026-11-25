@@ -34,6 +34,21 @@ final class UserControllerTest extends ApiTestCase
         self::assertSame(Response::HTTP_NOT_FOUND, $data['status']);
     }
 
+    #[DataProvider('provideProfilePages')]
+    public function testProfilePageOfAnUnknownMemberReturnsNotFound(string $page): void
+    {
+        $this->requestJson('GET', '/api/users/nobody/'.$page);
+
+        self::assertResponseStatusCodeSame(Response::HTTP_NOT_FOUND);
+    }
+
+    public static function provideProfilePages(): iterable
+    {
+        foreach (['diary', 'watched', 'likes', 'watchlist', 'lists'] as $page) {
+            yield $page => [$page];
+        }
+    }
+
     public function testProfileShowsTheFavoritesInOrderAndTheNumberOfMoviesWatched(): void
     {
         $this->importMovieCatalog();
@@ -67,6 +82,16 @@ final class UserControllerTest extends ApiTestCase
         self::assertSame(2, $data['total']);
         self::assertSame(2, $data['lastPage']);
         self::assertSame([['id' => $arthur->getId(), 'username' => 'arthur_films']], $data['items']);
+    }
+
+    public function testSearchMatchesAnUnderscoreLiterally(): void
+    {
+        UserFactory::createOne(['username' => 'jane_doe']);
+        UserFactory::createOne(['username' => 'janexdoe']);
+
+        $data = $this->requestJson('GET', '/api/users?q=e_d');
+
+        self::assertSame(['jane_doe'], array_column($data['items'], 'username'));
     }
 
     public function testSearchRejectsATooLongQuery(): void
@@ -131,13 +156,6 @@ final class UserControllerTest extends ApiTestCase
         yield 'year out of range' => ['year=99999', 'year'];
     }
 
-    public function testDiaryOfAnUnknownMemberReturnsNotFound(): void
-    {
-        $this->requestJson('GET', '/api/users/nobody/diary');
-
-        self::assertResponseStatusCodeSame(Response::HTTP_NOT_FOUND);
-    }
-
     public function testProfileListsTheWatchedLikedAndWatchlistedMoviesFromTheMostRecent(): void
     {
         $this->importMovieCatalog();
@@ -164,13 +182,6 @@ final class UserControllerTest extends ApiTestCase
         $watchlist = $this->requestJson('GET', '/api/users/cobb/watchlist?limit=1');
         self::assertSame(1, $watchlist['total']);
         self::assertSame([$pulpFictionId], array_column(array_column($watchlist['items'], 'movie'), 'id'));
-    }
-
-    public function testWatchlistOfAnUnknownMemberReturnsNotFound(): void
-    {
-        $this->requestJson('GET', '/api/users/nobody/watchlist');
-
-        self::assertResponseStatusCodeSame(Response::HTTP_NOT_FOUND);
     }
 
     public function testOthersOnlySeeThePublicListsOfAMember(): void

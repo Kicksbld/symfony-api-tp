@@ -2,6 +2,7 @@
 
 namespace App\Entity;
 
+use App\Entity\Trait\TimestampableTrait;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
@@ -10,8 +11,11 @@ use Doctrine\ORM\Mapping as ORM;
 #[ORM\Entity]
 #[ORM\UniqueConstraint(fields: ['user', 'movie'])]
 #[ORM\UniqueConstraint(fields: ['user', 'position'])]
+#[ORM\HasLifecycleCallbacks]
 class FavoriteMovie
 {
+    use TimestampableTrait;
+
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
@@ -40,18 +44,8 @@ class FavoriteMovie
         return $this->id;
     }
 
-    public function getUser(): ?User
-    {
-        return $this->user;
-    }
-
     public function getMovie(): ?Movie
     {
         return $this->movie;
-    }
-
-    public function getPosition(): int
-    {
-        return $this->position;
     }
 }
