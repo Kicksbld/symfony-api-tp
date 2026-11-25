@@ -1,0 +1,35 @@
+# Les identifiants des personnes dépendent de la base : les récupérer d'abord avec GET /api/people?q=
+# ou dans la distribution et l'équipe d'une fiche film.
+
+### Recherche d'une personne par son nom (200)
+GET {{baseURL}}/api/people?q=nolan
+
+### Toutes les personnes par ordre alphabétique, deuxième page (200)
+GET {{baseURL}}/api/people?page=2&limit=10
+
+### Pagination invalide (422)
+GET {{baseURL}}/api/people?page=0&limit=101
+
+### Fiche d'une personne avec ses rôles et ses films par poste (200)
+GET {{baseURL}}/api/people/1
+
+### Fiche d'une personne qui n'existe pas (404)
+GET {{baseURL}}/api/people/999999
+
+### Tous les films d'une personne, du plus récent au plus ancien (200)
+GET {{baseURL}}/api/people/1/movies
+
+### Films où la personne joue (200)
+GET {{baseURL}}/api/people/1/movies?job=Actor
+
+### Films réalisés par la personne (200)
+GET {{baseURL}}/api/people/1/movies?job=Director
+
+### Films composés par la personne, 5 par page (200)
+GET {{baseURL}}/api/people/1/movies?job=Original Music Composer&limit=5
+
+### Poste de plus de 100 caractères (422)
+GET {{baseURL}}/api/people/1/movies?job=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+
+### Films d'une personne qui n'existe pas (404)
+GET {{baseURL}}/api/people/999999/movies

@@ -3,7 +3,10 @@
 namespace App\Repository;
 
 use App\Dto\MovieSearchDto;
+use App\Dto\PersonMovieSearchDto;
 use App\Entity\Movie;
+use App\Entity\Person;
+use App\Enum\CreditType;
 use App\Enum\MovieSort;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\DBAL\Types\Types;
@@ -58,6 +61,10 @@ class MovieRepository extends ServiceEntityRepository
                 ->setParameter('company', $movieSearchDto->company);
         }
 
+        if (null !== $movieSearchDto->person) {
+            $this->filterByPerson($queryBuilder, $movieSearchDto->person);
+        }
+
         // Un film peut être à la fois en location et à l'achat sur la même plateforme : le Paginator dédoublonne.
         if (null !== $movieSearchDto->provider) {
             $queryBuilder
@@ -76,6 +83,27 @@ class MovieRepository extends ServiceEntityRepository
 
         // Départage les égalités pour que l'ordre reste stable d'une page à l'autre.
         return $queryBuilder->addOrderBy('movie.id', 'ASC');
+    }
+
+    public function createFilmographyQueryBuilder(Person $person, PersonMovieSearchDto $personMovieSearchDto): QueryBuilder
+    {
+        $queryBuilder = $this->createQueryBuilder('movie');
+        $this->filterByPerson($queryBuilder, $person->getId());
+
+        $job = $personMovieSearchDto->job;
+        if (PersonMovieSearchDto::ACTOR_JOB === $job) {
+            $queryBuilder
+                ->andWhere('credit.type = :creditType')
+                ->setParameter('creditType', CreditType::Cast);
+        } elseif (null !== $job) {
+            $queryBuilder
+                ->andWhere('credit.job = :job')
+                ->setParameter('job', $job);
+        }
+
+        return $queryBuilder
+            ->orderBy('movie.releaseDate', 'DESC')
+            ->addOrderBy('movie.id', 'ASC');
     }
 
     /**
@@ -97,5 +125,14 @@ class MovieRepository extends ServiceEntityRepository
             ->andWhere(\sprintf('movie.releaseDate >= :%1$sStart AND movie.releaseDate < :%1$sEnd', $name))
             ->setParameter($name.'Start', new \DateTimeImmutable($firstYear.'-01-01'), Types::DATE_IMMUTABLE)
             ->setParameter($name.'End', new \DateTimeImmutable(($firstYear + $yearCount).'-01-01'), Types::DATE_IMMUTABLE);
+    }
+
+    // Une personne peut avoir plusieurs crédits sur un même film (réalisateur et scénariste) : le Paginator dédoublonne.
+    private function filterByPerson(QueryBuilder $queryBuilder, int $personId): void
+    {
+        $queryBuilder
+            ->innerJoin('movie.credits', 'credit')
+            ->andWhere('IDENTITY(credit.person) = :person')
+            ->setParameter('person', $personId);
     }
 }

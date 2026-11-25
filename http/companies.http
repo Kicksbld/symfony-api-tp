@@ -1,0 +1,10 @@
+# Les identifiants des studios sont dans la fiche d'un film (GET /api/movies/{id}, champ companies).
+
+### Fiche d'un studio (200)
+GET {{baseURL}}/api/companies/1
+
+### Films d'un studio, via le filtre du catalogue (200)
+GET {{baseURL}}/api/movies?company=1
+
+### Studio qui n'existe pas (404)
+GET {{baseURL}}/api/companies/999999
