@@ -16,7 +16,8 @@ final readonly class CreateLogEntryDto
         #[EntityExists(Movie::class)]
         public ?int $movie = null,
 
-        #[Assert\LessThanOrEqual('today')]
+        // Le serveur est en UTC : en France après minuit, le jour local est déjà « demain » pour lui.
+        #[Assert\LessThanOrEqual('tomorrow')]
         public ?\DateTimeImmutable $watchedOn = null,
 
         #[StarRating]

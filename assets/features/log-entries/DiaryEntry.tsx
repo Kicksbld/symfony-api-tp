@@ -1,5 +1,6 @@
 import { Heart, Repeat } from "lucide-react";
 import { Link } from "react-router";
+import { LogEntryActions } from "@/features/log-entries/LogEntryActions";
 import { LogEntryReview } from "@/features/log-entries/LogEntryReview";
 import { formatDate } from "@/features/log-entries/format";
 import { MoviePoster } from "@/features/movies/MoviePoster";
@@ -41,6 +42,7 @@ export function DiaryEntry({ entry }: { entry: LogEntry }) {
                     </p>
                 </header>
                 {entry.review !== null && entry.review !== "" && <LogEntryReview review={entry.review} containsSpoilers={entry.containsSpoilers} />}
+                <LogEntryActions entry={entry} />
             </div>
         </article>
     );

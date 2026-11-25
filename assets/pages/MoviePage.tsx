@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { MoviePoster } from "@/features/movies/MoviePoster";
 import { WatchlistButton } from "@/features/movie-relationships/WatchlistButton";
+import { LogMovieButton } from "@/features/log-entries/LogMovieButton";
 import { formatRating, formatRuntime, releaseYear } from "@/features/movies/format";
 import { movieQuery } from "@/features/movies/queries";
 import { ApiError } from "@/lib/api";
@@ -85,7 +86,10 @@ function MovieSheet({ movie }: { movie: MovieDetail }) {
                         </>
                     )}
                 </p>
-                <WatchlistButton movieId={movie.id} />
+                <div className="flex flex-wrap items-start gap-3">
+                    <LogMovieButton movie={movie} />
+                    <WatchlistButton movieId={movie.id} />
+                </div>
                 {movie.overview !== null && movie.overview !== "" && (
                     <section className="space-y-2">
                         <h2 className="text-lg font-semibold">Synopsis</h2>

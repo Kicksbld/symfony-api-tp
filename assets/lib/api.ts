@@ -16,6 +16,26 @@ export class ApiError extends Error {
     }
 }
 
+export type FormErrors<TField extends string> = {
+    fields: Partial<Record<TField, string>>;
+    others: string[];
+};
+
+// Une violation sans champ du formulaire (règle sur l'objet entier) reste affichée en haut du formulaire.
+export function formErrors<TField extends string>(violations: Violation[], fields: readonly TField[]): FormErrors<TField> {
+    const errors: FormErrors<TField> = { fields: {}, others: [] };
+    for (const { propertyPath, title } of violations) {
+        const field = fields.find((candidate) => candidate === propertyPath);
+        if (field === undefined) {
+            errors.others.push(title);
+        } else {
+            errors.fields[field] ??= title;
+        }
+    }
+
+    return errors;
+}
+
 type ApiRequestInit = RequestInit & { session?: Session | null };
 
 type ErrorBody = {
