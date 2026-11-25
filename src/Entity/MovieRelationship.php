@@ -113,4 +113,26 @@ class MovieRelationship
 
         return $this;
     }
+
+    // Journaliser un film le marque comme vu et le sort de la watchlist.
+    public function recordLogEntry(LogEntry $logEntry): static
+    {
+        $this->watched = true;
+        $this->inWatchlist = false;
+
+        return $this->followLogEntry($logEntry);
+    }
+
+    // La note et le coup de coeur suivent la dernière entrée. Une entrée sans note ni coup de coeur ne retire pas ceux déjà donnés.
+    public function followLogEntry(LogEntry $logEntry): static
+    {
+        if (null !== $logEntry->getRating()) {
+            $this->setRating($logEntry->getRating());
+        }
+        if ($logEntry->isLiked()) {
+            $this->liked = true;
+        }
+
+        return $this;
+    }
 }

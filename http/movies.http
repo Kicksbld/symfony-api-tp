@@ -43,6 +43,9 @@ GET {{baseURL}}/api/movies?decade=1995&country=XX&person=0&region=JP
 ### Films les mieux notés par les membres (200)
 GET {{baseURL}}/api/movies?sort=rating
 
+### Films tendances : les plus journalisés ces 7 derniers jours (200)
+GET {{baseURL}}/api/movies?sort=trending
+
 ### Tri inconnu (422)
 GET {{baseURL}}/api/movies?sort=random
 

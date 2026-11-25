@@ -110,6 +110,11 @@ Commencer par [`http/auth.http`](http/auth.http) : la requête de connexion enre
 | `GET` | `/api/movies/{id}/relationship` | Mon état sur le film : vu, aimé, note, watchlist | Oui |
 | `PATCH` | `/api/movies/{id}/relationship` | Modifie mon état sur le film | Oui |
 | `GET` | `/api/movies/{id}/watch-providers` | Plateformes où regarder le film dans un pays (`?region=FR` par défaut), par type d'offre | Non |
+| `GET` | `/api/log-entries` | Fil public paginé des entrées de journal, du plus récent au plus ancien, filtrable par film, membre et critiques | Non |
+| `POST` | `/api/log-entries` | Journalise un film : date, note, coup de coeur, revisionnage, critique | Oui |
+| `GET` | `/api/log-entries/{id}` | Une entrée de journal | Non |
+| `PATCH` | `/api/log-entries/{id}` | Modifie une de mes entrées | Oui, auteur |
+| `DELETE` | `/api/log-entries/{id}` | Supprime une de mes entrées | Oui, auteur |
 | `GET` | `/api/people` | Liste paginée des personnes (acteurs et équipe), avec recherche par nom (`?q=`) | Non |
 | `GET` | `/api/people/{id}` | Fiche d'une personne : rôles joués (`cast`) et films par poste (`crew`) | Non |
 | `GET` | `/api/people/{id}/movies` | Liste paginée des films d'une personne, filtrable par poste (`?job=Director`, `?job=Actor`) | Non |
@@ -145,7 +150,7 @@ Paramètres de `GET /api/movies`, tous facultatifs et combinables :
 | `person` | `person=1` | Identifiant d'une personne, quel que soit son poste (voir `GET /api/people`) |
 | `provider` | `provider=1` | Identifiant d'une plateforme (voir `GET /api/watch-providers`) |
 | `region` | `region=BE` | Pays de diffusion pour le filtre `provider` : `FR` (par défaut), `BE`, `CH`, `CA` ou `US` |
-| `sort` | `sort=title` | `popular` (par défaut, score de popularité TMDB), `rating` (moyenne des membres, films sans note à la fin), `releaseDate` (plus récents d'abord) ou `title` |
+| `sort` | `sort=title` | `popular` (par défaut, score de popularité TMDB), `trending` (films les plus journalisés par les membres ces 7 derniers jours, puis par popularité TMDB à égalité), `rating` (moyenne des membres, films sans note à la fin), `releaseDate` (plus récents d'abord) ou `title` |
 
 La liste renvoie une vue allégée (titre, titre original, date de sortie, moyenne des membres sur 5 `averageRating`, affiche). La fiche `GET /api/movies/{id}` ajoute le synopsis, la durée en minutes, le nombre de notes des membres (`ratingCount`), la note moyenne TMDB sur 10 (`voteAverage`, à titre indicatif), les genres, les studios, les pays, la distribution avec les rôles (`cast`) et l'équipe avec les postes (`crew`). Les images (`posterUrl`, `profileUrl`, `logoUrl`) sont des URL complètes vers TMDB.
 
@@ -187,6 +192,39 @@ Tant que le membre n'a rien modifié, les valeurs par défaut sont renvoyées (`
 }
 ```
 
+### Journal et critiques
+
+Chaque visionnage est une entrée de journal. Une critique est simplement une entrée avec du texte dans `review` :
+
+```json
+{
+  "id": 12,
+  "user": { "id": 3, "username": "jane_doe" },
+  "movie": { "id": 1, "title": "Inception", "originalTitle": "Inception", "releaseDate": "2010-07-15", "averageRating": 4.2, "posterUrl": "https://image.tmdb.org/t/p/w500/..." },
+  "watchedOn": "2026-11-20",
+  "rating": 4.5,
+  "liked": true,
+  "rewatch": false,
+  "review": "Un rêve dans un rêve.",
+  "containsSpoilers": false,
+  "createdAt": "2026-11-25T09:12:00+00:00"
+}
+```
+
+Seul `movie` est obligatoire à la création. Journaliser un film met à jour mon état sur ce film : il passe en vu et sort de la watchlist, la note et le coup de coeur de l'entrée sont repris s'ils sont renseignés (une entrée sans note ne retire pas la note déjà donnée). Modifier ma dernière entrée sur un film met aussi à jour ma note et mon coup de coeur sur ce film, modifier une entrée plus ancienne n'y touche pas. Supprimer une entrée ne change pas cet état : le film reste vu.
+
+`PATCH /api/log-entries/{id}` ne modifie que les champs envoyés, et `null` efface `watchedOn`, `rating` ou `review`. Seul l'auteur peut modifier ou supprimer son entrée, les autres membres reçoivent une `403`.
+
+Le texte de la critique est toujours renvoyé, même quand `containsSpoilers` vaut `true` : c'est au client de le masquer.
+
+Paramètres de `GET /api/log-entries`, tous facultatifs et combinables :
+
+| Paramètre | Exemple | Description |
+| --- | --- | --- |
+| `movie` | `movie=1` | Entrées d'un film |
+| `user` | `user=jane_doe` | Entrées d'un membre, par son username |
+| `withReview` | `withReview=true` | Seulement les critiques |
+
 ### Validation
 
 Règles de validation :
@@ -196,9 +234,12 @@ Règles de validation :
 - `password` : 8 caractères minimum.
 - `bio` : 500 caractères maximum, une chaîne vide efface la bio.
 - `rating` : de `0.5` à `5` par pas de `0.5`, ou `null`.
-- `watched`, `liked`, `inWatchlist` : booléens.
+- `watched`, `liked`, `inWatchlist`, `rewatch`, `containsSpoilers` : booléens.
+- `movie` : identifiant d'un film existant.
+- `watchedOn` : date au format `AAAA-MM-JJ`, pas dans le futur, ou `null`.
+- `review` : texte non vide de 10 000 caractères maximum, ou `null`.
 
-Codes de retour utilisés : `200` lecture et modification, `201` création, `401` non connecté ou mauvais identifiants, `404` ressource introuvable, `422` données invalides, dans le corps de la requête comme dans les paramètres de l'URL (avec la liste des champs en erreur dans `violations`). Toutes les erreurs sont renvoyées en JSON.
+Codes de retour utilisés : `200` lecture et modification, `201` création, `204` suppression, `401` non connecté ou mauvais identifiants, `403` ressource d'un autre membre, `404` ressource introuvable, `422` données invalides, dans le corps de la requête comme dans les paramètres de l'URL (avec la liste des champs en erreur dans `violations`). Toutes les erreurs sont renvoyées en JSON.
 
 ## Tests
 

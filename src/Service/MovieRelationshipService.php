@@ -41,17 +41,26 @@ final readonly class MovieRelationshipService
             $movieRelationship->setInWatchlist($updateMovieRelationshipDto->inWatchlist);
         }
 
-        // La moyenne se calcule en base, donc après l'enregistrement de la nouvelle note, dans la même transaction.
-        $this->entityManager->wrapInTransaction(function () use ($movieRelationship, $movie, $ratingSent): void {
+        $this->save($movieRelationship, $ratingSent);
+
+        return $movieRelationship;
+    }
+
+    /**
+     * Enregistre la relation avec tout ce qui attend d'être enregistré, puis recalcule la moyenne du film si la note a changé.
+     * La moyenne se calcule en base, donc après l'enregistrement de la nouvelle note, dans la même transaction.
+     */
+    public function save(MovieRelationship $movieRelationship, bool $ratingChanged): void
+    {
+        $this->entityManager->wrapInTransaction(function () use ($movieRelationship, $ratingChanged): void {
             $this->entityManager->persist($movieRelationship);
             $this->entityManager->flush();
 
-            if ($ratingSent) {
+            if ($ratingChanged) {
+                $movie = $movieRelationship->getMovie();
                 $movie->updateRatings($this->getRatingDistribution($movie));
             }
         });
-
-        return $movieRelationship;
     }
 
     public function getRatingDistribution(Movie $movie): RatingDistribution
