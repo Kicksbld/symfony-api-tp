@@ -4,11 +4,16 @@ namespace App\Entity;
 
 use App\Entity\Trait\TimestampableTrait;
 use App\Enum\CreditType;
+use App\Enum\WatchProviderType;
+use App\Model\TmdbImage;
 use App\Repository\MovieRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Attribute\Context;
+use Symfony\Component\Serializer\Attribute\Groups;
+use Symfony\Component\Serializer\Normalizer\DateTimeNormalizer;
 
 #[ORM\Entity(repositoryClass: MovieRepository::class)]
 #[ORM\HasLifecycleCallbacks]
@@ -19,6 +24,7 @@ class Movie
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    #[Groups(['movie:list', 'movie:read'])]
     private ?int $id = null;
 
     #[ORM\Column(unique: true)]
@@ -26,19 +32,25 @@ class Movie
 
     // Titre français, TMDB renvoie le titre original quand il n'y a pas de traduction.
     #[ORM\Column(length: 255)]
+    #[Groups(['movie:list', 'movie:read'])]
     private ?string $title = null;
 
     #[ORM\Column(length: 255)]
+    #[Groups(['movie:list', 'movie:read'])]
     private ?string $originalTitle = null;
 
     #[ORM\Column(type: Types::TEXT, nullable: true)]
+    #[Groups(['movie:read'])]
     private ?string $overview = null;
 
     #[ORM\Column(type: Types::DATE_IMMUTABLE, nullable: true)]
+    #[Groups(['movie:list', 'movie:read'])]
+    #[Context([DateTimeNormalizer::FORMAT_KEY => 'Y-m-d'])]
     private ?\DateTimeImmutable $releaseDate = null;
 
     // Durée en minutes.
     #[ORM\Column(type: Types::SMALLINT, nullable: true)]
+    #[Groups(['movie:read'])]
     private ?int $runtime = null;
 
     #[ORM\Column(length: 255, nullable: true)]
@@ -47,22 +59,27 @@ class Movie
     #[ORM\Column]
     private float $popularity = 0;
 
+    // Note moyenne TMDB sur 10, affichée à titre indicatif à côté de celle des membres.
     #[ORM\Column]
+    #[Groups(['movie:read'])]
     private float $voteAverage = 0;
 
     #[ORM\Column]
+    #[Groups(['movie:read'])]
     private int $voteCount = 0;
 
     /**
      * @var Collection<int, Genre>
      */
     #[ORM\ManyToMany(targetEntity: Genre::class)]
+    #[Groups(['movie:read'])]
     private Collection $genres;
 
     /**
      * @var Collection<int, Company>
      */
     #[ORM\ManyToMany(targetEntity: Company::class)]
+    #[Groups(['movie:read'])]
     private Collection $companies;
 
     /**
@@ -71,6 +88,7 @@ class Movie
      * @var Collection<int, Country>
      */
     #[ORM\ManyToMany(targetEntity: Country::class)]
+    #[Groups(['movie:read'])]
     private Collection $countries;
 
     /**
@@ -185,6 +203,12 @@ class Movie
         return $this;
     }
 
+    #[Groups(['movie:list', 'movie:read'])]
+    public function getPosterUrl(): ?string
+    {
+        return TmdbImage::url($this->posterPath, TmdbImage::POSTER_SIZE);
+    }
+
     public function getPopularity(): float
     {
         return $this->popularity;
@@ -293,8 +317,12 @@ class Movie
     }
 
     /**
+     * Le groupe movie:cast ajoute le personnage, movie:crew le poste : chaque liste n'a que ses champs.
+     *
      * @return list<Credit>
      */
+    #[Groups(['movie:read'])]
+    #[Context(normalizationContext: ['groups' => ['movie:read', 'movie:cast']])]
     public function getCast(): array
     {
         return $this->credits->filter(static fn (Credit $credit): bool => CreditType::Cast === $credit->getType())->getValues();
@@ -303,6 +331,8 @@ class Movie
     /**
      * @return list<Credit>
      */
+    #[Groups(['movie:read'])]
+    #[Context(normalizationContext: ['groups' => ['movie:read', 'movie:crew']])]
     public function getCrew(): array
     {
         return $this->credits->filter(static fn (Credit $credit): bool => CreditType::Crew === $credit->getType())->getValues();
@@ -329,6 +359,24 @@ class Movie
     public function getWatchProviders(): Collection
     {
         return $this->watchProviders;
+    }
+
+    /**
+     * Plateformes d'un pays de diffusion, rangées par type d'offre dans l'ordre de TMDB.
+     *
+     * @return array<string, list<WatchProvider>>
+     */
+    public function getWatchProvidersByType(string $region): array
+    {
+        $watchProvidersByType = array_fill_keys(array_column(WatchProviderType::cases(), 'value'), []);
+
+        foreach ($this->watchProviders as $movieWatchProvider) {
+            if ($region === $movieWatchProvider->getRegion()) {
+                $watchProvidersByType[$movieWatchProvider->getType()->value][] = $movieWatchProvider->getWatchProvider();
+            }
+        }
+
+        return $watchProvidersByType;
     }
 
     /**

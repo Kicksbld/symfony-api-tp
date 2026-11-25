@@ -2,8 +2,10 @@
 
 namespace App\Entity;
 
+use App\Model\TmdbImage;
 use App\Repository\PersonRepository;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Attribute\Groups;
 
 #[ORM\Entity(repositoryClass: PersonRepository::class)]
 class Person
@@ -11,12 +13,14 @@ class Person
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    #[Groups(['movie:read'])]
     private ?int $id = null;
 
     #[ORM\Column(unique: true)]
     private ?int $tmdbId = null;
 
     #[ORM\Column(length: 255)]
+    #[Groups(['movie:read'])]
     private ?string $name = null;
 
     #[ORM\Column(length: 255, nullable: true)]
@@ -61,5 +65,11 @@ class Person
         $this->profilePath = $profilePath;
 
         return $this;
+    }
+
+    #[Groups(['movie:read'])]
+    public function getProfileUrl(): ?string
+    {
+        return TmdbImage::url($this->profilePath, TmdbImage::PROFILE_SIZE);
     }
 }

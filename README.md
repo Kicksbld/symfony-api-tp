@@ -104,6 +104,46 @@ Commencer par [`http/auth.http`](http/auth.http) : la requête de connexion enre
 | `POST` | `/api/login_check` | Se connecte et renvoie le token JWT avec le profil | Non |
 | `GET` | `/api/me` | Profil du membre connecté | Oui |
 | `PATCH` | `/api/me` | Modifie le username et la bio du membre connecté | Oui |
+| `GET` | `/api/movies` | Liste paginée des films, avec recherche, filtres et tri | Non |
+| `GET` | `/api/movies/{id}` | Fiche complète d'un film | Non |
+| `GET` | `/api/movies/{id}/watch-providers` | Plateformes où regarder le film dans un pays (`?region=FR` par défaut), par type d'offre | Non |
+| `GET` | `/api/genres` | Liste paginée des genres | Non |
+| `GET` | `/api/countries` | Liste paginée des pays de production | Non |
+| `GET` | `/api/watch-providers` | Liste paginée des plateformes présentes dans un pays (`?region=FR` par défaut) | Non |
+
+### Pagination
+
+Toutes les listes sont paginées avec `?page=1&limit=20` (valeurs par défaut, `limit` va jusqu'à 100) et renvoient le même format :
+
+```json
+{
+  "items": [],
+  "total": 1591,
+  "lastPage": 80
+}
+```
+
+### Recherche dans le catalogue
+
+Paramètres de `GET /api/movies`, tous facultatifs et combinables :
+
+| Paramètre | Exemple | Description |
+| --- | --- | --- |
+| `q` | `q=dark knight` | Cherche dans le titre français et le titre original |
+| `genre` | `genre=1` | Identifiant d'un genre (voir `GET /api/genres`) |
+| `decade` | `decade=1990` | Films sortis de 1990 à 1999 |
+| `year` | `year=2010` | Films sortis en 2010 |
+| `country` | `country=FR` | Code ISO d'un pays de production (voir `GET /api/countries`) |
+| `company` | `company=1` | Identifiant d'un studio |
+| `provider` | `provider=1` | Identifiant d'une plateforme (voir `GET /api/watch-providers`) |
+| `region` | `region=BE` | Pays de diffusion pour le filtre `provider` : `FR` (par défaut), `BE`, `CH`, `CA` ou `US` |
+| `sort` | `sort=title` | `popular` (par défaut, score de popularité TMDB), `releaseDate` (plus récents d'abord) ou `title` |
+
+La liste renvoie une vue allégée (titre, titre original, date de sortie, affiche). La fiche `GET /api/movies/{id}` ajoute le synopsis, la durée en minutes, la note moyenne TMDB sur 10 (`voteAverage`, à titre indicatif), les genres, les studios, les pays, la distribution avec les rôles (`cast`) et l'équipe avec les postes (`crew`). Les images (`posterUrl`, `profileUrl`, `logoUrl`) sont des URL complètes vers TMDB.
+
+`region` désigne toujours un pays de diffusion (où regarder le film) et `country` un pays de production.
+
+### Validation
 
 Règles de validation :
 
@@ -112,7 +152,7 @@ Règles de validation :
 - `password` : 8 caractères minimum.
 - `bio` : 500 caractères maximum, une chaîne vide efface la bio.
 
-Codes de retour utilisés : `200` lecture et modification, `201` création, `401` non connecté ou mauvais identifiants, `404` ressource introuvable, `422` données invalides (avec la liste des champs en erreur dans `violations`). Toutes les erreurs sont renvoyées en JSON.
+Codes de retour utilisés : `200` lecture et modification, `201` création, `401` non connecté ou mauvais identifiants, `404` ressource introuvable, `422` données invalides, dans le corps de la requête comme dans les paramètres de l'URL (avec la liste des champs en erreur dans `violations`). Toutes les erreurs sont renvoyées en JSON.
 
 ## Tests
 

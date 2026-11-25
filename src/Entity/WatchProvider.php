@@ -2,8 +2,10 @@
 
 namespace App\Entity;
 
+use App\Model\TmdbImage;
 use App\Repository\WatchProviderRepository;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Attribute\Groups;
 
 #[ORM\Entity(repositoryClass: WatchProviderRepository::class)]
 class WatchProvider
@@ -11,12 +13,14 @@ class WatchProvider
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    #[Groups(['watchProvider:read'])]
     private ?int $id = null;
 
     #[ORM\Column(unique: true)]
     private ?int $tmdbId = null;
 
     #[ORM\Column(length: 255)]
+    #[Groups(['watchProvider:read'])]
     private ?string $name = null;
 
     #[ORM\Column(length: 255, nullable: true)]
@@ -61,5 +65,11 @@ class WatchProvider
         $this->logoPath = $logoPath;
 
         return $this;
+    }
+
+    #[Groups(['watchProvider:read'])]
+    public function getLogoUrl(): ?string
+    {
+        return TmdbImage::url($this->logoPath, TmdbImage::LOGO_SIZE);
     }
 }

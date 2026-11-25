@@ -1,0 +1,5 @@
+### Liste des genres par ordre alphabétique (200)
+GET {{baseURL}}/api/genres
+
+### Pagination invalide (422)
+GET {{baseURL}}/api/genres?limit=0

@@ -5,6 +5,7 @@ namespace App\Entity;
 use App\Enum\CreditType;
 use App\Repository\CreditRepository;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Attribute\Groups;
 
 #[ORM\Entity(repositoryClass: CreditRepository::class)]
 class Credit
@@ -20,6 +21,7 @@ class Credit
 
     #[ORM\ManyToOne]
     #[ORM\JoinColumn(nullable: false)]
+    #[Groups(['movie:read'])]
     private ?Person $person = null;
 
     #[ORM\Column(enumType: CreditType::class)]
@@ -27,13 +29,16 @@ class Credit
 
     // Rôle joué, seulement pour la distribution.
     #[ORM\Column(length: 255, nullable: true)]
+    #[Groups(['movie:cast'])]
     private ?string $character = null;
 
     // Poste et département, seulement pour l'équipe.
     #[ORM\Column(length: 100, nullable: true)]
+    #[Groups(['movie:crew'])]
     private ?string $job = null;
 
     #[ORM\Column(length: 100, nullable: true)]
+    #[Groups(['movie:crew'])]
     private ?string $department = null;
 
     #[ORM\Column]
