@@ -4,12 +4,10 @@
     "scripts": {
         "dev": "vite",
         "build": "tsc --noEmit && vite build",
-        "lint": "eslint .",
-        "test:browser": "playwright test tests/Browser --output var/playwright"
+        "lint": "eslint ."
     },
     "devDependencies": {
         "@eslint/js": "^10.0.1",
-        "@playwright/test": "^1.65.1",
         "@tailwindcss/vite": "^4.3.5",
         "@types/node": "^26.6.10",
         "@types/react": "^19.3.2",

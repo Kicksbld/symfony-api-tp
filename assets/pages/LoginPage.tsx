@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from "react";
-import { Navigate, useNavigate } from "react-router";
+import { Link, Navigate, useLocation, useSearchParams } from "react-router";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,17 +7,21 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ApiError } from "@/lib/api";
 import { useAuth } from "@/features/auth/auth";
+import { authPath, redirectTarget } from "@/lib/redirect";
 
 export function LoginPage() {
     const { session, login } = useAuth();
-    const navigate = useNavigate();
-    const [email, setEmail] = useState("");
+    const [searchParams] = useSearchParams();
+    const location = useLocation();
+    const target = redirectTarget(searchParams);
+    // L'inscription transmet l'email du compte créé quand l'ouverture de session a échoué.
+    const [email, setEmail] = useState(typeof location.state?.email === "string" ? location.state.email : "");
     const [password, setPassword] = useState("");
     const [error, setError] = useState<string | null>(null);
     const [submitting, setSubmitting] = useState(false);
 
     if (session !== null) {
-        return <Navigate to="/" replace />;
+        return <Navigate to={target} replace />;
     }
 
     async function handleSubmit(event: FormEvent<HTMLFormElement>): Promise<void> {
@@ -27,7 +31,6 @@ export function LoginPage() {
 
         try {
             await login(email, password);
-            navigate("/");
         } catch (reason) {
             setError(reason instanceof ApiError && reason.status === 401 ? "Email ou mot de passe incorrect." : "La connexion a échoué, réessayez.");
         } finally {
@@ -67,6 +70,12 @@ export function LoginPage() {
                         Se connecter
                     </Button>
                 </form>
+                <p className="mt-4 text-center text-sm text-muted-foreground">
+                    Pas encore de compte ?{" "}
+                    <Link to={authPath("/register", target)} className="text-primary underline-offset-4 hover:underline">
+                        Créer un compte
+                    </Link>
+                </p>
             </CardContent>
         </Card>
     );
