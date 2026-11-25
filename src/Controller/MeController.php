@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 
+use App\Dto\ReplaceFavoritesDto;
 use App\Dto\UpdateProfileDto;
 use App\Entity\User;
 use App\Service\AccountService;
@@ -35,5 +36,15 @@ final class MeController extends AbstractController
         $user = $this->accountService->updateProfile($user, $updateProfileDto);
 
         return $this->json($user, context: ['groups' => User::PRIVATE_PROFILE_GROUPS]);
+    }
+
+    #[Route('/favorites', name: 'favorites_replace', methods: ['PUT'])]
+    public function replaceFavorites(
+        #[CurrentUser] User $user,
+        #[MapRequestPayload(validationFailedStatusCode: Response::HTTP_UNPROCESSABLE_ENTITY)] ReplaceFavoritesDto $replaceFavoritesDto,
+    ): JsonResponse {
+        $favorites = $this->accountService->replaceFavorites($user, $replaceFavoritesDto);
+
+        return $this->json($favorites, context: ['groups' => ['movie:list']]);
     }
 }

@@ -2,11 +2,13 @@
 
 namespace App\Repository;
 
+use App\Dto\DiaryFilterDto;
 use App\Dto\LogEntrySearchDto;
 use App\Entity\LogEntry;
 use App\Entity\Movie;
 use App\Entity\User;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\QueryBuilder;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -47,6 +49,33 @@ class LogEntryRepository extends ServiceEntityRepository
         return $this->orderByMostRecent($queryBuilder);
     }
 
+    /**
+     * Comme sur Letterboxd, le journal ne contient que les visionnages datés, du plus récent au plus ancien.
+     */
+    public function createDiaryQueryBuilder(User $user, DiaryFilterDto $diaryFilterDto): QueryBuilder
+    {
+        $queryBuilder = $this->createQueryBuilder('logEntry')
+            ->addSelect('movie')
+            ->innerJoin('logEntry.movie', 'movie')
+            ->andWhere('logEntry.user = :user')
+            ->andWhere('logEntry.watchedOn IS NOT NULL')
+            ->setParameter('user', $user);
+
+        if (null !== $diaryFilterDto->year) {
+            $start = new \DateTimeImmutable(\sprintf('%d-%d-01', $diaryFilterDto->year, $diaryFilterDto->month ?? 1));
+            $end = $start->modify(null === $diaryFilterDto->month ? '+1 year' : '+1 month');
+
+            $queryBuilder
+                ->andWhere('logEntry.watchedOn >= :start')
+                ->andWhere('logEntry.watchedOn < :end')
+                ->setParameter('start', $start, Types::DATE_IMMUTABLE)
+                ->setParameter('end', $end, Types::DATE_IMMUTABLE);
+        }
+
+        // À date de visionnage égale, la dernière entrée créée passe en premier.
+        return $this->orderByMostRecent($queryBuilder->orderBy('logEntry.watchedOn', 'DESC'));
+    }
+
     public function findLatestByUserAndMovie(User $user, Movie $movie): ?LogEntry
     {
         $queryBuilder = $this->createQueryBuilder('logEntry')
@@ -63,7 +92,7 @@ class LogEntryRepository extends ServiceEntityRepository
     private function orderByMostRecent(QueryBuilder $queryBuilder): QueryBuilder
     {
         return $queryBuilder
-            ->orderBy('logEntry.createdAt', 'DESC')
+            ->addOrderBy('logEntry.createdAt', 'DESC')
             ->addOrderBy('logEntry.id', 'DESC');
     }
 }

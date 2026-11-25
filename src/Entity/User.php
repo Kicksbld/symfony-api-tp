@@ -6,11 +6,13 @@ use App\Entity\Trait\TimestampableTrait;
 use App\Repository\UserRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
+use Doctrine\Common\Collections\Criteria;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
+use Symfony\Component\Serializer\Attribute\Context;
 use Symfony\Component\Serializer\Attribute\Groups;
 
 #[ORM\Entity(repositoryClass: UserRepository::class)]
@@ -24,6 +26,8 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     // Profil complet, réservé au membre lui-même : l'email ne doit pas apparaître sur les profils publics.
     public const array PRIVATE_PROFILE_GROUPS = ['user:read', 'user:private'];
+
+    public const int FAVORITE_MOVIES_MAX = 4;
 
     #[ORM\Id]
     #[ORM\GeneratedValue]
@@ -52,9 +56,26 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\OneToMany(targetEntity: LogEntry::class, mappedBy: 'user')]
     private Collection $logEntries;
 
+    /**
+     * @var Collection<int, FavoriteMovie>
+     */
+    #[ORM\OneToMany(targetEntity: FavoriteMovie::class, mappedBy: 'user', cascade: ['persist'], orphanRemoval: true)]
+    #[ORM\OrderBy(['position' => 'ASC'])]
+    private Collection $favoriteMovies;
+
+    /**
+     * EXTRA_LAZY : compter les films vus fait un COUNT sans charger toutes les relations du membre.
+     *
+     * @var Collection<int, MovieRelationship>
+     */
+    #[ORM\OneToMany(targetEntity: MovieRelationship::class, mappedBy: 'user', fetch: 'EXTRA_LAZY')]
+    private Collection $movieRelationships;
+
     public function __construct()
     {
         $this->logEntries = new ArrayCollection();
+        $this->favoriteMovies = new ArrayCollection();
+        $this->movieRelationships = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -127,5 +148,35 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function getLogEntries(): Collection
     {
         return $this->logEntries;
+    }
+
+    /**
+     * @return list<Movie>
+     */
+    #[Groups(['user:read'])]
+    #[Context(normalizationContext: ['groups' => ['movie:list']])]
+    public function getFavorites(): array
+    {
+        return $this->favoriteMovies->map(static fn (FavoriteMovie $favoriteMovie): ?Movie => $favoriteMovie->getMovie())->getValues();
+    }
+
+    public function clearFavorites(): static
+    {
+        $this->favoriteMovies->clear();
+
+        return $this;
+    }
+
+    public function addFavorite(Movie $movie): static
+    {
+        $this->favoriteMovies->add(new FavoriteMovie($this, $movie, $this->favoriteMovies->count() + 1));
+
+        return $this;
+    }
+
+    #[Groups(['user:read'])]
+    public function getWatchedCount(): int
+    {
+        return $this->movieRelationships->matching(Criteria::create()->andWhere(Criteria::expr()->eq('watched', true)))->count();
     }
 }

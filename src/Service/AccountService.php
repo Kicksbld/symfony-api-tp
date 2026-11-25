@@ -3,7 +3,9 @@
 namespace App\Service;
 
 use App\Dto\RegisterDto;
+use App\Dto\ReplaceFavoritesDto;
 use App\Dto\UpdateProfileDto;
+use App\Entity\Movie;
 use App\Entity\User;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
@@ -45,5 +47,25 @@ final readonly class AccountService
         $this->entityManager->flush();
 
         return $user;
+    }
+
+    /**
+     * @return list<Movie>
+     */
+    public function replaceFavorites(User $user, ReplaceFavoritesDto $replaceFavoritesDto): array
+    {
+        // Doctrine insère les nouvelles lignes avant de supprimer les anciennes : sans un premier flush, un film gardé
+        // ou une position réutilisée casserait les contraintes d'unicité. La transaction évite de perdre les favoris
+        // si l'ajout échoue.
+        $this->entityManager->wrapInTransaction(function () use ($user, $replaceFavoritesDto): void {
+            $user->clearFavorites();
+            $this->entityManager->flush();
+
+            foreach ($replaceFavoritesDto->movies as $movieId) {
+                $user->addFavorite($this->entityManager->getReference(Movie::class, $movieId));
+            }
+        });
+
+        return $user->getFavorites();
     }
 }
