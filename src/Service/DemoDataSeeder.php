@@ -62,7 +62,7 @@ final readonly class DemoDataSeeder
     ];
 
     // États posés sans entrée de journal : watchlist, ou film vu et noté sans le journaliser.
-    private const array MOVIE_STATES = [
+    private const array MOVIE_RELATIONSHIPS = [
         ['user' => 'jane_doe', 'movie' => 10, 'inWatchlist' => true],
         ['user' => 'jane_doe', 'movie' => 11, 'inWatchlist' => true],
         ['user' => 'jane_doe', 'movie' => 12, 'inWatchlist' => true],
@@ -118,7 +118,7 @@ final readonly class DemoDataSeeder
             $users = $this->createUsers();
             $this->createFollows($users);
             $this->createLogEntries($users, $movies);
-            $this->createMovieStates($users, $movies);
+            $this->createMovieRelationships($users, $movies);
             $this->createFavorites($users, $movies);
             $this->createLists($users, $movies);
         });
@@ -157,12 +157,13 @@ final readonly class DemoDataSeeder
     private function createLogEntries(array $users, array $movies): void
     {
         foreach (self::LOG_ENTRIES as $data) {
-            if (!isset($movies[$data['movie']])) {
+            $movie = $movies[$data['movie']] ?? null;
+            if (null === $movie) {
                 continue;
             }
 
             $logEntry = $this->logEntryService->create($users[$data['user']], new CreateLogEntryDto(
-                movie: $movies[$data['movie']]->getId(),
+                movie: $movie->getId(),
                 watchedOn: isset($data['daysAgo']) ? new \DateTimeImmutable(\sprintf('today -%d days', $data['daysAgo'])) : null,
                 rating: $data['rating'] ?? null,
                 liked: $data['liked'] ?? false,
@@ -184,14 +185,15 @@ final readonly class DemoDataSeeder
      * @param array<string, User> $users
      * @param list<Movie>         $movies
      */
-    private function createMovieStates(array $users, array $movies): void
+    private function createMovieRelationships(array $users, array $movies): void
     {
-        foreach (self::MOVIE_STATES as $data) {
-            if (!isset($movies[$data['movie']])) {
+        foreach (self::MOVIE_RELATIONSHIPS as $data) {
+            $movie = $movies[$data['movie']] ?? null;
+            if (null === $movie) {
                 continue;
             }
 
-            $this->movieRelationshipService->update($users[$data['user']], $movies[$data['movie']], new UpdateMovieRelationshipDto(
+            $this->movieRelationshipService->update($users[$data['user']], $movie, new UpdateMovieRelationshipDto(
                 watched: $data['watched'] ?? null,
                 liked: $data['liked'] ?? null,
                 rating: $data['rating'] ?? null,
@@ -227,8 +229,9 @@ final readonly class DemoDataSeeder
             ));
 
             foreach ($data['items'] as $movieRank => $note) {
-                if (isset($movies[$movieRank])) {
-                    $this->movieListService->addItem($movieList, new CreateMovieListItemDto($movies[$movieRank]->getId(), $note));
+                $movie = $movies[$movieRank] ?? null;
+                if (null !== $movie) {
+                    $this->movieListService->addItem($movieList, new CreateMovieListItemDto($movie->getId(), $note));
                 }
             }
             foreach ($data['likedBy'] ?? [] as $username) {
@@ -248,13 +251,8 @@ final readonly class DemoDataSeeder
      */
     private function findMovieIds(array $movies, array $movieRanks): array
     {
-        $movieIds = [];
-        foreach ($movieRanks as $movieRank) {
-            if (isset($movies[$movieRank])) {
-                $movieIds[] = $movies[$movieRank]->getId();
-            }
-        }
+        $rankedMovies = array_filter(array_map(static fn (int $movieRank): ?Movie => $movies[$movieRank] ?? null, $movieRanks));
 
-        return $movieIds;
+        return array_values(array_map(static fn (Movie $movie): int => $movie->getId(), $rankedMovies));
     }
 }

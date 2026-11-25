@@ -315,7 +315,7 @@ Paramètres de `GET /api/lists`, tous facultatifs et combinables :
 
 | Paramètre | Exemple | Description |
 | --- | --- | --- |
-| `q` | `q=nolan` | Cherche dans le nom de la liste |
+| `q` | `q=top` | Cherche dans le nom de la liste |
 | `user` | `user=jane_doe` | Listes publiques d'un membre, par son username |
 | `movie` | `movie=1` | Listes qui contiennent ce film |
 | `sort` | `sort=popular` | `recent` (par défaut, plus récentes d'abord) ou `popular` (plus likées d'abord, puis plus récentes à égalité) |
