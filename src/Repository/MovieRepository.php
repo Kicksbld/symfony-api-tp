@@ -4,6 +4,7 @@ namespace App\Repository;
 
 use App\Dto\MovieSearchDto;
 use App\Dto\PersonMovieSearchDto;
+use App\Entity\LogEntry;
 use App\Entity\Movie;
 use App\Entity\Person;
 use App\Enum\CreditType;
@@ -18,6 +19,8 @@ use Doctrine\Persistence\ManagerRegistry;
  */
 class MovieRepository extends ServiceEntityRepository
 {
+    private const string TRENDING_PERIOD = '-7 days';
+
     public function __construct(ManagerRegistry $registry)
     {
         parent::__construct($registry, Movie::class);
@@ -77,6 +80,7 @@ class MovieRepository extends ServiceEntityRepository
 
         match ($movieSearchDto->sort) {
             MovieSort::Popular => $queryBuilder->orderBy('movie.popularity', 'DESC'),
+            MovieSort::Trending => $this->orderByTrending($queryBuilder),
             // SQLite range les NULL en dernier en ordre décroissant : les films sans note finissent en bas.
             MovieSort::Rating => $queryBuilder->orderBy('movie.averageRating', 'DESC')->addOrderBy('movie.ratingCount', 'DESC'),
             MovieSort::ReleaseDate => $queryBuilder->orderBy('movie.releaseDate', 'DESC'),
@@ -118,6 +122,20 @@ class MovieRepository extends ServiceEntityRepository
             ->orderBy('movie.id')
             ->getQuery()
             ->getSingleColumnResult();
+    }
+
+    // Nombre d'entrées de journal des 7 derniers jours, en sous-requête pour ne pas grouper la requête paginée.
+    // À égalité, et pour les films que personne n'a journalisés, on retombe sur la popularité TMDB.
+    private function orderByTrending(QueryBuilder $queryBuilder): QueryBuilder
+    {
+        return $queryBuilder
+            ->addSelect(\sprintf(
+                '(SELECT COUNT(trendingLogEntry.id) FROM %s trendingLogEntry WHERE trendingLogEntry.movie = movie AND trendingLogEntry.createdAt >= :trendingSince) AS HIDDEN trendingCount',
+                LogEntry::class,
+            ))
+            ->setParameter('trendingSince', new \DateTimeImmutable(self::TRENDING_PERIOD), Types::DATETIME_IMMUTABLE)
+            ->orderBy('trendingCount', 'DESC')
+            ->addOrderBy('movie.popularity', 'DESC');
     }
 
     // Comparaison sur des dates plutôt qu'avec YEAR(), qui n'existe pas en DQL.

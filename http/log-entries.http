@@ -1,0 +1,140 @@
+# Lancer d'abord la connexion de auth.http pour récupérer le token.
+# L'identifiant du film dépend de la base : le récupérer avec GET /api/movies.
+
+### Journaliser un film avec une note, un coup de coeur et une critique (201)
+POST {{baseURL}}/api/log-entries
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "movie": 1,
+  "watchedOn": "2026-11-20",
+  "rating": 4.5,
+  "liked": true,
+  "rewatch": false,
+  "review": "Un rêve dans un rêve, toujours aussi efficace.",
+  "containsSpoilers": false
+}
+
+> {%
+  client.global.set("logEntryId", response.body.id);
+%}
+
+### Journaliser un film sans date ni note : seul le film est obligatoire (201)
+POST {{baseURL}}/api/log-entries
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "movie": 1
+}
+
+### Film manquant, date dans le futur, note invalide, critique vide (422)
+POST {{baseURL}}/api/log-entries
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "watchedOn": "2999-01-01",
+  "rating": 3.7,
+  "review": " "
+}
+
+### Film qui n'existe pas (422)
+POST {{baseURL}}/api/log-entries
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "movie": 999999
+}
+
+### Journaliser sans token (401)
+POST {{baseURL}}/api/log-entries
+Content-Type: application/json
+
+{
+  "movie": 1
+}
+
+### Fil public de l'activité récente (200)
+GET {{baseURL}}/api/log-entries
+
+### Critiques récentes d'un film (200)
+GET {{baseURL}}/api/log-entries?movie=1&withReview=true
+
+### Journal d'un membre, deuxième page de 10 entrées (200)
+GET {{baseURL}}/api/log-entries?user=1&page=2&limit=10
+
+### Filtres invalides (422)
+GET {{baseURL}}/api/log-entries?movie=0&user=-1
+
+### withReview qui n'est pas un booléen (422)
+GET {{baseURL}}/api/log-entries?withReview=maybe
+
+### Lire une entrée (200)
+GET {{baseURL}}/api/log-entries/{{logEntryId}}
+
+### Lire une entrée qui n'existe pas (404)
+GET {{baseURL}}/api/log-entries/999999
+
+### Modifier sa note et signaler des spoilers, les autres champs ne changent pas (200)
+PATCH {{baseURL}}/api/log-entries/{{logEntryId}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "rating": 5,
+  "containsSpoilers": true
+}
+
+### Effacer la date et la critique avec null (200)
+PATCH {{baseURL}}/api/log-entries/{{logEntryId}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "watchedOn": null,
+  "review": null
+}
+
+### Modification invalide (422)
+PATCH {{baseURL}}/api/log-entries/{{logEntryId}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "rating": 0,
+  "liked": "yes"
+}
+
+### Modifier l'entrée d'un autre membre, l'identifiant 1 si elle n'est pas à moi (403)
+PATCH {{baseURL}}/api/log-entries/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "liked": true
+}
+
+### Modifier sans token (401)
+PATCH {{baseURL}}/api/log-entries/{{logEntryId}}
+Content-Type: application/json
+
+{
+  "liked": true
+}
+
+### Supprimer l'entrée d'un autre membre, l'identifiant 1 si elle n'est pas à moi (403)
+DELETE {{baseURL}}/api/log-entries/1
+Authorization: Bearer {{token}}
+
+### Supprimer sans token (401)
+DELETE {{baseURL}}/api/log-entries/{{logEntryId}}
+
+### Supprimer son entrée (204)
+DELETE {{baseURL}}/api/log-entries/{{logEntryId}}
+Authorization: Bearer {{token}}
+
+### Lire l'entrée supprimée (404)
+GET {{baseURL}}/api/log-entries/{{logEntryId}}

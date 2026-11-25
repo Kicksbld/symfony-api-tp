@@ -2,8 +2,7 @@
 
 namespace App\Dto;
 
-use App\Model\Rating;
-use Symfony\Component\Validator\Constraints as Assert;
+use App\Validator\StarRating;
 
 /**
  * Un champ à null n'a pas été envoyé et n'est donc pas modifié, sauf rating où null retire la note
@@ -16,8 +15,7 @@ final readonly class UpdateMovieRelationshipDto
 
         public ?bool $liked = null,
 
-        #[Assert\Range(min: Rating::MIN_STARS, max: Rating::MAX_STARS)]
-        #[Assert\DivisibleBy(Rating::STEP)]
+        #[StarRating]
         public ?float $rating = null,
 
         public ?bool $inWatchlist = null,

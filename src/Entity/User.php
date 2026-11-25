@@ -4,6 +4,8 @@ namespace App\Entity;
 
 use App\Entity\Trait\TimestampableTrait;
 use App\Repository\UserRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
@@ -26,7 +28,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    #[Groups(['user:read'])]
+    #[Groups(['user:list', 'user:read'])]
     private ?int $id = null;
 
     #[ORM\Column(length: 180, unique: true)]
@@ -34,7 +36,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     private ?string $email = null;
 
     #[ORM\Column(length: 20, unique: true)]
-    #[Groups(['user:read'])]
+    #[Groups(['user:list', 'user:read'])]
     private ?string $username = null;
 
     #[ORM\Column]
@@ -43,6 +45,17 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(type: Types::TEXT, nullable: true)]
     #[Groups(['user:read'])]
     private ?string $bio = null;
+
+    /**
+     * @var Collection<int, LogEntry>
+     */
+    #[ORM\OneToMany(targetEntity: LogEntry::class, mappedBy: 'user')]
+    private Collection $logEntries;
+
+    public function __construct()
+    {
+        $this->logEntries = new ArrayCollection();
+    }
 
     public function getId(): ?int
     {
@@ -106,5 +119,13 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         $this->bio = $bio;
 
         return $this;
+    }
+
+    /**
+     * @return Collection<int, LogEntry>
+     */
+    public function getLogEntries(): Collection
+    {
+        return $this->logEntries;
     }
 }

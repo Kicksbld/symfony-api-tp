@@ -19,6 +19,8 @@ final class MovieControllerTest extends ApiTestCase
 
     private const int PULP_FICTION = 680;
 
+    private const int THE_DARK_KNIGHT = 155;
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -351,6 +353,26 @@ final class MovieControllerTest extends ApiTestCase
         self::assertSame(['Pulp Fiction', 'Inception', 'The Dark Knight : Le Chevalier noir'], array_column($data['items'], 'title'));
     }
 
+    public function testListCanBeSortedByTheMostLoggedMoviesOfTheLastSevenDays(): void
+    {
+        $this->logMovie(self::INCEPTION);
+        $this->logMovie(self::INCEPTION);
+        $this->logMovie(self::INCEPTION);
+        // Le tri ne compte que les 7 derniers jours : on vieillit ces trois entrées.
+        static::getContainer()->get('doctrine')->getConnection()
+            ->executeStatement("UPDATE log_entry SET created_at = datetime('now', '-8 days')");
+
+        $this->logMovie(self::PULP_FICTION);
+        $this->logMovie(self::PULP_FICTION);
+        $this->logMovie(self::THE_DARK_KNIGHT);
+
+        $data = $this->requestJson('GET', '/api/movies?sort=trending');
+
+        self::assertResponseIsSuccessful();
+        self::assertSame(['Pulp Fiction', 'The Dark Knight : Le Chevalier noir', 'Inception'], array_column($data['items'], 'title'));
+        self::assertSame(3, $data['total']);
+    }
+
     public function testListRejectsAPageThatIsNotANumber(): void
     {
         $this->requestJson('GET', '/api/movies?page=abc');
@@ -363,5 +385,12 @@ final class MovieControllerTest extends ApiTestCase
         $this->loginAs($user ?? UserFactory::createOne());
         $this->requestJson('PATCH', '/api/movies/'.$this->findId(Movie::class, ['tmdbId' => $tmdbId]).'/relationship', ['rating' => $rating]);
         self::assertResponseIsSuccessful();
+    }
+
+    private function logMovie(int $tmdbId): void
+    {
+        $this->loginAs(UserFactory::createOne());
+        $this->requestJson('POST', '/api/log-entries', ['movie' => $this->findId(Movie::class, ['tmdbId' => $tmdbId])]);
+        self::assertResponseStatusCodeSame(Response::HTTP_CREATED);
     }
 }

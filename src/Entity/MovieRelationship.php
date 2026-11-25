@@ -113,4 +113,23 @@ class MovieRelationship
 
         return $this;
     }
+
+    /**
+     * L'état suit la dernière entrée du journal : le film est vu et sort de la watchlist.
+     * Une entrée sans note ni coup de coeur ne retire pas ceux déjà donnés.
+     */
+    public function recordLogEntry(LogEntry $logEntry): static
+    {
+        $this->watched = true;
+        $this->inWatchlist = false;
+
+        if (null !== $logEntry->getRating()) {
+            $this->setRating($logEntry->getRating());
+        }
+        if ($logEntry->isLiked()) {
+            $this->liked = true;
+        }
+
+        return $this;
+    }
 }
