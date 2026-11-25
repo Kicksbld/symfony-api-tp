@@ -162,6 +162,14 @@ Le profil a trois onglets, chacun avec son adresse :
 
 `/users/{username}` ouvre le journal. Chaque onglet est paginé par 20 avec `?page=2` dans l'adresse, comme le catalogue. Une page invalide revient à la première, une page au-delà de la dernière propose d'y aller. Un onglet vide l'indique, et une critique marquée spoiler reste cachée jusqu'au clic sur « Afficher la critique ». Ajouter ou retirer un film depuis sa fiche relit la watchlist du profil : elle est à jour au retour sur l'onglet.
 
+#### Journaliser un film
+
+Sur la fiche, le bouton « Journaliser » ouvre un formulaire : date de visionnage (obligatoire, préremplie avec le jour local du navigateur), note facultative de 0,5 à 5 par demi-étoile, coup de cœur, revisionnage, critique et case « spoilers » (active seulement avec une critique). Il envoie `POST /api/log-entries` avec tous les champs, une note ou une critique vide part à `null`. Un visiteur est envoyé vers la connexion, puis revient sur la fiche.
+
+Le succès n'est affiché qu'après la réponse de l'API, avec un lien « Voir mon journal ». Mon état sur le film, la moyenne du film et les onglets et compteurs de mon profil sont alors relus : le film sort de la watchlist, passe dans les films vus et l'entrée apparaît dans le journal. En cas d'erreur, le brouillon reste dans le formulaire, même après avoir fermé la fenêtre, et les erreurs de validation (`422`) s'affichent sous les champs concernés.
+
+Dans mon journal, chaque entrée a les boutons « Modifier » et « Supprimer ». Les autres visiteurs ne les voient pas, et l'API répond de toute façon `403` à un autre membre. La modification envoie `PATCH /api/log-entries/{id}` avec tous les champs. La suppression demande une confirmation puis envoie `DELETE /api/log-entries/{id}`. Le front ne calcule pas lui-même mon état sur le film : il relit les mêmes vues qu'à la création, et c'est l'API qui applique ses règles (seule la dernière entrée change la note et le coup de cœur, une suppression laisse le film vu).
+
 #### Thème et navigation
 
 Les couleurs, polices et rayons viennent d'un thème [TweakCN](https://tweakcn.com), appliqué dans [`assets/app.css`](assets/app.css) avec :

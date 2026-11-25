@@ -21,6 +21,11 @@ function pageParams(page: number): URLSearchParams {
     return new URLSearchParams({ page: String(page), limit: String(PROFILE_PAGE_SIZE) });
 }
 
+// Préfixe commun au profil et à ses onglets, pour tout relire après un changement du membre.
+export function userQueriesKey(username: string): readonly ["users", string] {
+    return ["users", username];
+}
+
 export function watchlistKey(username: string): readonly ["users", string, "watchlist"] {
     return userKey(username, "watchlist");
 }
