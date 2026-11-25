@@ -17,9 +17,10 @@ class Credit
 
     #[ORM\ManyToOne(inversedBy: 'credits')]
     #[ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]
+    #[Groups(['person:read'])]
     private ?Movie $movie = null;
 
-    #[ORM\ManyToOne]
+    #[ORM\ManyToOne(inversedBy: 'credits')]
     #[ORM\JoinColumn(nullable: false)]
     #[Groups(['movie:read'])]
     private ?Person $person = null;

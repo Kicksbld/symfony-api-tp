@@ -1,5 +1,5 @@
-# Les identifiants (films, genres, studios, plateformes) dépendent de la base : les récupérer d'abord avec
-# GET /api/movies, GET /api/genres et GET /api/watch-providers, puis les reporter dans les requêtes.
+# Les identifiants (films, genres, studios, personnes, plateformes) dépendent de la base : les récupérer d'abord avec
+# GET /api/movies, GET /api/genres, GET /api/people et GET /api/watch-providers, puis les reporter dans les requêtes.
 
 ### Liste des films, les plus populaires d'abord (200)
 GET {{baseURL}}/api/movies
@@ -25,6 +25,9 @@ GET {{baseURL}}/api/movies?country=FR&sort=releaseDate
 ### Films d'un studio, par ordre alphabétique (200)
 GET {{baseURL}}/api/movies?company=1&sort=title
 
+### Films d'une personne, quel que soit son poste (200)
+GET {{baseURL}}/api/movies?person=1
+
 ### Films disponibles sur une plateforme en France (200)
 GET {{baseURL}}/api/movies?provider=1
 
@@ -34,8 +37,8 @@ GET {{baseURL}}/api/movies?provider=1&region=BE
 ### Pagination invalide : page à 0 et limite au-dessus de 100 (422)
 GET {{baseURL}}/api/movies?page=0&limit=101
 
-### Filtres invalides : décennie qui ne commence pas par 0, pays inconnu, pays de diffusion non importé (422)
-GET {{baseURL}}/api/movies?decade=1995&country=XX&region=JP
+### Filtres invalides : décennie qui ne commence pas par 0, pays inconnu, personne à 0, pays de diffusion non importé (422)
+GET {{baseURL}}/api/movies?decade=1995&country=XX&person=0&region=JP
 
 ### Tri inconnu (422)
 GET {{baseURL}}/api/movies?sort=random

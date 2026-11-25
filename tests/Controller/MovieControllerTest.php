@@ -99,6 +99,25 @@ final class MovieControllerTest extends ApiTestCase
         self::assertSame(['Inception', 'The Dark Knight : Le Chevalier noir'], array_column($data['items'], 'title'));
     }
 
+    public function testListCanBeFilteredByPerson(): void
+    {
+        $cillianMurphyId = $this->findId(Person::class, ['name' => 'Cillian Murphy']);
+
+        $data = $this->requestJson('GET', '/api/movies?person='.$cillianMurphyId.'&sort=title');
+
+        self::assertSame(['Inception', 'The Dark Knight : Le Chevalier noir'], array_column($data['items'], 'title'));
+    }
+
+    public function testMoviesWhereAPersonHasSeveralJobsAreListedOnce(): void
+    {
+        $tarantinoId = $this->findId(Person::class, ['name' => 'Quentin Tarantino']);
+
+        $data = $this->requestJson('GET', '/api/movies?person='.$tarantinoId);
+
+        self::assertSame(['Pulp Fiction'], array_column($data['items'], 'title'));
+        self::assertSame(1, $data['total']);
+    }
+
     public function testListCanBeFilteredByWatchProviderInFranceByDefault(): void
     {
         $netflixId = $this->findId(WatchProvider::class, ['name' => 'Netflix']);
@@ -146,10 +165,10 @@ final class MovieControllerTest extends ApiTestCase
 
     public function testListRejectsInvalidFilters(): void
     {
-        $data = $this->requestJson('GET', '/api/movies?decade=1995&year=100000&country=XX&region=ZZ');
+        $data = $this->requestJson('GET', '/api/movies?decade=1995&year=100000&country=XX&person=0&region=ZZ');
 
         self::assertResponseStatusCodeSame(Response::HTTP_UNPROCESSABLE_ENTITY);
-        self::assertSame(['decade', 'year', 'country', 'region'], array_column($data['violations'], 'propertyPath'));
+        self::assertSame(['decade', 'year', 'country', 'person', 'region'], array_column($data['violations'], 'propertyPath'));
     }
 
     public function testListRejectsAnUnknownSort(): void

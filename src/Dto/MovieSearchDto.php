@@ -36,6 +36,9 @@ final readonly class MovieSearchDto
         public ?int $company = null,
 
         #[Assert\Positive]
+        public ?int $person = null,
+
+        #[Assert\Positive]
         public ?int $provider = null,
 
         // Pays de diffusion, utilisé seulement avec le filtre provider.

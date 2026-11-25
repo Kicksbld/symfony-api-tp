@@ -13,14 +13,14 @@ class Company
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    #[Groups(['movie:read'])]
+    #[Groups(['movie:read', 'company:read'])]
     private ?int $id = null;
 
     #[ORM\Column(unique: true)]
     private ?int $tmdbId = null;
 
     #[ORM\Column(length: 255)]
-    #[Groups(['movie:read'])]
+    #[Groups(['movie:read', 'company:read'])]
     private ?string $name = null;
 
     #[ORM\Column(length: 255, nullable: true)]
@@ -67,7 +67,7 @@ class Company
         return $this;
     }
 
-    #[Groups(['movie:read'])]
+    #[Groups(['movie:read', 'company:read'])]
     public function getLogoUrl(): ?string
     {
         return TmdbImage::url($this->logoPath, TmdbImage::LOGO_SIZE);
