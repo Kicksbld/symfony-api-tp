@@ -1,19 +1,33 @@
 import { useQuery } from "@tanstack/react-query";
-import { RefreshCw } from "lucide-react";
+import { CircleUserRound, RefreshCw } from "lucide-react";
+import { NavLink } from "react-router";
+import { navigationItemClassName, type NavigationLayout } from "@/components/navigation-item";
 import { Button } from "@/components/ui/button";
 import { currentUserQuery } from "@/features/auth/queries";
 import type { Session } from "@/lib/session";
 
-export function AccountControls({ session, logout }: { session: Session; logout: () => void }) {
+type AccountControlsProps = {
+    layout: NavigationLayout;
+    session: Session;
+    onLogout: () => void;
+    onNavigate?: () => void;
+};
+
+export function AccountControls({ layout, session, onLogout, onNavigate }: AccountControlsProps) {
     const { data: user, error, isFetching, refetch } = useQuery(currentUserQuery(session));
+    const username = user?.username ?? session.user.username;
 
     return (
-        <div className="flex items-center gap-3 text-sm">
-            <span>{user?.username ?? session.user.username}</span>
+        <>
+            <NavLink to={`/users/${username}`} className={navigationItemClassName(layout)} onClick={onNavigate}>
+                <CircleUserRound aria-hidden="true" />
+                {username}
+            </NavLink>
             {error !== null && (
                 <Button
                     variant="ghost"
-                    size="icon-sm"
+                    size="icon-lg"
+                    className={layout === "panel" ? "size-11" : undefined}
                     aria-label="Réessayer le chargement du profil"
                     title="Réessayer le chargement du profil"
                     onClick={() => void refetch()}
@@ -22,9 +36,9 @@ export function AccountControls({ session, logout }: { session: Session; logout:
                     <RefreshCw aria-hidden="true" />
                 </Button>
             )}
-            <Button variant="outline" size="sm" onClick={logout}>
+            <button type="button" className={navigationItemClassName(layout, "outline")} onClick={onLogout}>
                 Déconnexion
-            </Button>
-        </div>
+            </button>
+        </>
     );
 }
