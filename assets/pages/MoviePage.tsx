@@ -6,16 +6,18 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { MoviePoster } from "@/features/movies/MoviePoster";
 import { WatchlistButton } from "@/features/movie-relationships/WatchlistButton";
 import { LogMovieButton } from "@/features/log-entries/LogMovieButton";
+import { catalogPathWith } from "@/features/movies/catalog-search";
 import { formatRuntime, releaseYear } from "@/features/movies/format";
 import { MovieRatings } from "@/features/movies/MovieRatings";
 import { movieQuery } from "@/features/movies/queries";
+import { countryLabel } from "@/features/movies/regions";
 import { WatchProviders } from "@/features/movies/WatchProviders";
 import { jobLabel } from "@/features/people/jobs";
 import { PersonLink } from "@/features/people/PersonLink";
 import { ApiError } from "@/lib/api";
 import { parsePositiveInteger } from "@/lib/numbers";
 import { TEXT_LINK_CLASS_NAME } from "@/lib/utils";
-import type { Company, CrewCredit, MovieDetail } from "@/lib/types";
+import type { Company, Country, CrewCredit, MovieDetail } from "@/lib/types";
 
 // La fiche ne montre que les têtes d'affiche, TMDB en fournit jusqu'à 15.
 const MAIN_CAST_SIZE = 8;
@@ -108,6 +110,7 @@ function MovieSheet({ movie }: { movie: MovieDetail }) {
                 )}
                 {crewByJob.size > 0 && <CrewSection crewByJob={crewByJob} />}
                 {movie.companies.length > 0 && <CompaniesSection companies={movie.companies} />}
+                {movie.countries.length > 0 && <CountriesSection countries={movie.countries} />}
                 <WatchProviders movieId={movie.id} />
             </div>
         </article>
@@ -158,6 +161,23 @@ function CompaniesSection({ companies }: { companies: Company[] }) {
                     <li key={company.id}>
                         <Button asChild variant="outline" size="sm">
                             <Link to={`/companies/${company.id}`}>{company.name}</Link>
+                        </Button>
+                    </li>
+                ))}
+            </ul>
+        </section>
+    );
+}
+
+function CountriesSection({ countries }: { countries: Country[] }) {
+    return (
+        <section className="space-y-2">
+            <h2 className="text-lg font-semibold">Pays de production</h2>
+            <ul className="flex flex-wrap gap-2">
+                {countries.map((country) => (
+                    <li key={country.code}>
+                        <Button asChild variant="outline" size="sm">
+                            <Link to={catalogPathWith({ country: country.code })}>{countryLabel(country)}</Link>
                         </Button>
                     </li>
                 ))}

@@ -7,21 +7,24 @@ import { QueryError } from "@/components/QueryError";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ActiveFilters } from "@/features/movies/ActiveFilters";
 import { CatalogFilters } from "@/features/movies/CatalogFilters";
 import { MovieCard } from "@/features/movies/MovieCard";
 import { catalogPath, hasCatalogFilters, parseCatalogSearch, withoutFilters, type CatalogSearch } from "@/features/movies/catalog-search";
-import { CATALOG_PAGE_SIZE, genresQuery, moviesQuery, type CatalogResult } from "@/features/movies/queries";
+import { CATALOG_PAGE_SIZE, moviesQuery, type CatalogResult } from "@/features/movies/queries";
+import { countryName } from "@/features/movies/regions";
+import { useCatalogReferences, type CatalogCorrection } from "@/features/movies/useCatalogReferences";
+
+type CorrectionState = Pick<CatalogCorrection, "invalidParams" | "unavailableProvider">;
 
 export function HomePage() {
     const [searchParams] = useSearchParams();
     const location = useLocation();
     const navigate = useNavigate();
-    const genres = useQuery(genresQuery());
     const { search, hasInvalidParams } = parseCatalogSearch(searchParams);
-    const unknownGenre = search.genre !== null && genres.data !== undefined && !genres.data.some((genre) => genre.id === search.genre);
-    // Un genre inconnu est retiré de l'URL : on attend la liste des genres pour ne pas afficher « aucun film » avant la redirection.
-    const canSearch = search.genre === null || !genres.isPending;
-    const { data, error, isFetching, isPending, isPlaceholderData, refetch } = useQuery(moviesQuery(search, canSearch && !unknownGenre));
+    const references = useCatalogReferences(search);
+    const { correction } = references;
+    const { data, error, isFetching, isPending, isPlaceholderData, refetch } = useQuery(moviesQuery(search, !references.isChecking && correction === null));
     // TanStack Query retire les données temporaires si la nouvelle recherche échoue.
     const [lastResult, setLastResult] = useState<typeof data>();
 
@@ -29,16 +32,20 @@ export function HomePage() {
         setLastResult(data);
     }
 
-    if (hasInvalidParams || unknownGenre) {
-        const validSearch = unknownGenre ? { ...search, genre: null, page: 1 } : search;
+    if (hasInvalidParams || correction !== null) {
+        const state: CorrectionState = {
+            invalidParams: hasInvalidParams || correction?.invalidParams === true,
+            unavailableProvider: correction?.unavailableProvider === true,
+        };
 
-        return <Navigate to={catalogPath(validSearch)} replace state={{ invalidParams: true }} />;
+        return <Navigate to={catalogPath(correction?.search ?? search)} replace state={state} />;
     }
 
     const result = data ?? lastResult;
     // Les résultats affichés peuvent venir d'une recherche précédente, le temps du chargement ou après une erreur.
     const isStale = result !== undefined && (isPlaceholderData || data === undefined);
     const showsInvalidParams = location.state?.invalidParams === true;
+    const showsUnavailableProvider = location.state?.unavailableProvider === true;
 
     // Changer un critère renvoie à la première page, les anciens numéros de page ne veulent plus rien dire.
     function changeSearch(next: CatalogSearch): void {
@@ -56,16 +63,22 @@ export function HomePage() {
                     {statusText(isFetching, result)}
                 </p>
             </div>
-            <CatalogFilters search={search} genres={genres.data} onChange={changeSearch} />
+            <CatalogFilters search={search} references={references} onChange={changeSearch} />
+            <ActiveFilters search={search} references={references} onChange={changeSearch} />
             {showsInvalidParams && (
                 <Alert>
                     <AlertDescription>Certains critères de l'adresse étaient invalides et ont été ignorés.</AlertDescription>
                 </Alert>
             )}
-            {genres.error !== null && (
-                <Alert variant="destructive">
-                    <AlertDescription>Impossible de charger les genres. {genres.error.message}</AlertDescription>
+            {showsUnavailableProvider && (
+                <Alert>
+                    <AlertDescription>
+                        La plateforme choisie ne propose aucun film du catalogue pour ce pays de diffusion ({countryName(search.region)}), le filtre a été retiré.
+                    </AlertDescription>
                 </Alert>
+            )}
+            {references.error !== null && (
+                <QueryError message="Impossible de charger certains filtres." error={references.error} onRetry={references.retry} retrying={references.retrying} />
             )}
             {error !== null && (
                 <QueryError message="Impossible de charger les films." error={error} onRetry={() => void refetch()} retrying={isFetching} />

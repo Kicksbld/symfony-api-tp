@@ -140,11 +140,25 @@ La page d'origine passe d'un écran à l'autre dans le paramètre `redirect` (pa
 
 L'accueil `/` liste les films avec `GET /api/movies`, triés par popularité par défaut. On peut chercher par titre, filtrer par genre (liste lue avec `GET /api/genres`) et par décennie, et changer le tri (populaires, tendances de la semaine, mieux notés, plus récents, titre). Les critères et la page vivent dans l'URL, par exemple `/?q=nuit&genre=18&decade=1990&sort=rating&page=2` : un rechargement, un lien partagé ou les boutons Précédent et Suivant du navigateur retrouvent la même recherche. Seuls les critères différents des valeurs par défaut sont écrits dans l'URL, et changer un critère revient à la page 1.
 
-Un paramètre invalide (titre vide ou trop long, genre inconnu, décennie hors liste, tri ou page non reconnus) est retiré de l'adresse avec un message, au lieu d'envoyer une requête que l'API refuserait en `422`. Une page au-delà de la dernière propose d'aller à la dernière page, et une recherche sans résultat propose d'effacer les filtres.
+Les filtres avancés reprennent ceux de l'API et se combinent entre eux (un film doit respecter tous les critères) :
+
+| Filtre | Paramètre | Liste de choix |
+| --- | --- | --- |
+| Année de sortie | `year` | Années de la décennie choisie, ou toutes depuis 1900 |
+| Pays de production | `country` (code ISO) | `GET /api/countries`, noms affichés en français |
+| Plateforme | `provider` et `region` | `GET /api/watch-providers?region=`, pour le pays de diffusion choisi (France par défaut) |
+| Personne | `person` | Recherche dans une fenêtre avec `GET /api/people?q=` |
+| Studio | `company` | Pas de liste : bouton « Affiner dans le catalogue » sur la page du studio |
+
+La fiche d'une personne et la page d'un studio ont aussi ce bouton, qui ouvre le catalogue filtré (`/?person=38`, `/?company=1`), et les pays de production de la fiche film mènent à `/?country=FR`. L'adresse obtenue se partage et accepte d'autres filtres, par exemple `/?person=38&decade=2010&provider=7`. Les filtres actifs s'affichent sous le formulaire avec leur nom, chacun avec un bouton pour le retirer.
+
+Le pays de diffusion n'est envoyé à l'API qu'avec une plateforme, et chaque combinaison de critères a sa propre entrée dans le cache de TanStack Query. Si la plateforme choisie n'a aucun film du catalogue dans le nouveau pays de diffusion, le filtre est retiré avec un message. Les listes de genres, de pays et de plateformes sont lues en entier (100 par page, les États-Unis en comptent plus) et gardées en cache jusqu'au rechargement.
+
+Un paramètre invalide (titre vide ou trop long, genre, pays, personne ou studio inconnu, décennie ou année hors liste, année hors de la décennie choisie, tri ou page non reconnus) est retiré de l'adresse avec un message, au lieu d'envoyer une requête que l'API refuserait en `422`. Une page au-delà de la dernière propose d'aller à la dernière page, et une recherche sans résultat propose d'effacer les filtres.
 
 #### Fiche film et watchlist
 
-Chaque carte du catalogue ouvre la fiche `/movies/{id}`, lue avec `GET /api/movies/{id}`. La fiche est préchargée dès le survol ou la prise de focus de la carte, elle s'affiche donc sans attente au clic. Elle montre l'affiche, le synopsis, la durée, les genres, les têtes d'affiche, l'équipe par poste (réalisation, scénario, image, musique, montage), les studios et la moyenne des membres (ou « Pas encore noté » sans note). Un identifiant invalide ou un film absent (`404`) affiche « Film introuvable ».
+Chaque carte du catalogue ouvre la fiche `/movies/{id}`, lue avec `GET /api/movies/{id}`. La fiche est préchargée dès le survol ou la prise de focus de la carte, elle s'affiche donc sans attente au clic. Elle montre l'affiche, le synopsis, la durée, les genres, les têtes d'affiche, l'équipe par poste (réalisation, scénario, image, musique, montage), les studios, les pays de production et la moyenne des membres (ou « Pas encore noté » sans note). Un identifiant invalide ou un film absent (`404`) affiche « Film introuvable ».
 
 Deux sections de la fiche ont leur propre requête, lancée une fois le film chargé. Si l'une échoue, elle affiche son erreur et un bouton « Réessayer » sans bloquer le reste de la fiche, et garde ce qu'elle affichait déjà.
 

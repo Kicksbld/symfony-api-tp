@@ -1,5 +1,9 @@
 import { authPath, returnPathFor } from "@/lib/redirect";
 import { clearSession, getSession, isCurrentSession, type Session } from "@/lib/session";
+import type { Paginated } from "@/lib/types";
+
+// Taille de page maximale acceptée par l'API.
+const MAX_PAGE_SIZE = 100;
 
 export type Violation = {
     propertyPath: string;
@@ -77,6 +81,22 @@ export async function apiFetch<T>(path: string, { session = getSession(), ...ini
     assertCurrentSession(session);
 
     return data;
+}
+
+// Lit toutes les pages d'une liste, pour une liste de choix qui doit être complète.
+export async function apiFetchAll<T>(path: string, params: Record<string, string>, signal: AbortSignal): Promise<T[]> {
+    const items: T[] = [];
+    let page = 1;
+    let lastPage: number;
+    do {
+        const query = new URLSearchParams({ ...params, page: String(page), limit: String(MAX_PAGE_SIZE) });
+        const result = await apiFetch<Paginated<T>>(`${path}?${query}`, { signal, session: null });
+        items.push(...result.items);
+        lastPage = result.lastPage;
+        page++;
+    } while (page <= lastPage);
+
+    return items;
 }
 
 function assertCurrentSession(session: Session | null): void {
