@@ -166,6 +166,35 @@ final class LogEntryControllerTest extends ApiTestCase
         self::assertNull($data['watchedOn']);
     }
 
+    public function testUpdatingTheLatestEntryUpdatesTheRatingAndLikeOfTheMember(): void
+    {
+        $user = UserFactory::createOne();
+        $this->logMovie(['rating' => 2], $user);
+        $latest = $this->logMovie(['rating' => 3], $user);
+
+        $this->requestJson('PATCH', '/api/log-entries/'.$latest, ['rating' => 4.5, 'liked' => true]);
+        self::assertResponseIsSuccessful();
+
+        $relationship = $this->requestJson('GET', '/api/movies/'.$this->movieId.'/relationship');
+        self::assertSame(4.5, $relationship['rating']);
+        self::assertTrue($relationship['liked']);
+        self::assertSame(4.5, $this->requestJson('GET', '/api/movies/'.$this->movieId.'/ratings')['average']);
+    }
+
+    public function testUpdatingAnOlderEntryKeepsTheRatingOfTheLatest(): void
+    {
+        $user = UserFactory::createOne();
+        $older = $this->logMovie(['rating' => 2], $user);
+        $this->logMovie(['rating' => 3], $user);
+
+        $this->requestJson('PATCH', '/api/log-entries/'.$older, ['rating' => 5, 'liked' => true]);
+        self::assertResponseIsSuccessful();
+
+        $relationship = $this->requestJson('GET', '/api/movies/'.$this->movieId.'/relationship');
+        self::assertSame(3, $relationship['rating']);
+        self::assertFalse($relationship['liked']);
+    }
+
     public function testUpdateRejectsInvalidData(): void
     {
         $logEntryId = $this->logMovie();
@@ -259,7 +288,7 @@ final class LogEntryControllerTest extends ApiTestCase
         $byMovie = $this->requestJson('GET', '/api/log-entries?movie='.$darkKnightId);
         self::assertSame([$reviewOfDarkKnight, $diaryOfDarkKnight], array_column($byMovie['items'], 'id'));
 
-        $byUser = $this->requestJson('GET', '/api/log-entries?user='.$member->getId());
+        $byUser = $this->requestJson('GET', '/api/log-entries?user='.$member->getUsername());
         self::assertSame([$diaryOfDarkKnight, $reviewOfInception], array_column($byUser['items'], 'id'));
 
         $reviews = $this->requestJson('GET', '/api/log-entries?withReview=true');
@@ -267,13 +296,13 @@ final class LogEntryControllerTest extends ApiTestCase
         self::assertSame('Le Joker.', $reviews['items'][0]['review']);
         self::assertTrue($reviews['items'][0]['containsSpoilers']);
 
-        $reviewsOfMemberOnDarkKnight = $this->requestJson('GET', '/api/log-entries?withReview=true&movie='.$darkKnightId.'&user='.$member->getId());
+        $reviewsOfMemberOnDarkKnight = $this->requestJson('GET', '/api/log-entries?withReview=true&movie='.$darkKnightId.'&user='.$member->getUsername());
         self::assertSame([], $reviewsOfMemberOnDarkKnight['items']);
     }
 
     public function testPublicFeedRejectsInvalidFilters(): void
     {
-        $data = $this->requestJson('GET', '/api/log-entries?movie=0&user=-1');
+        $data = $this->requestJson('GET', '/api/log-entries?movie=0&user=Not%20A%20Username');
 
         self::assertResponseStatusCodeSame(Response::HTTP_UNPROCESSABLE_ENTITY);
         self::assertSame(['movie', 'user'], array_column($data['violations'], 'propertyPath'));

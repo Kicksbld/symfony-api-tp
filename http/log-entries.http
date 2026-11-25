@@ -64,10 +64,10 @@ GET {{baseURL}}/api/log-entries
 GET {{baseURL}}/api/log-entries?movie=1&withReview=true
 
 ### Journal d'un membre, deuxième page de 10 entrées (200)
-GET {{baseURL}}/api/log-entries?user=1&page=2&limit=10
+GET {{baseURL}}/api/log-entries?user=jane_doe&page=2&limit=10
 
-### Filtres invalides (422)
-GET {{baseURL}}/api/log-entries?movie=0&user=-1
+### Filtres invalides : film à 0, username en majuscules (422)
+GET {{baseURL}}/api/log-entries?movie=0&user=Jane%20Doe
 
 ### withReview qui n'est pas un booléen (422)
 GET {{baseURL}}/api/log-entries?withReview=maybe
@@ -78,7 +78,8 @@ GET {{baseURL}}/api/log-entries/{{logEntryId}}
 ### Lire une entrée qui n'existe pas (404)
 GET {{baseURL}}/api/log-entries/999999
 
-### Modifier sa note et signaler des spoilers, les autres champs ne changent pas (200)
+### Modifier sa note et signaler des spoilers, les autres champs ne changent pas.
+# C'est ma dernière entrée sur ce film : ma note sur le film passe aussi à 5 (200)
 PATCH {{baseURL}}/api/log-entries/{{logEntryId}}
 Authorization: Bearer {{token}}
 Content-Type: application/json

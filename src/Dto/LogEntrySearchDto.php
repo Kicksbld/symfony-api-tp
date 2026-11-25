@@ -2,6 +2,7 @@
 
 namespace App\Dto;
 
+use App\Validator\Username;
 use Symfony\Component\Validator\Constraints as Assert;
 
 final readonly class LogEntrySearchDto
@@ -10,8 +11,8 @@ final readonly class LogEntrySearchDto
         #[Assert\Positive]
         public ?int $movie = null,
 
-        #[Assert\Positive]
-        public ?int $user = null,
+        #[Username]
+        public ?string $user = null,
 
         public bool $withReview = false,
     ) {

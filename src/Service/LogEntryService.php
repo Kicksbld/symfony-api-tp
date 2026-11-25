@@ -7,6 +7,7 @@ use App\Dto\UpdateLogEntryDto;
 use App\Entity\LogEntry;
 use App\Entity\Movie;
 use App\Entity\User;
+use App\Repository\LogEntryRepository;
 use Doctrine\ORM\EntityManagerInterface;
 
 final readonly class LogEntryService
@@ -14,6 +15,7 @@ final readonly class LogEntryService
     public function __construct(
         private EntityManagerInterface $entityManager,
         private MovieRelationshipService $movieRelationshipService,
+        private LogEntryRepository $logEntryRepository,
     ) {
     }
 
@@ -60,7 +62,18 @@ final readonly class LogEntryService
             $logEntry->setContainsSpoilers($updateLogEntryDto->containsSpoilers);
         }
 
-        $this->entityManager->flush();
+        // Seule la dernière entrée du membre sur ce film reflète son avis actuel : modifier une entrée plus ancienne
+        // ne change pas sa note ni son coup de coeur.
+        $user = $logEntry->getUser();
+        $movie = $logEntry->getMovie();
+        if ($this->logEntryRepository->findLatestByUserAndMovie($user, $movie) !== $logEntry) {
+            $this->entityManager->flush();
+
+            return $logEntry;
+        }
+
+        $movieRelationship = $this->movieRelationshipService->findOrNew($user, $movie)->followLogEntry($logEntry);
+        $this->movieRelationshipService->save($movieRelationship, null !== $logEntry->getRating());
 
         return $logEntry;
     }

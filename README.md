@@ -211,7 +211,7 @@ Chaque visionnage est une entrée de journal. Une critique est simplement une en
 }
 ```
 
-Seul `movie` est obligatoire à la création. Journaliser un film met à jour mon état sur ce film : il passe en vu et sort de la watchlist, la note et le coup de coeur de l'entrée sont repris s'ils sont renseignés (une entrée sans note ne retire pas la note déjà donnée). Modifier ou supprimer une entrée ne touche pas à cet état.
+Seul `movie` est obligatoire à la création. Journaliser un film met à jour mon état sur ce film : il passe en vu et sort de la watchlist, la note et le coup de coeur de l'entrée sont repris s'ils sont renseignés (une entrée sans note ne retire pas la note déjà donnée). Modifier ma dernière entrée sur un film met aussi à jour ma note et mon coup de coeur sur ce film, modifier une entrée plus ancienne n'y touche pas. Supprimer une entrée ne change pas cet état : le film reste vu.
 
 `PATCH /api/log-entries/{id}` ne modifie que les champs envoyés, et `null` efface `watchedOn`, `rating` ou `review`. Seul l'auteur peut modifier ou supprimer son entrée, les autres membres reçoivent une `403`.
 
@@ -222,7 +222,7 @@ Paramètres de `GET /api/log-entries`, tous facultatifs et combinables :
 | Paramètre | Exemple | Description |
 | --- | --- | --- |
 | `movie` | `movie=1` | Entrées d'un film |
-| `user` | `user=3` | Entrées d'un membre |
+| `user` | `user=jane_doe` | Entrées d'un membre, par son username |
 | `withReview` | `withReview=true` | Seulement les critiques |
 
 ### Validation

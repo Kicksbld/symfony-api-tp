@@ -4,6 +4,8 @@ namespace App\Repository;
 
 use App\Dto\LogEntrySearchDto;
 use App\Entity\LogEntry;
+use App\Entity\Movie;
+use App\Entity\User;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\ORM\QueryBuilder;
 use Doctrine\Persistence\ManagerRegistry;
@@ -34,15 +36,32 @@ class LogEntryRepository extends ServiceEntityRepository
 
         if (null !== $logEntrySearchDto->user) {
             $queryBuilder
-                ->andWhere('logEntry.user = :user')
-                ->setParameter('user', $logEntrySearchDto->user);
+                ->andWhere('user.username = :username')
+                ->setParameter('username', $logEntrySearchDto->user);
         }
 
         if ($logEntrySearchDto->withReview) {
             $queryBuilder->andWhere('logEntry.review IS NOT NULL');
         }
 
-        // Plusieurs entrées peuvent être créées dans la même seconde : l'identifiant départage.
+        return $this->orderByMostRecent($queryBuilder);
+    }
+
+    public function findLatestByUserAndMovie(User $user, Movie $movie): ?LogEntry
+    {
+        $queryBuilder = $this->createQueryBuilder('logEntry')
+            ->andWhere('logEntry.user = :user')
+            ->andWhere('logEntry.movie = :movie')
+            ->setParameter('user', $user)
+            ->setParameter('movie', $movie)
+            ->setMaxResults(1);
+
+        return $this->orderByMostRecent($queryBuilder)->getQuery()->getOneOrNullResult();
+    }
+
+    // Plusieurs entrées peuvent être créées dans la même seconde : l'identifiant départage.
+    private function orderByMostRecent(QueryBuilder $queryBuilder): QueryBuilder
+    {
         return $queryBuilder
             ->orderBy('logEntry.createdAt', 'DESC')
             ->addOrderBy('logEntry.id', 'DESC');
