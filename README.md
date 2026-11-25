@@ -181,6 +181,12 @@ Le profil a trois onglets, chacun avec son adresse :
 
 `/users/{username}` ouvre le journal. Chaque onglet est paginé par 20 avec `?page=2` dans l'adresse, comme le catalogue. Une page invalide revient à la première, une page au-delà de la dernière propose d'y aller. Un onglet vide l'indique, et une critique marquée spoiler reste cachée jusqu'au clic sur « Afficher la critique ». Ajouter ou retirer un film depuis sa fiche relit la watchlist du profil : elle est à jour au retour sur l'onglet.
 
+#### Modification du profil
+
+Depuis son propre profil, le membre connecté peut ouvrir « Modifier mon profil » (`/settings/profile`). Le pseudo et la bio sont enregistrés avec `PATCH /api/me`. Une bio vide efface la bio existante. Si le pseudo change, la navigation et le lien « Voir mon profil public » utilisent la nouvelle adresse.
+
+La recherche du catalogue permet d'ajouter jusqu'à quatre films distincts. Les flèches changent leur ordre, et « Enregistrer les favoris » envoie la liste complète à `PUT /api/me/favorites`. Chaque formulaire conserve ses saisies si l'enregistrement échoue.
+
 #### Personnes et studios
 
 Sur la fiche film, chaque nom de la distribution et de l'équipe ouvre la fiche de la personne, et chaque studio ouvre sa page. Comme pour les films, la fiche d'une personne est préchargée au survol ou à la prise de focus du lien.

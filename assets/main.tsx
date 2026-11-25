@@ -5,6 +5,7 @@ import { BrowserRouter, Navigate, Route, Routes } from "react-router";
 import { Layout } from "@/components/Layout";
 import { AuthProvider } from "@/features/auth/AuthProvider";
 import { CompanyPage } from "@/pages/CompanyPage";
+import { EditProfilePage } from "@/pages/EditProfilePage";
 import { HomePage } from "@/pages/HomePage";
 import { LoginPage } from "@/pages/LoginPage";
 import { MoviePage } from "@/pages/MoviePage";
@@ -28,6 +29,7 @@ createRoot(document.getElementById("root")!).render(
                             <Route path="people" element={<PeoplePage />} />
                             <Route path="people/:id" element={<PersonPage />} />
                             <Route path="companies/:id" element={<CompanyPage />} />
+                            <Route path="settings/profile" element={<EditProfilePage />} />
                             <Route path="users/:username" element={<ProfilePage />}>
                                 <Route index element={<Navigate to="diary" replace />} />
                                 <Route path="diary" element={<DiaryTab />} />
