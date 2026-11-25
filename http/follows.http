@@ -11,35 +11,35 @@ Content-Type: application/json
 }
 
 ### Suivre arthur, la réponse est le membre suivi (201)
-POST {{baseURL}}/api/users/arthur/follow
+POST {{baseURL}}/api/users/arthur/followers
 Authorization: Bearer {{token}}
 
 ### Suivre arthur une seconde fois (409)
-POST {{baseURL}}/api/users/arthur/follow
+POST {{baseURL}}/api/users/arthur/followers
 Authorization: Bearer {{token}}
 
 ### Se suivre soi-même (422)
-POST {{baseURL}}/api/users/jane_doe/follow
+POST {{baseURL}}/api/users/jane_doe/followers
 Authorization: Bearer {{token}}
 
 ### Suivre un membre inconnu (404)
-POST {{baseURL}}/api/users/nobody/follow
+POST {{baseURL}}/api/users/nobody/followers
 Authorization: Bearer {{token}}
 
 ### Suivre sans être connecté (401)
-POST {{baseURL}}/api/users/arthur/follow
+POST {{baseURL}}/api/users/arthur/followers
 
 ### Ne plus suivre arthur (204)
-DELETE {{baseURL}}/api/users/arthur/follow
+DELETE {{baseURL}}/api/users/arthur/followers
 Authorization: Bearer {{token}}
 
 ### Ne plus suivre un membre qu'on ne suit pas (404)
-DELETE {{baseURL}}/api/users/arthur/follow
+DELETE {{baseURL}}/api/users/arthur/followers
 Authorization: Bearer {{token}}
 
 ### Ne plus suivre un membre inconnu (404)
-DELETE {{baseURL}}/api/users/nobody/follow
+DELETE {{baseURL}}/api/users/nobody/followers
 Authorization: Bearer {{token}}
 
 ### Ne plus suivre sans être connecté (401)
-DELETE {{baseURL}}/api/users/arthur/follow
+DELETE {{baseURL}}/api/users/arthur/followers

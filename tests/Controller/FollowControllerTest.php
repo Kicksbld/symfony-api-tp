@@ -12,7 +12,7 @@ final class FollowControllerTest extends ApiTestCase
     {
         UserFactory::createOne(['username' => 'arthur']);
 
-        $this->requestJson('POST', '/api/users/arthur/follow');
+        $this->requestJson('POST', '/api/users/arthur/followers');
 
         self::assertResponseStatusCodeSame(Response::HTTP_UNAUTHORIZED);
     }
@@ -22,7 +22,7 @@ final class FollowControllerTest extends ApiTestCase
         $this->loginAs(UserFactory::createOne(['username' => 'cobb']));
         $arthur = UserFactory::createOne(['username' => 'arthur']);
 
-        $followed = $this->requestJson('POST', '/api/users/arthur/follow');
+        $followed = $this->requestJson('POST', '/api/users/arthur/followers');
         self::assertResponseStatusCodeSame(Response::HTTP_CREATED);
         self::assertSame(['id' => $arthur->getId(), 'username' => 'arthur'], $followed);
 
@@ -39,9 +39,9 @@ final class FollowControllerTest extends ApiTestCase
     {
         $this->loginAs(UserFactory::createOne(['username' => 'cobb']));
         UserFactory::createOne(['username' => 'arthur']);
-        $this->requestJson('POST', '/api/users/arthur/follow');
+        $this->requestJson('POST', '/api/users/arthur/followers');
 
-        $data = $this->requestJson('POST', '/api/users/arthur/follow');
+        $data = $this->requestJson('POST', '/api/users/arthur/followers');
 
         self::assertResponseStatusCodeSame(Response::HTTP_CONFLICT);
         self::assertSame(Response::HTTP_CONFLICT, $data['status']);
@@ -51,7 +51,7 @@ final class FollowControllerTest extends ApiTestCase
     {
         $this->loginAs(UserFactory::createOne(['username' => 'cobb']));
 
-        $this->requestJson('POST', '/api/users/cobb/follow');
+        $this->requestJson('POST', '/api/users/cobb/followers');
 
         self::assertResponseStatusCodeSame(Response::HTTP_UNPROCESSABLE_ENTITY);
     }
@@ -60,7 +60,7 @@ final class FollowControllerTest extends ApiTestCase
     {
         $this->loginAs(UserFactory::createOne());
 
-        $this->requestJson('POST', '/api/users/nobody/follow');
+        $this->requestJson('POST', '/api/users/nobody/followers');
 
         self::assertResponseStatusCodeSame(Response::HTTP_NOT_FOUND);
     }
@@ -69,9 +69,9 @@ final class FollowControllerTest extends ApiTestCase
     {
         $this->loginAs(UserFactory::createOne(['username' => 'cobb']));
         UserFactory::createOne(['username' => 'arthur']);
-        $this->requestJson('POST', '/api/users/arthur/follow');
+        $this->requestJson('POST', '/api/users/arthur/followers');
 
-        $this->client->jsonRequest('DELETE', '/api/users/arthur/follow');
+        $this->client->jsonRequest('DELETE', '/api/users/arthur/followers');
         self::assertResponseStatusCodeSame(Response::HTTP_NO_CONTENT);
 
         $arthur = $this->requestJson('GET', '/api/users/arthur');
@@ -83,7 +83,7 @@ final class FollowControllerTest extends ApiTestCase
         $this->loginAs(UserFactory::createOne(['username' => 'cobb']));
         UserFactory::createOne(['username' => 'arthur']);
 
-        $this->requestJson('DELETE', '/api/users/arthur/follow');
+        $this->requestJson('DELETE', '/api/users/arthur/followers');
 
         self::assertResponseStatusCodeSame(Response::HTTP_NOT_FOUND);
     }
@@ -92,7 +92,7 @@ final class FollowControllerTest extends ApiTestCase
     {
         $this->loginAs(UserFactory::createOne());
 
-        $this->requestJson('DELETE', '/api/users/nobody/follow');
+        $this->requestJson('DELETE', '/api/users/nobody/followers');
 
         self::assertResponseStatusCodeSame(Response::HTTP_NOT_FOUND);
     }
@@ -101,7 +101,7 @@ final class FollowControllerTest extends ApiTestCase
     {
         UserFactory::createOne(['username' => 'arthur']);
 
-        $this->requestJson('DELETE', '/api/users/arthur/follow');
+        $this->requestJson('DELETE', '/api/users/arthur/followers');
 
         self::assertResponseStatusCodeSame(Response::HTTP_UNAUTHORIZED);
     }
@@ -114,10 +114,10 @@ final class FollowControllerTest extends ApiTestCase
         UserFactory::createOne(['username' => 'saito']);
         foreach ([$ariadne, $arthur] as $follower) {
             $this->loginAs($follower);
-            $this->requestJson('POST', '/api/users/cobb/follow');
+            $this->requestJson('POST', '/api/users/cobb/followers');
         }
         $this->loginAs($cobb);
-        $this->requestJson('POST', '/api/users/saito/follow');
+        $this->requestJson('POST', '/api/users/saito/followers');
         $this->client->setServerParameter('HTTP_AUTHORIZATION', '');
 
         $followers = $this->requestJson('GET', '/api/users/cobb/followers?limit=1');

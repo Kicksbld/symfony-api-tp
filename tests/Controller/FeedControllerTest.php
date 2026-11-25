@@ -33,8 +33,8 @@ final class FeedControllerTest extends ApiTestCase
         $this->logMovie($inceptionId);
         $this->loginAs($cobb);
         $this->logMovie($inceptionId);
-        $this->requestJson('POST', '/api/users/arthur/follow');
-        $this->requestJson('POST', '/api/users/ariadne/follow');
+        $this->requestJson('POST', '/api/users/arthur/followers');
+        $this->requestJson('POST', '/api/users/ariadne/followers');
 
         $data = $this->requestJson('GET', '/api/feed?limit=20');
 

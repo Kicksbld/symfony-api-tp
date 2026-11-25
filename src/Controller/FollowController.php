@@ -11,7 +11,7 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\CurrentUser;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
-#[Route('/api/users/{username:followed}/follow', name: 'api_follows_')]
+#[Route('/api/users/{username:followed}/followers', name: 'api_follows_')]
 #[IsGranted('IS_AUTHENTICATED')]
 final class FollowController extends AbstractController
 {
