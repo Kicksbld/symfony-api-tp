@@ -1,10 +1,12 @@
-### Inscription d'un nouveau membre (201)
+# Les fichiers .http s'utilisent sur une base préparée avec app:tmdb:import --from-file puis app:seed-demo (voir le README).
+
+### Inscription d'un nouveau membre (201, puis 422 si la requête a déjà été lancée)
 POST {{baseURL}}/api/register
 Content-Type: application/json
 
 {
-  "email": "jane@example.com",
-  "username": "jane_doe",
+  "email": "nouveau@example.com",
+  "username": "nouveau",
   "password": "secret-password"
 }
 
@@ -18,7 +20,7 @@ Content-Type: application/json
   "password": "short"
 }
 
-### Inscription avec un email et un username déjà pris, à lancer après la première requête (422)
+### Inscription avec l'email et le username d'un compte de démo, déjà pris (422)
 POST {{baseURL}}/api/register
 Content-Type: application/json
 
@@ -28,13 +30,13 @@ Content-Type: application/json
   "password": "secret-password"
 }
 
-### Connexion : le token est enregistré pour les autres fichiers .http (200)
+### Connexion avec le compte de démo jane_doe : le token est enregistré pour les autres fichiers .http (200)
 POST {{baseURL}}/api/login_check
 Content-Type: application/json
 
 {
   "email": "jane@example.com",
-  "password": "secret-password"
+  "password": "demo1234"
 }
 
 > {%

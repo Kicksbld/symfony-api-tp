@@ -1,5 +1,4 @@
-# Le membre jane_doe est créé par l'inscription de auth.http. Si son username a été changé avec me.http,
-# remplacer jane_doe par le nouveau.
+# jane_doe est un compte de démo créé par app:seed-demo.
 
 ### Chercher des membres par username (200)
 GET {{baseURL}}/api/users?q=jane&page=1&limit=20

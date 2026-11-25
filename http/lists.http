@@ -48,7 +48,7 @@ Content-Type: application/json
 GET {{baseURL}}/api/lists
 
 ### Recherche par nom (200)
-GET {{baseURL}}/api/lists?q=nolan
+GET {{baseURL}}/api/lists?q=top
 
 ### Listes publiques d'un membre qui contiennent un film, deuxième page de 10 listes (200)
 GET {{baseURL}}/api/lists?user=jane_doe&movie=1&page=2&limit=10

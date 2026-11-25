@@ -22,11 +22,11 @@ GET {{baseURL}}/api/people/1/movies
 ### Films où la personne joue (200)
 GET {{baseURL}}/api/people/1/movies?job=Actor
 
-### Films réalisés par la personne (200)
-GET {{baseURL}}/api/people/1/movies?job=Director
+### Films réalisés par une personne, ici Christopher Nolan après une installation depuis le fichier de données (200)
+GET {{baseURL}}/api/people/38/movies?job=Director
 
-### Films composés par la personne, 5 par page (200)
-GET {{baseURL}}/api/people/1/movies?job=Original Music Composer&limit=5
+### Films composés par une personne, ici Hans Zimmer, 5 par page (200)
+GET {{baseURL}}/api/people/317/movies?job=Original%20Music%20Composer&limit=5
 
 ### Poste de plus de 100 caractères (422)
 GET {{baseURL}}/api/people/1/movies?job=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
