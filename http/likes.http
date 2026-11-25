@@ -1,0 +1,71 @@
+# Lancer d'abord la connexion de auth.http, puis la création de liste de lists.http pour récupérer movieListId.
+# L'identifiant du film dépend de la base : le récupérer avec GET /api/movies.
+
+### Journaliser un film avec une critique, pour avoir une entrée à liker (201)
+POST {{baseURL}}/api/log-entries
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "movie": 1,
+  "review": "Toujours aussi bon."
+}
+
+> {%
+  client.global.set("likedLogEntryId", response.body.id);
+%}
+
+### Liker une critique, la réponse est la critique avec son nombre de likes (201)
+POST {{baseURL}}/api/log-entries/{{likedLogEntryId}}/like
+Authorization: Bearer {{token}}
+
+### Liker la même critique une seconde fois (409)
+POST {{baseURL}}/api/log-entries/{{likedLogEntryId}}/like
+Authorization: Bearer {{token}}
+
+### Liker une critique qui n'existe pas (404)
+POST {{baseURL}}/api/log-entries/999999/like
+Authorization: Bearer {{token}}
+
+### Liker sans token (401)
+POST {{baseURL}}/api/log-entries/{{likedLogEntryId}}/like
+
+### Retirer son like (204)
+DELETE {{baseURL}}/api/log-entries/{{likedLogEntryId}}/like
+Authorization: Bearer {{token}}
+
+### Retirer un like absent (404)
+DELETE {{baseURL}}/api/log-entries/{{likedLogEntryId}}/like
+Authorization: Bearer {{token}}
+
+### Retirer un like sans token (401)
+DELETE {{baseURL}}/api/log-entries/{{likedLogEntryId}}/like
+
+### Liker une liste, la réponse est la liste avec son nombre de likes (201)
+POST {{baseURL}}/api/lists/{{movieListId}}/like
+Authorization: Bearer {{token}}
+
+### Liker la même liste une seconde fois (409)
+POST {{baseURL}}/api/lists/{{movieListId}}/like
+Authorization: Bearer {{token}}
+
+### Liker une liste qui n'existe pas, ou la liste privée d'un autre membre (404)
+POST {{baseURL}}/api/lists/999999/like
+Authorization: Bearer {{token}}
+
+### Liker une liste sans token (401)
+POST {{baseURL}}/api/lists/{{movieListId}}/like
+
+### Listes publiques les plus likées d'abord (200)
+GET {{baseURL}}/api/lists?sort=popular
+
+### Retirer son like de la liste (204)
+DELETE {{baseURL}}/api/lists/{{movieListId}}/like
+Authorization: Bearer {{token}}
+
+### Retirer un like absent de la liste (404)
+DELETE {{baseURL}}/api/lists/{{movieListId}}/like
+Authorization: Bearer {{token}}
+
+### Retirer un like de liste sans token (401)
+DELETE {{baseURL}}/api/lists/{{movieListId}}/like

@@ -5,6 +5,8 @@ namespace App\Entity;
 use App\Entity\Trait\TimestampableTrait;
 use App\Model\Rating;
 use App\Repository\LogEntryRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Serializer\Attribute\Context;
@@ -66,10 +68,26 @@ class LogEntry
     #[Groups(['logEntry:read'])]
     private bool $containsSpoilers = false;
 
+    /**
+     * EXTRA_LAZY : compter les likes et les commentaires fait un COUNT sans tous les charger.
+     *
+     * @var Collection<int, LogEntryLike>
+     */
+    #[ORM\OneToMany(targetEntity: LogEntryLike::class, mappedBy: 'logEntry', fetch: 'EXTRA_LAZY')]
+    private Collection $likes;
+
+    /**
+     * @var Collection<int, LogEntryComment>
+     */
+    #[ORM\OneToMany(targetEntity: LogEntryComment::class, mappedBy: 'logEntry', fetch: 'EXTRA_LAZY')]
+    private Collection $comments;
+
     public function __construct(User $user, Movie $movie)
     {
         $this->user = $user;
         $this->movie = $movie;
+        $this->likes = new ArrayCollection();
+        $this->comments = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -158,6 +176,18 @@ class LogEntry
         $this->containsSpoilers = $containsSpoilers;
 
         return $this;
+    }
+
+    #[Groups(['logEntry:read'])]
+    public function getLikeCount(): int
+    {
+        return $this->likes->count();
+    }
+
+    #[Groups(['logEntry:read'])]
+    public function getCommentCount(): int
+    {
+        return $this->comments->count();
     }
 
     // Redéfini depuis TimestampableTrait pour l'exposer : c'est la date d'activité affichée dans le fil.

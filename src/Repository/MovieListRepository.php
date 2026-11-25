@@ -4,7 +4,9 @@ namespace App\Repository;
 
 use App\Dto\MovieListSearchDto;
 use App\Entity\MovieList;
+use App\Entity\MovieListLike;
 use App\Entity\User;
+use App\Enum\MovieListSort;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\ORM\QueryBuilder;
 use Doctrine\Persistence\ManagerRegistry;
@@ -50,6 +52,10 @@ class MovieListRepository extends ServiceEntityRepository
                 ->setParameter('movie', $movieListSearchDto->movie);
         }
 
+        if (MovieListSort::Popular === $movieListSearchDto->sort) {
+            $this->orderByLikeCount($queryBuilder);
+        }
+
         return $this->orderByMostRecent($queryBuilder);
     }
 
@@ -71,11 +77,23 @@ class MovieListRepository extends ServiceEntityRepository
         return $this->orderByMostRecent($queryBuilder);
     }
 
-    // Plusieurs listes peuvent être créées dans la même seconde : l'identifiant départage.
+    // Nombre de likes en sous-requête pour ne pas grouper la requête paginée. À égalité, les plus récentes d'abord.
+    private function orderByLikeCount(QueryBuilder $queryBuilder): void
+    {
+        $queryBuilder
+            ->addSelect(\sprintf(
+                '(SELECT COUNT(movieListLike.id) FROM %s movieListLike WHERE movieListLike.movieList = movieList) AS HIDDEN likeCount',
+                MovieListLike::class,
+            ))
+            ->orderBy('likeCount', 'DESC');
+    }
+
+    // Complète le tri déjà posé, s'il y en a un. Plusieurs listes peuvent être créées dans la même seconde :
+    // l'identifiant départage.
     private function orderByMostRecent(QueryBuilder $queryBuilder): QueryBuilder
     {
         return $queryBuilder
-            ->orderBy('movieList.createdAt', 'DESC')
+            ->addOrderBy('movieList.createdAt', 'DESC')
             ->addOrderBy('movieList.id', 'DESC');
     }
 }
