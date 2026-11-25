@@ -26,8 +26,6 @@ export type LogEntryPayload = {
     containsSpoilers: boolean;
 };
 
-export const RATING_CHOICES = Array.from({ length: 10 }, (_, index) => (index + 1) / 2);
-
 // Le champ date attend le jour local : toISOString() donnerait celui de Greenwich, qui peut être la veille ou le lendemain.
 export function localToday(): string {
     const today = new Date();

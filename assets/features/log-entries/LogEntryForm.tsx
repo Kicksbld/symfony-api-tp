@@ -5,10 +5,9 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { NativeSelect } from "@/components/ui/native-select";
 import { Textarea } from "@/components/ui/textarea";
-import { localToday, RATING_CHOICES, type DraftErrors, type LogEntryDraft } from "@/features/log-entries/draft";
-import { formatRating } from "@/features/movies/format";
+import { localToday, type DraftErrors, type LogEntryDraft } from "@/features/log-entries/draft";
+import { RatingSelect } from "@/features/movies/RatingSelect";
 
 // Même limite que LogEntry::REVIEW_MAX_LENGTH côté API.
 const REVIEW_MAX_LENGTH = 10_000;
@@ -74,21 +73,14 @@ export function LogEntryForm({ draft, errors, submitting, submitLabel, onChange,
                     />
                 </Field>
                 <Field id={`${id}-rating`} label="Note" error={errors.fields.rating}>
-                    <NativeSelect
+                    <RatingSelect
                         id={`${id}-rating`}
                         className="w-full"
                         value={draft.rating}
                         aria-invalid={errors.fields.rating !== undefined}
                         aria-describedby={errors.fields.rating && `${id}-rating-error`}
                         onChange={(event) => update("rating", event.target.value)}
-                    >
-                        <option value="">Pas de note</option>
-                        {RATING_CHOICES.map((rating) => (
-                            <option key={rating} value={String(rating)}>
-                                {formatRating(rating)}
-                            </option>
-                        ))}
-                    </NativeSelect>
+                    />
                 </Field>
             </div>
             <div className="flex flex-wrap gap-x-6 gap-y-3">

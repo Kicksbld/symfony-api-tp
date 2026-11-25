@@ -1,5 +1,5 @@
 import { queryOptions, useMutation, useQueryClient } from "@tanstack/react-query";
-import { watchlistKey } from "@/features/users/queries";
+import { userQueriesKey } from "@/features/users/queries";
 import { apiFetch } from "@/lib/api";
 import { sessionKey } from "@/lib/query-client";
 import { isCurrentSession, type Session } from "@/lib/session";
@@ -12,42 +12,49 @@ export function relationshipQuery(session: Session, movieId: number) {
     });
 }
 
-export function useWatchlistMutation(session: Session, movieId: number) {
+export function useRelationshipMutation(session: Session, movieId: number) {
     const queryClient = useQueryClient();
     const { queryKey } = relationshipQuery(session, movieId);
 
     return useMutation({
-        mutationKey: [...queryKey, "watchlist"],
-        mutationFn: (inWatchlist: boolean) =>
+        mutationKey: queryKey,
+        mutationFn: (patch: Partial<MovieRelationship>) =>
             apiFetch<MovieRelationship>(`/movies/${movieId}/relationship`, {
                 session,
                 method: "PATCH",
-                body: JSON.stringify({ inWatchlist }),
+                body: JSON.stringify(patch),
             }),
-        onMutate: async (inWatchlist) => {
+        onMutate: async (patch) => {
             // Une lecture en cours écraserait l'état optimiste avec l'ancienne valeur.
             await queryClient.cancelQueries({ queryKey });
             const previous = queryClient.getQueryData(queryKey);
             if (previous !== undefined && isCurrentSession(session)) {
-                queryClient.setQueryData(queryKey, { ...previous, inWatchlist });
+                queryClient.setQueryData(queryKey, { ...previous, ...patch });
             }
 
-            return { previous };
+            return previous;
         },
-        onError: (_error, _inWatchlist, context) => {
-            if (context?.previous !== undefined && isCurrentSession(session)) {
-                queryClient.setQueryData(queryKey, context.previous);
+        onSuccess: (relationship) => {
+            if (isCurrentSession(session)) {
+                queryClient.setQueryData(queryKey, relationship);
             }
         },
-        onSettled: async () => {
-            if (!isCurrentSession(session)) {
-                return;
+        onError: (_error, _patch, previous) => {
+            if (previous !== undefined && isCurrentSession(session)) {
+                queryClient.setQueryData(queryKey, previous);
+            }
+        },
+        onSettled: async (_data, _error, patch) => {
+            const refresh = [queryClient.invalidateQueries({ queryKey: userQueriesKey(session.user.username) })];
+            if (isCurrentSession(session)) {
+                refresh.push(queryClient.invalidateQueries({ queryKey }));
+            }
+            if (patch.rating !== undefined) {
+                // Les résultats du catalogue affichent aussi la moyenne du film.
+                refresh.push(queryClient.invalidateQueries({ queryKey: ["movies"] }));
             }
 
-            await Promise.all([
-                queryClient.invalidateQueries({ queryKey }),
-                queryClient.invalidateQueries({ queryKey: watchlistKey(session.user.username) }),
-            ]);
+            await Promise.all(refresh);
         },
     });
 }

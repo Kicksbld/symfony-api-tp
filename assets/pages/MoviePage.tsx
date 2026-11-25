@@ -4,7 +4,7 @@ import { QueryError } from "@/components/QueryError";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { MoviePoster } from "@/features/movies/MoviePoster";
-import { WatchlistButton } from "@/features/movie-relationships/WatchlistButton";
+import { MovieRelationshipControls } from "@/features/movie-relationships/MovieRelationshipControls";
 import { LogMovieButton } from "@/features/log-entries/LogMovieButton";
 import { catalogPathWith } from "@/features/movies/catalog-search";
 import { formatRuntime, releaseYear } from "@/features/movies/format";
@@ -81,7 +81,7 @@ function MovieSheet({ movie }: { movie: MovieDetail }) {
                 </header>
                 <div className="flex flex-wrap items-start gap-3">
                     <LogMovieButton movie={movie} />
-                    <WatchlistButton movieId={movie.id} />
+                    <MovieRelationshipControls movieId={movie.id} />
                 </div>
                 <MovieRatings movieId={movie.id} />
                 {movie.overview !== null && movie.overview !== "" && (

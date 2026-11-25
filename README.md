@@ -156,7 +156,7 @@ Le pays de diffusion n'est envoyé à l'API qu'avec une plateforme, et chaque co
 
 Un paramètre invalide (titre vide ou trop long, genre, pays, personne ou studio inconnu, décennie ou année hors liste, année hors de la décennie choisie, tri ou page non reconnus) est retiré de l'adresse avec un message, au lieu d'envoyer une requête que l'API refuserait en `422`. Une page au-delà de la dernière propose d'aller à la dernière page, et une recherche sans résultat propose d'effacer les filtres.
 
-#### Fiche film et watchlist
+#### Fiche film et suivi personnel
 
 Chaque carte du catalogue ouvre la fiche `/movies/{id}`, lue avec `GET /api/movies/{id}`. La fiche est préchargée dès le survol ou la prise de focus de la carte, elle s'affiche donc sans attente au clic. Elle montre l'affiche, le synopsis, la durée, les genres, les têtes d'affiche, l'équipe par poste (réalisation, scénario, image, musique, montage), les studios, les pays de production et la moyenne des membres (ou « Pas encore noté » sans note). Un identifiant invalide ou un film absent (`404`) affiche « Film introuvable ».
 
@@ -165,21 +165,26 @@ Deux sections de la fiche ont leur propre requête, lancée une fois le film cha
 - « Notes des membres » lit `GET /api/movies/{id}/ratings` : un histogramme de 10 colonnes, de 0,5 à 5 étoiles, avec la moyenne et le nombre de notes, ou « Pas encore noté » sans note. Les colonnes sont aussi décrites dans un tableau lu par les lecteurs d'écran. Journaliser, modifier ou supprimer une entrée relit la répartition.
 - « Où regarder » lit `GET /api/movies/{id}/watch-providers?region=FR` et groupe les plateformes par abonnement, location et achat. Un menu change de pays (France par défaut, Belgique, Suisse, Canada, États-Unis), les offres du pays précédent restent affichées pendant le chargement. Un pays sans offre l'indique.
 
-Un membre connecté voit son état avec `GET /api/movies/{id}/relationship`, et le bouton envoie `PATCH /api/movies/{id}/relationship` avec seulement `{ "inWatchlist": true }` ou `false`. Le bouton change tout de suite, un clic pendant l'envoi est ignoré, puis mon état sur le film et la watchlist du profil sont relus. En cas d'erreur, le bouton revient à son état précédent et un message s'affiche. Un visiteur est envoyé vers la connexion, puis revient sur la fiche.
+Un membre connecté voit son état avec `GET /api/movies/{id}/relationship`. Depuis la fiche, il peut marquer le film comme vu ou aimé, l'ajouter à sa watchlist ou changer sa note par demi-étoile. Chaque action envoie seulement le champ modifié à `PATCH /api/movies/{id}/relationship`. L'option « Pas de note » envoie `{ "rating": null }`. Ces actions ne créent aucune entrée de journal.
+
+Le suivi change tout de suite, puis la fiche et les onglets du profil se synchronisent avec le serveur. Un changement de note actualise aussi l'histogramme. En cas d'erreur, le suivi revient à son état précédent et un message s'affiche. Depuis la watchlist, un visiteur est envoyé vers la connexion, puis revient sur la fiche.
 
 #### Profil public
 
 `/users/{username}` affiche le profil d'un membre, lu avec `GET /api/users/{username}` : pseudo, bio, nombre de films vus, d'abonnés et d'abonnements, et les 4 films favoris qui mènent à leur fiche. Le profil est public : il s'ouvre sans compte, et ses requêtes partent sans token. Un pseudo inconnu (`404`) affiche « Membre introuvable ». Le lien avec le pseudo dans la navigation ouvre le profil du membre connecté.
 
-Le profil a trois onglets, chacun avec son adresse :
+Le profil a quatre onglets, chacun avec son adresse :
 
 | Adresse | Endpoint | Contenu |
 | --- | --- | --- |
 | `/users/{username}/diary` | `GET /api/users/{username}/diary` | Journal : film, date de visionnage, note, aimé, revu et critique |
 | `/users/{username}/watched` | `GET /api/users/{username}/watched` | Films vus |
+| `/users/{username}/likes` | `GET /api/users/{username}/likes` | Films aimés |
 | `/users/{username}/watchlist` | `GET /api/users/{username}/watchlist` | Watchlist |
 
-`/users/{username}` ouvre le journal. Chaque onglet est paginé par 20 avec `?page=2` dans l'adresse, comme le catalogue. Une page invalide revient à la première, une page au-delà de la dernière propose d'y aller. Un onglet vide l'indique, et une critique marquée spoiler reste cachée jusqu'au clic sur « Afficher la critique ». Ajouter ou retirer un film depuis sa fiche relit la watchlist du profil : elle est à jour au retour sur l'onglet.
+`/users/{username}` ouvre le journal. Chaque onglet est paginé par 20 avec `?page=2` dans l'adresse, comme le catalogue. Une page invalide revient à la première, une page au-delà de la dernière propose d'y aller. Un onglet vide l'indique, et une critique marquée spoiler reste cachée jusqu'au clic sur « Afficher la critique ».
+
+Le journal peut être filtré par année, puis par mois. Les filtres sont conservés dans l'adresse et dans les liens de pagination, par exemple `?year=2026&month=11&page=2`. Changer un filtre revient à la première page. Effacer l'année efface aussi le mois.
 
 #### Modification du profil
 
