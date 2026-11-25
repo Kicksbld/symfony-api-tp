@@ -24,11 +24,7 @@ class LogEntryRepository extends ServiceEntityRepository
 
     public function createSearchQueryBuilder(LogEntrySearchDto $logEntrySearchDto): QueryBuilder
     {
-        // Auteur et film sont joints pour être sérialisés sans une requête par entrée.
-        $queryBuilder = $this->createQueryBuilder('logEntry')
-            ->addSelect('user', 'movie')
-            ->innerJoin('logEntry.user', 'user')
-            ->innerJoin('logEntry.movie', 'movie');
+        $queryBuilder = $this->createWithUserAndMovieQueryBuilder();
 
         if (null !== $logEntrySearchDto->movie) {
             $queryBuilder
@@ -79,10 +75,7 @@ class LogEntryRepository extends ServiceEntityRepository
     public function createFeedQueryBuilder(User $user): QueryBuilder
     {
         // La jointure sur les abonnés de l'auteur, filtrée sur le membre connecté, ne garde que les membres qu'il suit.
-        $queryBuilder = $this->createQueryBuilder('logEntry')
-            ->addSelect('user', 'movie')
-            ->innerJoin('logEntry.user', 'user')
-            ->innerJoin('logEntry.movie', 'movie')
+        $queryBuilder = $this->createWithUserAndMovieQueryBuilder()
             ->innerJoin('user.followers', 'follower')
             ->andWhere('follower = :follower')
             ->setParameter('follower', $user);
@@ -100,6 +93,15 @@ class LogEntryRepository extends ServiceEntityRepository
             ->setMaxResults(1);
 
         return $this->orderByMostRecent($queryBuilder)->getQuery()->getOneOrNullResult();
+    }
+
+    // Auteur et film sont joints pour être sérialisés sans une requête par entrée.
+    private function createWithUserAndMovieQueryBuilder(): QueryBuilder
+    {
+        return $this->createQueryBuilder('logEntry')
+            ->addSelect('user', 'movie')
+            ->innerJoin('logEntry.user', 'user')
+            ->innerJoin('logEntry.movie', 'movie');
     }
 
     // Complète le tri déjà posé, s'il y en a un. Plusieurs entrées peuvent être créées dans la même seconde :

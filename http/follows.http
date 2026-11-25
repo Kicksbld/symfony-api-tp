@@ -10,7 +10,7 @@ Content-Type: application/json
   "password": "secret-password"
 }
 
-### Suivre arthur (204)
+### Suivre arthur, la réponse est le membre suivi (201)
 POST {{baseURL}}/api/users/arthur/follow
 Authorization: Bearer {{token}}
 
@@ -35,6 +35,10 @@ Authorization: Bearer {{token}}
 
 ### Ne plus suivre un membre qu'on ne suit pas (404)
 DELETE {{baseURL}}/api/users/arthur/follow
+Authorization: Bearer {{token}}
+
+### Ne plus suivre un membre inconnu (404)
+DELETE {{baseURL}}/api/users/nobody/follow
 Authorization: Bearer {{token}}
 
 ### Ne plus suivre sans être connecté (401)

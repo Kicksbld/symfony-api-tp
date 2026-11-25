@@ -20,10 +20,11 @@ final class FollowControllerTest extends ApiTestCase
     public function testMemberCanFollowAnotherMember(): void
     {
         $this->loginAs(UserFactory::createOne(['username' => 'cobb']));
-        UserFactory::createOne(['username' => 'arthur']);
+        $arthur = UserFactory::createOne(['username' => 'arthur']);
 
-        $this->client->jsonRequest('POST', '/api/users/arthur/follow');
-        self::assertResponseStatusCodeSame(Response::HTTP_NO_CONTENT);
+        $followed = $this->requestJson('POST', '/api/users/arthur/follow');
+        self::assertResponseStatusCodeSame(Response::HTTP_CREATED);
+        self::assertSame(['id' => $arthur->getId(), 'username' => 'arthur'], $followed);
 
         $arthur = $this->requestJson('GET', '/api/users/arthur');
         self::assertSame(1, $arthur['followersCount']);
@@ -83,6 +84,15 @@ final class FollowControllerTest extends ApiTestCase
         UserFactory::createOne(['username' => 'arthur']);
 
         $this->requestJson('DELETE', '/api/users/arthur/follow');
+
+        self::assertResponseStatusCodeSame(Response::HTTP_NOT_FOUND);
+    }
+
+    public function testUnfollowAnUnknownMemberReturnsNotFound(): void
+    {
+        $this->loginAs(UserFactory::createOne());
+
+        $this->requestJson('DELETE', '/api/users/nobody/follow');
 
         self::assertResponseStatusCodeSame(Response::HTTP_NOT_FOUND);
     }

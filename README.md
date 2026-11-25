@@ -324,11 +324,11 @@ Le journal (`/diary`) ne contient que les entrées datées (`watchedOn`), de la 
 
 ### Abonnements et feed
 
-`POST /api/users/{username}/follow` suit un membre et `DELETE` arrête de le suivre, les deux renvoient une `204` sans contenu. Suivre un membre déjà suivi renvoie une `409`, se suivre soi-même une `422`, et ne plus suivre un membre qu'on ne suit pas une `404`.
+`POST /api/users/{username}/follow` suit un membre et renvoie une `201` avec le membre suivi (`id` et `username`). `DELETE` sur la même route arrête de le suivre et renvoie une `204` sans contenu. Suivre un membre déjà suivi renvoie une `409`, se suivre soi-même une `422`, et ne plus suivre un membre qu'on ne suit pas une `404`.
 
 `/followers` et `/following` renvoient des membres au même format que `GET /api/users` (`id` et `username`).
 
-`GET /api/feed` renvoie les entrées de journal des membres que je suis, au même format que `GET /api/log-entries`. Mes propres entrées n'y apparaissent pas.
+`GET /api/feed` renvoie les entrées de journal des membres que je suis, au même format que `GET /api/log-entries` et dans le même ordre : de la dernière entrée créée à la plus ancienne, quelle que soit la date de visionnage. Mes propres entrées n'y apparaissent pas.
 
 ### Validation
 
