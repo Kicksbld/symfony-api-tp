@@ -1,0 +1,140 @@
+# Lancer d'abord la connexion de auth.http pour récupérer le token.
+# L'identifiant du film dépend de la base : le récupérer avec GET /api/movies.
+
+### Créer une liste classée et privée (201)
+POST {{baseURL}}/api/lists
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "Mes Nolan préférés",
+  "description": "Classés du meilleur au moins bon.",
+  "ranked": true,
+  "public": false
+}
+
+> {%
+  client.global.set("movieListId", response.body.id);
+%}
+
+### Créer une liste avec seulement un nom : publique et non classée par défaut (201)
+POST {{baseURL}}/api/lists
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "À voir à Noël"
+}
+
+### Nom manquant, description vide, ranked qui n'est pas un booléen (422)
+POST {{baseURL}}/api/lists
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "description": " ",
+  "ranked": "yes"
+}
+
+### Créer une liste sans token (401)
+POST {{baseURL}}/api/lists
+Content-Type: application/json
+
+{
+  "name": "Ma liste"
+}
+
+### Listes publiques, des plus récentes aux plus anciennes (200)
+GET {{baseURL}}/api/lists
+
+### Recherche par nom (200)
+GET {{baseURL}}/api/lists?q=nolan
+
+### Listes publiques d'un membre qui contiennent un film, deuxième page de 10 listes (200)
+GET {{baseURL}}/api/lists?user=jane_doe&movie=1&page=2&limit=10
+
+### Filtres invalides : username en majuscules, film à 0 (422)
+GET {{baseURL}}/api/lists?user=Jane%20Doe&movie=0
+
+### Lire ma liste, même privée (200)
+GET {{baseURL}}/api/lists/{{movieListId}}
+Authorization: Bearer {{token}}
+
+### Lire une liste privée sans être son auteur, ici sans token (404)
+GET {{baseURL}}/api/lists/{{movieListId}}
+
+### Lire une liste qui n'existe pas (404)
+GET {{baseURL}}/api/lists/999999
+
+### Renommer la liste et la rendre publique, les autres champs ne changent pas (200)
+PATCH {{baseURL}}/api/lists/{{movieListId}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "Tout Nolan",
+  "public": true
+}
+
+### Effacer la description avec null (200)
+PATCH {{baseURL}}/api/lists/{{movieListId}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "description": null
+}
+
+### Modification invalide (422)
+PATCH {{baseURL}}/api/lists/{{movieListId}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "",
+  "public": "no"
+}
+
+### Modifier la liste publique d'un autre membre, l'identifiant 1 si elle n'est pas à moi (403)
+PATCH {{baseURL}}/api/lists/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "À moi"
+}
+
+### Modifier sans token (401)
+PATCH {{baseURL}}/api/lists/{{movieListId}}
+Content-Type: application/json
+
+{
+  "name": "À moi"
+}
+
+### Supprimer la liste publique d'un autre membre, l'identifiant 1 si elle n'est pas à moi (403)
+DELETE {{baseURL}}/api/lists/1
+Authorization: Bearer {{token}}
+
+### Supprimer sans token (401)
+DELETE {{baseURL}}/api/lists/{{movieListId}}
+
+### Créer une liste à supprimer, pour garder la première pour list-items.http (201)
+POST {{baseURL}}/api/lists
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "Liste temporaire"
+}
+
+> {%
+  client.global.set("movieListToDeleteId", response.body.id);
+%}
+
+### Supprimer ma liste et ses films (204)
+DELETE {{baseURL}}/api/lists/{{movieListToDeleteId}}
+Authorization: Bearer {{token}}
+
+### Lire la liste supprimée (404)
+GET {{baseURL}}/api/lists/{{movieListToDeleteId}}
