@@ -1,6 +1,6 @@
 import { useQuery, type QueryKey, type UseQueryOptions } from "@tanstack/react-query";
 import type { ReactNode } from "react";
-import { Link } from "react-router";
+import { Link, type To } from "react-router";
 import { EmptyState } from "@/components/EmptyState";
 import { Pagination } from "@/components/Pagination";
 import { QueryError } from "@/components/QueryError";
@@ -8,25 +8,22 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { Paginated } from "@/lib/types";
 
-type ProfileTabContentProps<T, TKey extends QueryKey> = {
+type PaginatedListProps<T, TKey extends QueryKey> = {
     query: UseQueryOptions<Paginated<T>, Error, Paginated<T>, TKey>;
     page: number;
+    pathForPage: (page: number) => To;
     label: string;
     emptyMessage: string;
-    children: (items: T[]) => ReactNode;
+    errorMessage: string;
+    children: (items: T[], total: number) => ReactNode;
 };
 
-// La première page n'est pas écrite dans l'URL, comme sur le catalogue.
-function pagePath(page: number): { search: string } {
-    return { search: page === 1 ? "" : `?page=${page}` };
-}
-
 // La clé de requête reste générique : TanStack Query refuse une clé élargie à « readonly unknown[] ».
-export function ProfileTabContent<T, TKey extends QueryKey>({ query, page, label, emptyMessage, children }: ProfileTabContentProps<T, TKey>) {
+export function PaginatedList<T, TKey extends QueryKey>({ query, page, pathForPage, label, emptyMessage, errorMessage, children }: PaginatedListProps<T, TKey>) {
     const { data, error, isFetching, refetch } = useQuery(query);
 
     if (error !== null) {
-        return <QueryError message="Impossible de charger cet onglet." error={error} onRetry={() => void refetch()} retrying={isFetching} />;
+        return <QueryError message={errorMessage} error={error} onRetry={() => void refetch()} retrying={isFetching} />;
     }
     if (data === undefined) {
         return (
@@ -47,7 +44,7 @@ export function ProfileTabContent<T, TKey extends QueryKey>({ query, page, label
         return (
             <EmptyState message={`La page ${page} n'existe pas, la liste s'arrête à la page ${data.lastPage}.`}>
                 <Button asChild variant="outline" size="sm">
-                    <Link to={pagePath(data.lastPage)}>Aller à la dernière page</Link>
+                    <Link to={pathForPage(data.lastPage)}>Aller à la dernière page</Link>
                 </Button>
             </EmptyState>
         );
@@ -55,8 +52,8 @@ export function ProfileTabContent<T, TKey extends QueryKey>({ query, page, label
 
     return (
         <div className="space-y-6">
-            {children(data.items)}
-            {data.lastPage > 1 && <Pagination page={page} lastPage={data.lastPage} pathForPage={pagePath} label={label} />}
+            {children(data.items, data.total)}
+            {data.lastPage > 1 && <Pagination page={page} lastPage={data.lastPage} pathForPage={pathForPage} label={label} />}
         </div>
     );
 }

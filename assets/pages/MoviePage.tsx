@@ -10,14 +10,15 @@ import { formatRuntime, releaseYear } from "@/features/movies/format";
 import { MovieRatings } from "@/features/movies/MovieRatings";
 import { movieQuery } from "@/features/movies/queries";
 import { WatchProviders } from "@/features/movies/WatchProviders";
+import { jobLabel } from "@/features/people/jobs";
+import { PersonLink } from "@/features/people/PersonLink";
 import { ApiError } from "@/lib/api";
 import { parsePositiveInteger } from "@/lib/numbers";
-import type { MovieDetail } from "@/lib/types";
+import { TEXT_LINK_CLASS_NAME } from "@/lib/utils";
+import type { Company, CrewCredit, MovieDetail } from "@/lib/types";
 
 // La fiche ne montre que les têtes d'affiche, TMDB en fournit jusqu'à 15.
 const MAIN_CAST_SIZE = 8;
-// Les postes de l'équipe sont ceux de TMDB, en anglais.
-const DIRECTOR_JOB = "Director";
 
 export function MoviePage() {
     const { id = "" } = useParams();
@@ -60,7 +61,7 @@ function MovieDetails({ movieId }: { movieId: number }) {
 
 function MovieSheet({ movie }: { movie: MovieDetail }) {
     const year = releaseYear(movie.releaseDate);
-    const directors = movie.crew.filter((credit) => credit.job === DIRECTOR_JOB);
+    const crewByJob = groupCrewByJob(movie.crew);
     const mainCast = movie.cast.slice(0, MAIN_CAST_SIZE);
     const facts = [movie.runtime !== null && formatRuntime(movie.runtime), ...movie.genres.map((genre) => genre.name)].filter(Boolean);
 
@@ -87,12 +88,6 @@ function MovieSheet({ movie }: { movie: MovieDetail }) {
                         <p className="leading-relaxed text-muted-foreground">{movie.overview}</p>
                     </section>
                 )}
-                {directors.length > 0 && (
-                    <section className="space-y-2">
-                        <h2 className="text-lg font-semibold">{directors.length > 1 ? "Réalisateurs" : "Réalisation"}</h2>
-                        <p>{directors.map((credit) => credit.person.name).join(", ")}</p>
-                    </section>
-                )}
                 {mainCast.length > 0 && (
                     <section className="space-y-2">
                         <h2 className="text-lg font-semibold">Distribution</h2>
@@ -100,7 +95,9 @@ function MovieSheet({ movie }: { movie: MovieDetail }) {
                             {/* Un acteur peut avoir deux rôles dans le même film : son id ne suffit pas comme clé. */}
                             {mainCast.map((credit, index) => (
                                 <li key={index} className="text-sm">
-                                    <span className="font-medium">{credit.person.name}</span>
+                                    <PersonLink personId={credit.person.id} className={TEXT_LINK_CLASS_NAME}>
+                                        {credit.person.name}
+                                    </PersonLink>
                                     {credit.character !== null && credit.character !== "" && (
                                         <span className="text-muted-foreground"> : {credit.character}</span>
                                     )}
@@ -109,9 +106,63 @@ function MovieSheet({ movie }: { movie: MovieDetail }) {
                         </ul>
                     </section>
                 )}
+                {crewByJob.size > 0 && <CrewSection crewByJob={crewByJob} />}
+                {movie.companies.length > 0 && <CompaniesSection companies={movie.companies} />}
                 <WatchProviders movieId={movie.id} />
             </div>
         </article>
+    );
+}
+
+// Les postes gardent l'ordre de l'import TMDB, la réalisation vient en premier.
+function groupCrewByJob(crew: CrewCredit[]): Map<string, CrewCredit[]> {
+    const crewByJob = new Map<string, CrewCredit[]>();
+    for (const credit of crew) {
+        crewByJob.set(credit.job, [...(crewByJob.get(credit.job) ?? []), credit]);
+    }
+
+    return crewByJob;
+}
+
+function CrewSection({ crewByJob }: { crewByJob: Map<string, CrewCredit[]> }) {
+    return (
+        <section className="space-y-2">
+            <h2 className="text-lg font-semibold">Équipe</h2>
+            <dl className="grid gap-x-6 gap-y-2 text-sm sm:grid-cols-[auto_1fr]">
+                {[...crewByJob].map(([job, credits]) => (
+                    <div key={job} className="contents">
+                        <dt className="text-muted-foreground">{jobLabel(job)}</dt>
+                        <dd className="mb-2 sm:mb-0">
+                            {credits.map((credit, index) => (
+                                <span key={index}>
+                                    {index > 0 && ", "}
+                                    <PersonLink personId={credit.person.id} className={TEXT_LINK_CLASS_NAME}>
+                                        {credit.person.name}
+                                    </PersonLink>
+                                </span>
+                            ))}
+                        </dd>
+                    </div>
+                ))}
+            </dl>
+        </section>
+    );
+}
+
+function CompaniesSection({ companies }: { companies: Company[] }) {
+    return (
+        <section className="space-y-2">
+            <h2 className="text-lg font-semibold">Studios</h2>
+            <ul className="flex flex-wrap gap-2">
+                {companies.map((company) => (
+                    <li key={company.id}>
+                        <Button asChild variant="outline" size="sm">
+                            <Link to={`/companies/${company.id}`}>{company.name}</Link>
+                        </Button>
+                    </li>
+                ))}
+            </ul>
+        </section>
     );
 }
 

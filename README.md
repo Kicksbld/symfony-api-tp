@@ -144,7 +144,7 @@ Un paramètre invalide (titre vide ou trop long, genre inconnu, décennie hors l
 
 #### Fiche film et watchlist
 
-Chaque carte du catalogue ouvre la fiche `/movies/{id}`, lue avec `GET /api/movies/{id}`. La fiche est préchargée dès le survol ou la prise de focus de la carte, elle s'affiche donc sans attente au clic. Elle montre l'affiche, le synopsis, la durée, les genres, la réalisation, les têtes d'affiche et la moyenne des membres (ou « Pas encore noté » sans note). Un identifiant invalide ou un film absent (`404`) affiche « Film introuvable ».
+Chaque carte du catalogue ouvre la fiche `/movies/{id}`, lue avec `GET /api/movies/{id}`. La fiche est préchargée dès le survol ou la prise de focus de la carte, elle s'affiche donc sans attente au clic. Elle montre l'affiche, le synopsis, la durée, les genres, les têtes d'affiche, l'équipe par poste (réalisation, scénario, image, musique, montage), les studios et la moyenne des membres (ou « Pas encore noté » sans note). Un identifiant invalide ou un film absent (`404`) affiche « Film introuvable ».
 
 Deux sections de la fiche ont leur propre requête, lancée une fois le film chargé. Si l'une échoue, elle affiche son erreur et un bouton « Réessayer » sans bloquer le reste de la fiche, et garde ce qu'elle affichait déjà.
 
@@ -166,6 +166,21 @@ Le profil a trois onglets, chacun avec son adresse :
 | `/users/{username}/watchlist` | `GET /api/users/{username}/watchlist` | Watchlist |
 
 `/users/{username}` ouvre le journal. Chaque onglet est paginé par 20 avec `?page=2` dans l'adresse, comme le catalogue. Une page invalide revient à la première, une page au-delà de la dernière propose d'y aller. Un onglet vide l'indique, et une critique marquée spoiler reste cachée jusqu'au clic sur « Afficher la critique ». Ajouter ou retirer un film depuis sa fiche relit la watchlist du profil : elle est à jour au retour sur l'onglet.
+
+#### Personnes et studios
+
+Sur la fiche film, chaque nom de la distribution et de l'équipe ouvre la fiche de la personne, et chaque studio ouvre sa page. Comme pour les films, la fiche d'une personne est préchargée au survol ou à la prise de focus du lien.
+
+| Adresse | Endpoint | Contenu |
+| --- | --- | --- |
+| `/people?q=nolan` | `GET /api/people?q=` | Recherche de personnes par nom, paginée par 24 |
+| `/people/{id}` | `GET /api/people/{id}` | Photo, postes occupés, rôles joués avec le nom du personnage |
+| `/people/{id}?job=Director` | `GET /api/people/{id}/movies?job=` | Filmographie paginée, filtrée par poste |
+| `/companies/{id}` | `GET /api/companies/{id}` et `GET /api/movies?company={id}` | Logo, nom et films du studio, des plus populaires aux moins connus |
+
+Le lien « Personnes » de la navigation ouvre la recherche. Sans nom, la page invite à en taper un plutôt que de lister toutes les personnes du catalogue. Sur la fiche d'une personne, la filmographie a un bouton par poste avec son nombre de films (« Tous », « Interprétation », « Réalisation », « Scénario »...) : le poste et la page vivent dans l'URL. Un poste que la personne n'a jamais occupé renvoie vers toute sa filmographie, et une page invalide revient à la première.
+
+Une personne sans photo garde le même format, avec une icône à la place. Un studio sans logo affiche seulement son nom. Une recherche sans résultat l'indique, et une personne ou un studio absent (`404`) affiche « Personne introuvable » ou « Studio introuvable ».
 
 #### Journaliser un film
 

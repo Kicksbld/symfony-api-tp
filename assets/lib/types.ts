@@ -35,12 +35,25 @@ export type CrewCredit = {
     department: string;
 };
 
+export type Company = {
+    id: number;
+    name: string;
+    logoUrl: string | null;
+};
+
 export type MovieDetail = MovieSummary & {
     overview: string | null;
     runtime: number | null;
     genres: Genre[];
+    companies: Company[];
     cast: CastCredit[];
     crew: CrewCredit[];
+};
+
+// crew range les films par poste TMDB : { "Director": [...], "Writer": [...] }.
+export type PersonDetail = PersonSummary & {
+    cast: { movie: MovieSummary; character: string | null }[];
+    crew: Record<string, MovieSummary[]>;
 };
 
 export type RatingDistribution = {
