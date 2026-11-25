@@ -6,8 +6,10 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { MoviePoster } from "@/features/movies/MoviePoster";
 import { WatchlistButton } from "@/features/movie-relationships/WatchlistButton";
 import { LogMovieButton } from "@/features/log-entries/LogMovieButton";
-import { formatRating, formatRuntime, releaseYear } from "@/features/movies/format";
+import { formatRuntime, releaseYear } from "@/features/movies/format";
+import { MovieRatings } from "@/features/movies/MovieRatings";
 import { movieQuery } from "@/features/movies/queries";
+import { WatchProviders } from "@/features/movies/WatchProviders";
 import { ApiError } from "@/lib/api";
 import { parsePositiveInteger } from "@/lib/numbers";
 import type { MovieDetail } from "@/lib/types";
@@ -74,22 +76,11 @@ function MovieSheet({ movie }: { movie: MovieDetail }) {
                     {movie.originalTitle !== movie.title && <p className="text-muted-foreground">Titre original : {movie.originalTitle}</p>}
                     {facts.length > 0 && <p className="text-sm text-muted-foreground">{facts.join(" · ")}</p>}
                 </header>
-                <p className="text-sm">
-                    {movie.averageRating === null ? (
-                        <span className="text-muted-foreground">Pas encore noté par les membres.</span>
-                    ) : (
-                        <>
-                            <span className="text-lg font-semibold">{formatRating(movie.averageRating)}</span>{" "}
-                            <span className="text-muted-foreground">
-                                moyenne des membres sur {movie.ratingCount} {movie.ratingCount > 1 ? "notes" : "note"}
-                            </span>
-                        </>
-                    )}
-                </p>
                 <div className="flex flex-wrap items-start gap-3">
                     <LogMovieButton movie={movie} />
                     <WatchlistButton movieId={movie.id} />
                 </div>
+                <MovieRatings movieId={movie.id} />
                 {movie.overview !== null && movie.overview !== "" && (
                     <section className="space-y-2">
                         <h2 className="text-lg font-semibold">Synopsis</h2>
@@ -118,6 +109,7 @@ function MovieSheet({ movie }: { movie: MovieDetail }) {
                         </ul>
                     </section>
                 )}
+                <WatchProviders movieId={movie.id} />
             </div>
         </article>
     );
