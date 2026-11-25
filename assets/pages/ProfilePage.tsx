@@ -4,20 +4,24 @@ import { PaginatedList } from "@/components/PaginatedList";
 import { QueryError } from "@/components/QueryError";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useAuth } from "@/features/auth/auth";
 import { DiaryEntry } from "@/features/log-entries/DiaryEntry";
+import { ListResults } from "@/features/movie-lists/ListResults";
 import { MovieGrid } from "@/features/movies/MovieGrid";
 import { DiaryFilterControls } from "@/features/users/DiaryFilterControls";
 import { diaryFilterParams, readDiaryFilters } from "@/features/users/diary-search";
 import { ProfileHeader } from "@/features/users/ProfileHeader";
-import { diaryQuery, movieRelationshipsQuery, profileQuery, type MovieRelationshipList } from "@/features/users/queries";
+import { diaryQuery, movieRelationshipsQuery, profileListsQuery, profileQuery, type MovieRelationshipList } from "@/features/users/queries";
 import { ApiError } from "@/lib/api";
 import { pageSearch, parsePage } from "@/lib/pagination";
+import type { UserProfile } from "@/lib/types";
 
 const TABS = [
     { path: "diary", label: "Journal" },
     { path: "watched", label: "Films vus" },
     { path: "likes", label: "Films aimés" },
     { path: "watchlist", label: "Watchlist" },
+    { path: "lists", label: "Listes" },
 ] as const;
 
 const TAB_ERROR_MESSAGE = "Impossible de charger cet onglet.";
@@ -65,20 +69,20 @@ export function ProfilePage() {
                         <NavLink
                             key={tab.path}
                             to={tab.path}
-                            className="-mb-px border-b-2 border-transparent px-4 py-3 text-sm font-medium whitespace-nowrap text-muted-foreground transition-colors hover:text-foreground aria-[current=page]:border-primary aria-[current=page]:text-foreground"
+                            className="-mb-px border-b-2 border-transparent px-2 py-3 text-sm font-medium whitespace-nowrap text-muted-foreground transition-colors hover:text-foreground sm:px-4 aria-[current=page]:border-primary aria-[current=page]:text-foreground"
                         >
                             {tab.label}
                         </NavLink>
                     ))}
                 </nav>
-                <Outlet context={profile.username} />
+                <Outlet context={profile} />
             </section>
         </div>
     );
 }
 
 export function DiaryTab() {
-    const username = useOutletContext<string>();
+    const { username } = useOutletContext<UserProfile>();
     const [searchParams, setSearchParams] = useSearchParams();
     const page = parsePage(searchParams);
     const filters = readDiaryFilters(searchParams);
@@ -115,7 +119,7 @@ export function DiaryTab() {
 }
 
 export function MovieRelationshipsTab({ list }: { list: MovieRelationshipList }) {
-    const username = useOutletContext<string>();
+    const { username } = useOutletContext<UserProfile>();
     const [searchParams] = useSearchParams();
     const page = parsePage(searchParams);
 
@@ -133,6 +137,32 @@ export function MovieRelationshipsTab({ list }: { list: MovieRelationshipList })
             {...MOVIE_LIST_COPY[list]}
         >
             {(items) => <MovieGrid movies={items.map((item) => item.movie)} />}
+        </PaginatedList>
+    );
+}
+
+export function ProfileListsTab() {
+    const { id, username } = useOutletContext<UserProfile>();
+    const { session } = useAuth();
+    const [searchParams] = useSearchParams();
+    const page = parsePage(searchParams);
+    const ownerSession = session?.user.id === id ? session : null;
+
+    if (page === null) {
+        return <Navigate to={pageSearch(1)} replace />;
+    }
+
+    return (
+        <PaginatedList
+            key={`${username}:${ownerSession?.cacheId ?? "public"}`}
+            query={profileListsQuery(username, page, ownerSession)}
+            page={page}
+            pathForPage={pageSearch}
+            label="Pagination des listes du profil"
+            emptyMessage={ownerSession === null ? "Ce membre n’a aucune liste publique." : "Vous n’avez encore aucune liste."}
+            errorMessage={TAB_ERROR_MESSAGE}
+        >
+            {(lists) => <ListResults lists={lists} />}
         </PaginatedList>
     );
 }

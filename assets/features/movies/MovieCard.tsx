@@ -1,24 +1,14 @@
-import { useQueryClient } from "@tanstack/react-query";
-import { Link } from "react-router";
 import { Card, CardContent } from "@/components/ui/card";
+import { MovieLink } from "@/features/movies/MovieLink";
 import { MoviePoster } from "@/features/movies/MoviePoster";
 import { formatRating, releaseYear } from "@/features/movies/format";
-import { movieQuery } from "@/features/movies/queries";
 import type { MovieSummary } from "@/lib/types";
 
 export function MovieCard({ movie }: { movie: MovieSummary }) {
-    const queryClient = useQueryClient();
-
-    function prefetchMovie(): void {
-        void queryClient.prefetchQuery(movieQuery(movie.id));
-    }
-
     return (
-        <Link
-            to={`/movies/${movie.id}`}
+        <MovieLink
+            movieId={movie.id}
             className="block rounded-xl focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
-            onPointerEnter={prefetchMovie}
-            onFocus={prefetchMovie}
         >
             <Card className="gap-0 overflow-hidden py-0 transition-colors hover:bg-muted">
                 {/* Le titre est déjà écrit sous l'affiche, la répéter dans le nom du lien n'apporte rien. */}
@@ -31,6 +21,6 @@ export function MovieCard({ movie }: { movie: MovieSummary }) {
                     </p>
                 </CardContent>
             </Card>
-        </Link>
+        </MovieLink>
     );
 }
