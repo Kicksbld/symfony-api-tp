@@ -1,16 +1,13 @@
 import { useQuery } from "@tanstack/react-query";
 import { LockKeyhole } from "lucide-react";
 import { Link, Navigate, useParams, useSearchParams } from "react-router";
-import { PaginatedResults } from "@/components/PaginatedList";
 import { QueryError } from "@/components/QueryError";
 import { SectionSkeleton } from "@/components/SectionSkeleton";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/features/auth/auth";
+import { ListActions } from "@/features/movie-lists/ListActions";
+import { EditableListFilms, ListFilms } from "@/features/movie-lists/ListFilms";
 import { listDetailQuery, listItemsQuery } from "@/features/movie-lists/queries";
-import type { MovieListItem } from "@/features/movie-lists/types";
-import { MovieLink } from "@/features/movies/MovieLink";
-import { MoviePoster } from "@/features/movies/MoviePoster";
-import { releaseYear } from "@/features/movies/format";
 import { ApiError } from "@/lib/api";
 import { parsePositiveInteger } from "@/lib/numbers";
 import { pageSearch, parsePage } from "@/lib/pagination";
@@ -49,6 +46,7 @@ function ListDetails({ id, page, session }: { id: number; page: number; session:
     }
 
     const author = list.user.username;
+    const ownerSession = session?.user.id === list.user.id ? session : null;
 
     return (
         <article className="space-y-8">
@@ -66,49 +64,12 @@ function ListDetails({ id, page, session }: { id: number; page: number; session:
                     )}
                 </div>
                 {list.description && <p className="max-w-prose wrap-break-word whitespace-pre-wrap">{list.description}</p>}
+                {ownerSession !== null && <ListActions session={ownerSession} list={list} />}
             </header>
-            <section aria-labelledby="list-films" className="space-y-4">
-                <h2 id="list-films" className="text-lg font-semibold">{list.itemCount} {list.itemCount === 1 ? "film" : "films"}</h2>
-                <PaginatedResults
-                    result={items}
-                    keepPreviousPage
-                    page={page}
-                    pathForPage={pageSearch}
-                    label="Pagination des films de la liste"
-                    emptyMessage="Cette liste ne contient encore aucun film."
-                    errorMessage="Impossible de charger les films de la liste."
-                >
-                    {(entries) => (
-                        <ul className="divide-y border-y">
-                            {entries.map((item) => <ListMovie key={item.id} item={item} ranked={list.ranked} />)}
-                        </ul>
-                    )}
-                </PaginatedResults>
-            </section>
+            {ownerSession === null
+                ? <ListFilms list={list} page={page} result={items} />
+                : <EditableListFilms list={list} page={page} result={items} session={ownerSession} />}
         </article>
-    );
-}
-
-function ListMovie({ item, ranked }: { item: MovieListItem; ranked: boolean }) {
-    const { movie, position, note } = item;
-    const year = releaseYear(movie.releaseDate);
-
-    return (
-        <li className="flex items-start gap-3 py-4 sm:gap-5">
-            {ranked && (
-                <span className="min-w-8 pt-1 text-sm font-medium text-muted-foreground tabular-nums">
-                    <span className="sr-only">Position </span>{position}
-                </span>
-            )}
-            <MoviePoster movie={movie} alt="" className="w-12 shrink-0 rounded-md text-xs sm:w-16" loading="lazy" />
-            <div className="min-w-0 space-y-1.5">
-                <h3 className="wrap-break-word">
-                    <MovieLink movieId={movie.id} className={TEXT_LINK_CLASS_NAME}>{movie.title}</MovieLink>
-                    {year && <span className="ml-2 text-sm text-muted-foreground">{year}</span>}
-                </h3>
-                {note && <p className="max-w-prose text-sm wrap-break-word whitespace-pre-wrap text-muted-foreground">{note}</p>}
-            </div>
-        </li>
     );
 }
 
