@@ -106,6 +106,9 @@ Commencer par [`http/auth.http`](http/auth.http) : la requête de connexion enre
 | `PATCH` | `/api/me` | Modifie le username et la bio du membre connecté | Oui |
 | `GET` | `/api/movies` | Liste paginée des films, avec recherche, filtres et tri | Non |
 | `GET` | `/api/movies/{id}` | Fiche complète d'un film | Non |
+| `GET` | `/api/movies/{id}/ratings` | Répartition des notes des membres sur le film : histogramme, nombre de notes et moyenne | Non |
+| `GET` | `/api/movies/{id}/relationship` | Mon état sur le film : vu, aimé, note, watchlist | Oui |
+| `PATCH` | `/api/movies/{id}/relationship` | Modifie mon état sur le film | Oui |
 | `GET` | `/api/movies/{id}/watch-providers` | Plateformes où regarder le film dans un pays (`?region=FR` par défaut), par type d'offre | Non |
 | `GET` | `/api/people` | Liste paginée des personnes (acteurs et équipe), avec recherche par nom (`?q=`) | Non |
 | `GET` | `/api/people/{id}` | Fiche d'une personne : rôles joués (`cast`) et films par poste (`crew`) | Non |
@@ -142,9 +145,9 @@ Paramètres de `GET /api/movies`, tous facultatifs et combinables :
 | `person` | `person=1` | Identifiant d'une personne, quel que soit son poste (voir `GET /api/people`) |
 | `provider` | `provider=1` | Identifiant d'une plateforme (voir `GET /api/watch-providers`) |
 | `region` | `region=BE` | Pays de diffusion pour le filtre `provider` : `FR` (par défaut), `BE`, `CH`, `CA` ou `US` |
-| `sort` | `sort=title` | `popular` (par défaut, score de popularité TMDB), `releaseDate` (plus récents d'abord) ou `title` |
+| `sort` | `sort=title` | `popular` (par défaut, score de popularité TMDB), `rating` (moyenne des membres, films sans note à la fin), `releaseDate` (plus récents d'abord) ou `title` |
 
-La liste renvoie une vue allégée (titre, titre original, date de sortie, affiche). La fiche `GET /api/movies/{id}` ajoute le synopsis, la durée en minutes, la note moyenne TMDB sur 10 (`voteAverage`, à titre indicatif), les genres, les studios, les pays, la distribution avec les rôles (`cast`) et l'équipe avec les postes (`crew`). Les images (`posterUrl`, `profileUrl`, `logoUrl`) sont des URL complètes vers TMDB.
+La liste renvoie une vue allégée (titre, titre original, date de sortie, moyenne des membres sur 5 `averageRating`, affiche). La fiche `GET /api/movies/{id}` ajoute le synopsis, la durée en minutes, le nombre de notes des membres (`ratingCount`), la note moyenne TMDB sur 10 (`voteAverage`, à titre indicatif), les genres, les studios, les pays, la distribution avec les rôles (`cast`) et l'équipe avec les postes (`crew`). Les images (`posterUrl`, `profileUrl`, `logoUrl`) sont des URL complètes vers TMDB.
 
 ### Personnes et studios
 
@@ -154,6 +157,36 @@ Le paramètre `job` de `GET /api/people/{id}/movies` reprend ces postes (`Direct
 
 `region` désigne toujours un pays de diffusion (où regarder le film) et `country` un pays de production.
 
+### Mon état sur un film
+
+`GET /api/movies/{id}/relationship` renvoie l'état du membre connecté sur un film :
+
+```json
+{
+  "watched": true,
+  "liked": false,
+  "rating": 4.5,
+  "inWatchlist": false
+}
+```
+
+Tant que le membre n'a rien modifié, les valeurs par défaut sont renvoyées (`false` et `rating` à `null`). `PATCH` ne modifie que les champs envoyés. `rating` va de `0.5` à `5` par demi-étoile, et `null` retire la note.
+
+`GET /api/movies/{id}/ratings` donne la répartition des notes des membres (la note actuelle de chacun) :
+
+```json
+{
+  "histogram": [
+    { "rating": 0.5, "count": 1 },
+    { "rating": 1, "count": 0 },
+    "...",
+    { "rating": 5, "count": 12 }
+  ],
+  "count": 27,
+  "average": 3.85
+}
+```
+
 ### Validation
 
 Règles de validation :
@@ -162,6 +195,8 @@ Règles de validation :
 - `username` : unique, de 3 à 20 caractères, uniquement des minuscules, des chiffres et `_`.
 - `password` : 8 caractères minimum.
 - `bio` : 500 caractères maximum, une chaîne vide efface la bio.
+- `rating` : de `0.5` à `5` par pas de `0.5`, ou `null`.
+- `watched`, `liked`, `inWatchlist` : booléens.
 
 Codes de retour utilisés : `200` lecture et modification, `201` création, `401` non connecté ou mauvais identifiants, `404` ressource introuvable, `422` données invalides, dans le corps de la requête comme dans les paramètres de l'URL (avec la liste des champs en erreur dans `violations`). Toutes les erreurs sont renvoyées en JSON.
 

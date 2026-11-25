@@ -40,6 +40,9 @@ GET {{baseURL}}/api/movies?page=0&limit=101
 ### Filtres invalides : décennie qui ne commence pas par 0, pays inconnu, personne à 0, pays de diffusion non importé (422)
 GET {{baseURL}}/api/movies?decade=1995&country=XX&person=0&region=JP
 
+### Films les mieux notés par les membres (200)
+GET {{baseURL}}/api/movies?sort=rating
+
 ### Tri inconnu (422)
 GET {{baseURL}}/api/movies?sort=random
 
@@ -48,6 +51,12 @@ GET {{baseURL}}/api/movies/1
 
 ### Fiche d'un film qui n'existe pas (404)
 GET {{baseURL}}/api/movies/999999
+
+### Répartition des notes des membres sur un film (200)
+GET {{baseURL}}/api/movies/1/ratings
+
+### Répartition des notes d'un film qui n'existe pas (404)
+GET {{baseURL}}/api/movies/999999/ratings
 
 ### Où regarder un film en France, par type d'offre (200)
 GET {{baseURL}}/api/movies/1/watch-providers

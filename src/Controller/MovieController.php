@@ -8,6 +8,7 @@ use App\Dto\WatchRegionDto;
 use App\Entity\Movie;
 use App\Model\Paginator;
 use App\Repository\MovieRepository;
+use App\Service\MovieRelationshipService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
@@ -18,8 +19,10 @@ use Symfony\Component\Routing\Requirement\Requirement;
 #[Route('/api/movies', name: 'api_movies_')]
 final class MovieController extends AbstractController
 {
-    public function __construct(private readonly MovieRepository $movieRepository)
-    {
+    public function __construct(
+        private readonly MovieRepository $movieRepository,
+        private readonly MovieRelationshipService $movieRelationshipService,
+    ) {
     }
 
     #[Route('', name: 'list', methods: ['GET'])]
@@ -36,6 +39,12 @@ final class MovieController extends AbstractController
     public function show(Movie $movie): JsonResponse
     {
         return $this->json($movie, context: ['groups' => ['movie:read']]);
+    }
+
+    #[Route('/{id}/ratings', name: 'ratings', requirements: ['id' => Requirement::DIGITS], methods: ['GET'])]
+    public function ratings(Movie $movie): JsonResponse
+    {
+        return $this->json($this->movieRelationshipService->getRatingDistribution($movie));
     }
 
     #[Route('/{id}/watch-providers', name: 'watch_providers', requirements: ['id' => Requirement::DIGITS], methods: ['GET'])]
