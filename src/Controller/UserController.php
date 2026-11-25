@@ -99,4 +99,24 @@ final class UserController extends AbstractController
 
         return $this->json($movieLists, context: ['groups' => ['paginate', 'movieList:read']]);
     }
+
+    #[Route('/{username:user}/followers', name: 'followers', methods: ['GET'])]
+    public function followers(
+        User $user,
+        #[MapQueryString(validationFailedStatusCode: Response::HTTP_UNPROCESSABLE_ENTITY)] PaginationDto $paginationDto = new PaginationDto(),
+    ): JsonResponse {
+        $followers = new Paginator()->paginate($this->userRepository->createFollowersQueryBuilder($user), $paginationDto);
+
+        return $this->json($followers, context: ['groups' => ['paginate', 'user:list']]);
+    }
+
+    #[Route('/{username:user}/following', name: 'following', methods: ['GET'])]
+    public function following(
+        User $user,
+        #[MapQueryString(validationFailedStatusCode: Response::HTTP_UNPROCESSABLE_ENTITY)] PaginationDto $paginationDto = new PaginationDto(),
+    ): JsonResponse {
+        $following = new Paginator()->paginate($this->userRepository->createFollowingQueryBuilder($user), $paginationDto);
+
+        return $this->json($following, context: ['groups' => ['paginate', 'user:list']]);
+    }
 }

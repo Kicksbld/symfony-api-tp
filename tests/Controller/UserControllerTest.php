@@ -23,6 +23,8 @@ final class UserControllerTest extends ApiTestCase
             'bio' => 'Architecte de rêves.',
             'favorites' => [],
             'watchedCount' => 0,
+            'followersCount' => 0,
+            'followingCount' => 0,
         ], $data);
     }
 
@@ -44,7 +46,7 @@ final class UserControllerTest extends ApiTestCase
 
     public static function provideProfilePages(): iterable
     {
-        foreach (['diary', 'watched', 'likes', 'watchlist', 'lists'] as $page) {
+        foreach (['diary', 'watched', 'likes', 'watchlist', 'lists', 'followers', 'following'] as $page) {
             yield $page => [$page];
         }
     }

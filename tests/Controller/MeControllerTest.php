@@ -34,6 +34,8 @@ final class MeControllerTest extends ApiTestCase
             'bio' => 'Cinephile.',
             'favorites' => [],
             'watchedCount' => 0,
+            'followersCount' => 0,
+            'followingCount' => 0,
         ], $data);
     }
 

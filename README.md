@@ -106,12 +106,17 @@ Commencer par [`http/auth.http`](http/auth.http) : la requête de connexion enre
 | `PATCH` | `/api/me` | Modifie le username et la bio du membre connecté | Oui |
 | `PUT` | `/api/me/favorites` | Remplace mes 4 films favoris, dans l'ordre d'affichage | Oui |
 | `GET` | `/api/users` | Liste paginée des membres, avec recherche par username (`?q=`) | Non |
-| `GET` | `/api/users/{username}` | Profil public d'un membre : bio, 4 favoris et nombre de films vus | Non |
+| `GET` | `/api/users/{username}` | Profil public d'un membre : bio, 4 favoris, nombre de films vus, d'abonnés et d'abonnements | Non |
 | `GET` | `/api/users/{username}/diary` | Journal paginé du membre, filtrable par année et mois (`?year=2026&month=11`) | Non |
 | `GET` | `/api/users/{username}/watched` | Liste paginée des films vus par le membre, avec sa note | Non |
 | `GET` | `/api/users/{username}/likes` | Liste paginée des films aimés par le membre | Non |
 | `GET` | `/api/users/{username}/watchlist` | Watchlist paginée du membre | Non |
 | `GET` | `/api/users/{username}/lists` | Listes paginées du membre (les privées seulement pour lui-même) | Non |
+| `GET` | `/api/users/{username}/followers` | Abonnés paginés du membre, triés par username | Non |
+| `GET` | `/api/users/{username}/following` | Membres suivis paginés, triés par username | Non |
+| `POST` | `/api/users/{username}/followers` | Suit un membre : je m'ajoute à ses abonnés | Oui |
+| `DELETE` | `/api/users/{username}/followers` | Ne suit plus un membre : je me retire de ses abonnés | Oui |
+| `GET` | `/api/feed` | Feed paginé : entrées de journal des membres suivis, de la plus récente à la plus ancienne | Oui |
 | `GET` | `/api/movies` | Liste paginée des films, avec recherche, filtres et tri | Non |
 | `GET` | `/api/movies/{id}` | Fiche complète d'un film | Non |
 | `GET` | `/api/movies/{id}/ratings` | Répartition des notes des membres sur le film : histogramme, nombre de notes et moyenne | Non |
@@ -287,7 +292,9 @@ Paramètres de `GET /api/lists`, tous facultatifs et combinables :
   "favorites": [
     { "id": 1, "title": "Inception", "originalTitle": "Inception", "releaseDate": "2010-07-15", "averageRating": 4.2, "posterUrl": "https://image.tmdb.org/t/p/w500/..." }
   ],
-  "watchedCount": 128
+  "watchedCount": 128,
+  "followersCount": 42,
+  "followingCount": 17
 }
 ```
 
@@ -314,6 +321,14 @@ Le journal (`/diary`) ne contient que les entrées datées (`watchedOn`), de la 
 ```
 
 `/lists` ne montre que les listes publiques, sauf quand le membre consulte son propre profil en étant connecté : ses listes privées sont alors incluses.
+
+### Abonnements et feed
+
+`POST /api/users/{username}/followers` suit un membre et renvoie une `201` avec le membre suivi (`id` et `username`). `DELETE` sur la même route arrête de le suivre et renvoie une `204` sans contenu. Suivre un membre déjà suivi renvoie une `409`, se suivre soi-même une `422`, et ne plus suivre un membre qu'on ne suit pas une `404`.
+
+`/followers` et `/following` renvoient des membres au même format que `GET /api/users` (`id` et `username`).
+
+`GET /api/feed` renvoie les entrées de journal des membres que je suis, au même format que `GET /api/log-entries` et dans le même ordre : de la dernière entrée créée à la plus ancienne, quelle que soit la date de visionnage. Mes propres entrées n'y apparaissent pas.
 
 ### Validation
 
