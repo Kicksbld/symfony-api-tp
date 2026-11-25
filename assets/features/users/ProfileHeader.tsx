@@ -1,3 +1,6 @@
+import { Link } from "react-router";
+import { Button } from "@/components/ui/button";
+import { useAuth } from "@/features/auth/auth";
 import { MovieCard } from "@/features/movies/MovieCard";
 import type { UserProfile } from "@/lib/types";
 
@@ -6,6 +9,7 @@ function formatCount(count: number, singular: string, pluralForm: string): strin
 }
 
 export function ProfileHeader({ profile }: { profile: UserProfile }) {
+    const { session } = useAuth();
     const counts = [
         formatCount(profile.watchedCount, "film vu", "films vus"),
         formatCount(profile.followersCount, "abonné", "abonnés"),
@@ -15,7 +19,14 @@ export function ProfileHeader({ profile }: { profile: UserProfile }) {
     return (
         <header className="space-y-6">
             <div className="space-y-2">
-                <h1 className="text-3xl font-semibold">{profile.username}</h1>
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                    <h1 className="text-3xl font-semibold">{profile.username}</h1>
+                    {session?.user.id === profile.id && (
+                        <Button asChild variant="outline">
+                            <Link to="/settings/profile">Modifier mon profil</Link>
+                        </Button>
+                    )}
+                </div>
                 {profile.bio !== null && profile.bio !== "" && <p className="max-w-2xl leading-relaxed whitespace-pre-line text-muted-foreground">{profile.bio}</p>}
                 <p className="text-sm text-muted-foreground">{counts.join(" · ")}</p>
             </div>

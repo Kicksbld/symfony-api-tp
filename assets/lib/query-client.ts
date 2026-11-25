@@ -1,5 +1,5 @@
 import { QueryClient } from "@tanstack/react-query";
-import { subscribeToSession, type Session } from "@/lib/session";
+import { getSession, subscribeToSession, type Session } from "@/lib/session";
 
 export const queryClient = new QueryClient({
     defaultOptions: {
@@ -15,7 +15,7 @@ export function sessionKey(session: Session): readonly ["session", number] {
 }
 
 subscribeToSession((previous) => {
-    if (previous === null) {
+    if (previous === null || previous.cacheId === getSession()?.cacheId) {
         return;
     }
 

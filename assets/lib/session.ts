@@ -40,16 +40,29 @@ export function saveSession(value: StoredSession, expectedRevision: number): boo
         return false;
     }
 
-    const stored = JSON.stringify(value);
-    localStorage.setItem(STORAGE_KEY, stored);
-    replaceSession(value, stored);
+    writeSession(value);
 
     return true;
 }
 
+export function updateSessionUser(expected: Session, user: CurrentUser): void {
+    syncStoredSession();
+    if (session === null || !isCurrentSession(expected) || session.user.id !== user.id) {
+        return;
+    }
+
+    writeSession({ token: session.token, expiresAt: session.expiresAt, user }, true);
+}
+
+function writeSession(value: StoredSession, sameLogin = false): void {
+    const stored = JSON.stringify(value);
+    localStorage.setItem(STORAGE_KEY, stored);
+    replaceSession(value, stored, sameLogin);
+}
+
 export function clearSession(expected: Session): boolean {
     syncStoredSession();
-    if (session !== expected) {
+    if (session?.cacheId !== expected.cacheId) {
         return false;
     }
 
@@ -59,7 +72,7 @@ export function clearSession(expected: Session): boolean {
 }
 
 export function isCurrentSession(expected: Session): boolean {
-    return session === expected
+    return session?.cacheId === expected.cacheId
         && expected.expiresAt > Date.now()
         && localStorage.getItem(STORAGE_KEY) === storedSession;
 }
@@ -85,7 +98,10 @@ function syncStoredSession(): void {
         return;
     }
 
-    replaceSession(value, stored);
+    const sameLogin = session?.token === value.token
+        && session.expiresAt === value.expiresAt
+        && session.user.id === value.user.id;
+    replaceSession(value, stored, sameLogin);
 }
 
 function forgetStoredSession(): void {
@@ -93,9 +109,12 @@ function forgetStoredSession(): void {
     replaceSession(null, null);
 }
 
-function replaceSession(value: StoredSession | null, stored: string | null): void {
+function replaceSession(value: StoredSession | null, stored: string | null, sameLogin = false): void {
     const previous = session;
-    revision++;
+    // Modifier le profil ne met pas fin aux requêtes lancées pendant cette connexion.
+    if (!sameLogin) {
+        revision++;
+    }
     const current = value === null ? null : { ...value, cacheId: revision };
     session = current;
     storedSession = stored;

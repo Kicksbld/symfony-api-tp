@@ -90,12 +90,6 @@ export type MovieRelationship = {
     inWatchlist: boolean;
 };
 
-export type CurrentUser = {
-    id: number;
-    username: string;
-    email: string;
-};
-
 export type LoginResponse = {
     token: string;
     ttl: number;
@@ -114,6 +108,8 @@ export type UserProfile = UserSummary & {
     followersCount: number;
     followingCount: number;
 };
+
+export type CurrentUser = UserProfile & { email: string };
 
 export type LogEntry = {
     id: number;
