@@ -1,8 +1,11 @@
-# Letterboxd API
+# Letterboxd
 
 API REST inspirée de [Letterboxd](https://letterboxd.com), réalisée pour le TP Symfony du module CCI DNMADE3. Chaque membre peut tenir un journal des films qu'il regarde, les noter, écrire des critiques, faire des listes et suivre d'autres membres.
 
-Le projet ne contient que l'API : pas de front, toutes les routes renvoient du JSON et sont testables avec les fichiers du dossier [`http/`](http).
+Le projet contient :
+
+- une API REST : toutes les routes sont sous `/api`, renvoient du JSON et sont testables avec les fichiers du dossier [`http/`](http) ;
+- un front React servi par Symfony sur toutes les autres adresses, qui appelle cette API depuis le navigateur.
 
 ## Stack
 
@@ -11,12 +14,14 @@ Le projet ne contient que l'API : pas de front, toutes les routes renvoient du J
 - LexikJWTAuthenticationBundle pour l'authentification par token JWT
 - HttpClient pour l'import du catalogue depuis [TMDB](https://www.themoviedb.org)
 - PHPUnit, dama/doctrine-test-bundle et Foundry pour les tests
+- Front : React, TypeScript, [shadcn/ui](https://ui.shadcn.com) et Tailwind CSS, construits par [Vite](https://vite.dev) avec [pentatrion/vite-bundle](https://symfony-vite.pentatrion.com/fr/)
 
 ## Prérequis
 
 - PHP 8.4 ou plus avec les extensions `pdo_sqlite`, `ctype`, `iconv` et `openssl`
 - [Composer](https://getcomposer.org)
 - [Symfony CLI](https://symfony.com/download) pour lancer le serveur local
+- [Node.js](https://nodejs.org) 20.19 ou plus avec npm, pour le front
 
 ## Installation
 
@@ -24,6 +29,7 @@ Le projet ne contient que l'API : pas de front, toutes les routes renvoient du J
 git clone https://github.com/Kicksbld/symfony-api-tp.git
 cd symfony-api-tp
 composer install
+npm install
 
 # Clés utilisées pour signer les tokens JWT (dans config/jwt/, non versionnées)
 php bin/console lexik:jwt:generate-keypair
@@ -36,6 +42,9 @@ php bin/console app:tmdb:import --from-file --no-debug
 
 # Membres de démonstration et leur activité
 php bin/console app:seed-demo
+
+# Construction du front (dans public/build/, non versionné)
+npm run build
 ```
 
 Aucune clé TMDB n'est nécessaire. L'option `--no-debug` est importante : en mode debug, Symfony garde en mémoire toutes les requêtes SQL pour le profiler, et l'import du catalogue complet dépasse alors la limite de mémoire de PHP.
@@ -99,7 +108,28 @@ Les films sont retrouvés par leur identifiant TMDB : relancer un import met à 
 symfony serve -d
 ```
 
-L'API répond sur `http://127.0.0.1:8000/api`. Pour arrêter le serveur : `symfony server:stop`.
+Le front répond sur `http://127.0.0.1:8000` et l'API sur `http://127.0.0.1:8000/api`. Pour arrêter le serveur : `symfony server:stop`.
+
+Le front utilise les fichiers construits par `npm run build`. Pour travailler dessus, lancer aussi le serveur de Vite dans un second terminal : les modifications sont alors visibles sans recharger la page.
+
+```bash
+npm run dev
+```
+
+### Front
+
+Symfony renvoie la même page sur toutes les adresses hors `/api` ([`FrontController`](src/Controller/FrontController.php)), et React choisit la page à afficher selon l'adresse : recharger `/login` fonctionne donc comme ouvrir `/`. Le front et l'API sont sur la même origine, il n'y a pas de CORS à configurer.
+
+Le code est dans [`assets/`](assets) :
+
+| Dossier | Contenu |
+| --- | --- |
+| `pages/` | Une page par adresse : accueil (`/`, films populaires paginés), connexion (`/login`) |
+| `components/` | Mise en page, carte d'un film, fournisseur de la session |
+| `components/ui/` | Composants [shadcn/ui](https://ui.shadcn.com), ajoutés avec `npx shadcn add <composant>` |
+| `lib/` | Client HTTP de l'API, session du membre connecté, types des réponses |
+
+Toutes les requêtes passent par `apiFetch()` ([`assets/lib/api.ts`](assets/lib/api.ts)), qui ajoute le token JWT du membre connecté. Le token est gardé dans le `localStorage` avec sa date d'expiration : la session survit à un rechargement et est oubliée au bout d'une heure, ou dès que l'API répond `401`.
 
 Si le serveur démarre en HTTPS (certificat local installé avec `symfony server:ca:install`), il faut changer la `baseURL` dans [`http/http-client.env.json`](http/http-client.env.json).
 
@@ -426,4 +456,6 @@ Les tests fonctionnels envoient de vraies requêtes HTTP à l'API. Ils utilisent
 ```bash
 vendor/bin/php-cs-fixer fix          # style @Symfony
 php bin/console lint:container       # vérification du conteneur de services
+npm run lint                         # ESLint sur le front
+npm run build                        # vérification des types TypeScript, puis construction du front
 ```
