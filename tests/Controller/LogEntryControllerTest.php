@@ -222,15 +222,18 @@ final class LogEntryControllerTest extends ApiTestCase
         self::assertResponseStatusCodeSame(Response::HTTP_UNAUTHORIZED);
     }
 
-    public function testAuthorCanDeleteTheirEntry(): void
+    public function testAuthorCanDeleteTheirEntryAndTheMovieStaysWatched(): void
     {
-        $logEntryId = $this->logMovie();
+        $logEntryId = $this->logMovie(['rating' => 4, 'liked' => true]);
 
         $this->client->jsonRequest('DELETE', '/api/log-entries/'.$logEntryId);
         self::assertResponseStatusCodeSame(Response::HTTP_NO_CONTENT);
 
         $this->requestJson('GET', '/api/log-entries/'.$logEntryId);
         self::assertResponseStatusCodeSame(Response::HTTP_NOT_FOUND);
+
+        $relationship = $this->requestJson('GET', '/api/movies/'.$this->movieId.'/relationship');
+        self::assertSame(['watched' => true, 'liked' => true, 'rating' => 4, 'inWatchlist' => false], $relationship);
     }
 
     public function testMemberCannotDeleteTheEntryOfSomeoneElse(): void

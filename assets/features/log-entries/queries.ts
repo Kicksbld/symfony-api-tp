@@ -9,7 +9,7 @@ import { isCurrentSession, type Session } from "@/lib/session";
 import type { LogEntry } from "@/lib/types";
 
 /**
- * Une entrée de journal change plusieurs vues côté serveur : mon état sur le film (vu, note, coup de coeur, watchlist),
+ * Une entrée de journal change plusieurs vues côté serveur : mon état sur le film (vu, note, coup de cœur, watchlist),
  * la moyenne du film, et les onglets et compteurs de mon profil. On les relit toutes au lieu de deviner le résultat.
  */
 async function refreshLogEntryViews(queryClient: QueryClient, session: Session, movieId: number): Promise<void> {
@@ -28,7 +28,7 @@ export function useCreateLogEntryMutation(session: Session, movieId: number) {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationKey: [...sessionKey(session), "log-entries", "create", movieId],
+        mutationKey: [...sessionKey(session), "movies", movieId, "log-entries", "create"],
         mutationFn: (payload: LogEntryPayload) =>
             apiFetch<LogEntry>("/log-entries", { session, method: "POST", body: JSON.stringify({ movie: movieId, ...payload }) }),
         onSuccess: () => refreshLogEntryViews(queryClient, session, movieId),

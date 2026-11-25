@@ -2,6 +2,7 @@ import { useId, type FormEvent, type ReactNode } from "react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { NativeSelect } from "@/components/ui/native-select";
@@ -112,6 +113,19 @@ export function LogEntryForm({ draft, errors, submitting, submitLabel, onChange,
                 {submitLabel}
             </Button>
         </form>
+    );
+}
+
+// Le formulaire est long : la fenêtre défile sur un petit écran au lieu de sortir de l'écran.
+export function LogEntryDialogContent({ title, description, children }: { title: string; description: string; children: ReactNode }) {
+    return (
+        <DialogContent className="max-h-[90dvh] overflow-y-auto sm:max-w-lg">
+            <DialogHeader>
+                <DialogTitle>{title}</DialogTitle>
+                <DialogDescription>{description}</DialogDescription>
+            </DialogHeader>
+            {children}
+        </DialogContent>
     );
 }
 

@@ -36,7 +36,7 @@ export function formErrors<TField extends string>(violations: Violation[], field
     return errors;
 }
 
-type ApiRequestInit =RequestInit & { session?: Session | null };
+type ApiRequestInit = RequestInit & { session?: Session | null };
 
 type ErrorBody = {
     message?: string;

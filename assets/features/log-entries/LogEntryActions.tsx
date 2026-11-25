@@ -13,12 +13,13 @@ import {
     AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogTrigger } from "@/components/ui/dialog";
 import { useAuth } from "@/features/auth/auth";
-import { draftFromEntry, draftPayload, NO_ERRORS, submissionErrors } from "@/features/log-entries/draft";
+import { draftFromEntry } from "@/features/log-entries/draft";
 import { formatDate } from "@/features/log-entries/format";
-import { LogEntryForm } from "@/features/log-entries/LogEntryForm";
+import { LogEntryDialogContent, LogEntryForm } from "@/features/log-entries/LogEntryForm";
 import { useDeleteLogEntryMutation, useUpdateLogEntryMutation } from "@/features/log-entries/queries";
+import { useLogEntryDraft } from "@/features/log-entries/useLogEntryDraft";
 import type { Session } from "@/lib/session";
 import type { LogEntry } from "@/lib/types";
 
@@ -42,29 +43,21 @@ export function LogEntryActions({ entry }: { entry: LogEntry }) {
 
 function EditLogEntryButton({ session, entry }: { session: Session; entry: LogEntry }) {
     const [open, setOpen] = useState(false);
-    const [draft, setDraft] = useState(() => draftFromEntry(entry));
-    const [errors, setErrors] = useState(NO_ERRORS);
+    const { draft, setDraft, errors, reset, submit } = useLogEntryDraft(() => draftFromEntry(entry));
     const updateLogEntry = useUpdateLogEntryMutation(session, entry);
 
     // Chaque ouverture repart de l'entrée enregistrée, un brouillon abandonné n'est pas gardé.
     function changeOpen(next: boolean): void {
         if (next) {
-            setDraft(draftFromEntry(entry));
-            setErrors(NO_ERRORS);
+            reset(draftFromEntry(entry));
         }
         setOpen(next);
     }
 
-    async function submit(): Promise<void> {
-        setErrors(NO_ERRORS);
-        try {
-            await updateLogEntry.mutateAsync(draftPayload(draft));
-        } catch (reason) {
-            setErrors(submissionErrors(reason, "Les modifications n'ont pas été enregistrées."));
-            return;
+    async function save(): Promise<void> {
+        if (await submit(updateLogEntry.mutateAsync, "Les modifications n'ont pas été enregistrées.")) {
+            setOpen(false);
         }
-
-        setOpen(false);
     }
 
     return (
@@ -75,20 +68,19 @@ function EditLogEntryButton({ session, entry }: { session: Session; entry: LogEn
                     Modifier
                 </Button>
             </DialogTrigger>
-            <DialogContent className="max-h-[90dvh] overflow-y-auto sm:max-w-lg">
-                <DialogHeader>
-                    <DialogTitle>Modifier le visionnage de {entry.movie.title}</DialogTitle>
-                    <DialogDescription>Votre note et votre coup de cœur sur le film suivent votre dernière entrée.</DialogDescription>
-                </DialogHeader>
+            <LogEntryDialogContent
+                title={`Modifier le visionnage de ${entry.movie.title}`}
+                description="Votre note et votre coup de cœur sur le film suivent votre dernière entrée."
+            >
                 <LogEntryForm
                     draft={draft}
                     errors={errors}
                     submitting={updateLogEntry.isPending}
                     submitLabel="Enregistrer les modifications"
                     onChange={setDraft}
-                    onSubmit={() => void submit()}
+                    onSubmit={() => void save()}
                 />
-            </DialogContent>
+            </LogEntryDialogContent>
         </Dialog>
     );
 }
