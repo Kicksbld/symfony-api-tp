@@ -8,8 +8,10 @@ export const MOVIE_SORTS = [
 
 export type MovieSort = (typeof MOVIE_SORTS)[number]["value"];
 
+// Le catalogue importé depuis TMDB ne contient aucun film avant 1900.
 const FIRST_DECADE = 1900;
-const LAST_DECADE = 2020;
+const LAST_DECADE = Math.floor(new Date().getFullYear() / 10) * 10;
+export const MAX_TITLE_LENGTH = 255;
 
 export const DECADES = Array.from({ length: (LAST_DECADE - FIRST_DECADE) / 10 + 1 }, (_, index) => LAST_DECADE - index * 10);
 
@@ -51,10 +53,10 @@ export function parseCatalogSearch(searchParams: URLSearchParams): ParsedCatalog
     }
 
     const search: CatalogSearch = {
-        q: searchParams.get("q")?.trim().slice(0, 255) ?? "",
+        q: read("q", parseTitle, ""),
         genre: read("genre", (value) => parsePositiveInteger(value), null),
         decade: read("decade", (value) => DECADES.find((decade) => String(decade) === value) ?? null, null),
-        sort: read("sort", (value) => MOVIE_SORTS.find((sort) => sort.value === value)?.value ?? null, DEFAULT_CATALOG_SEARCH.sort),
+        sort: read("sort", findMovieSort, DEFAULT_CATALOG_SEARCH.sort),
         page: read("page", (value) => parsePositiveInteger(value), 1),
     };
 
@@ -91,6 +93,22 @@ export function catalogPath(search: CatalogSearch): string {
 
 export function hasCatalogFilters(search: CatalogSearch): boolean {
     return search.q !== "" || search.genre !== null || search.decade !== null;
+}
+
+// Le tri n'est pas un filtre : on le garde quand on efface les critères.
+export function withoutFilters(search: CatalogSearch): CatalogSearch {
+    return { ...DEFAULT_CATALOG_SEARCH, sort: search.sort };
+}
+
+export function findMovieSort(value: string): MovieSort | null {
+    return MOVIE_SORTS.find((sort) => sort.value === value)?.value ?? null;
+}
+
+// Un titre fait d'espaces ne filtre rien, et l'API refuse un titre de plus de 255 caractères.
+function parseTitle(value: string): string | null {
+    const title = value.trim();
+
+    return title !== "" && title.length <= MAX_TITLE_LENGTH ? title : null;
 }
 
 function parsePositiveInteger(value: string): number | null {

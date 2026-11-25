@@ -140,7 +140,7 @@ La page d'origine passe d'un écran à l'autre dans le paramètre `redirect` (pa
 
 L'accueil `/` liste les films avec `GET /api/movies`, triés par popularité par défaut. On peut chercher par titre, filtrer par genre (liste lue avec `GET /api/genres`) et par décennie, et changer le tri (populaires, tendances de la semaine, mieux notés, plus récents, titre). Les critères et la page vivent dans l'URL, par exemple `/?q=nuit&genre=18&decade=1990&sort=rating&page=2` : un rechargement, un lien partagé ou les boutons Précédent et Suivant du navigateur retrouvent la même recherche. Seuls les critères différents des valeurs par défaut sont écrits dans l'URL, et changer un critère revient à la page 1.
 
-Un paramètre invalide (genre inconnu, décennie hors liste, tri ou page qui ne sont pas reconnus) est retiré de l'adresse avec un message, au lieu d'envoyer une requête que l'API refuserait en `422`. Une page au-delà de la dernière propose d'aller à la dernière page, et une recherche sans résultat propose d'effacer les filtres.
+Un paramètre invalide (titre vide ou trop long, genre inconnu, décennie hors liste, tri ou page non reconnus) est retiré de l'adresse avec un message, au lieu d'envoyer une requête que l'API refuserait en `422`. Une page au-delà de la dernière propose d'aller à la dernière page, et une recherche sans résultat propose d'effacer les filtres.
 
 #### Thème et navigation
 
@@ -157,7 +157,7 @@ La navigation ([`MainNavigation`](assets/components/MainNavigation.tsx)) s'affic
 #### Requêtes et cache
 
 - Définir les lectures avec `queryOptions` dans le dossier de la fonctionnalité. La clé contient la ressource et les paramètres de la requête, par exemple `["movies", { sort: "popular", page: "1", limit: "24" }]`. Passer le `signal` de TanStack Query à `apiFetch` pour annuler la requête.
-- Une lecture publique identique pour tous, comme les films populaires, appelle `apiFetch` avec `session: null`. Si la réponse dépend du membre, préfixer la clé par `sessionKey(session)` et passer cette même session à `apiFetch`, comme pour `/api/me`. Une déconnexion, une expiration ou un changement de compte annule les lectures de la session précédente et efface ses entrées du cache.
+- Une lecture publique identique pour tous, comme le catalogue des films, appelle `apiFetch` avec `session: null`. Si la réponse dépend du membre, préfixer la clé par `sessionKey(session)` et passer cette même session à `apiFetch`, comme pour `/api/me`. Une déconnexion, une expiration ou un changement de compte annule les lectures de la session précédente et efface ses entrées du cache.
 - Afficher des squelettes au premier chargement. Pour une pagination ou un filtre, garder les données visibles avec `placeholderData: keepPreviousData` et signaler la mise à jour. Limiter cette conservation à la même session pour les lectures personnalisées. En cas d'erreur, garder les résultats déjà affichés et proposer de relancer la requête avec `refetch`.
 - Précharger à l'intention de navigation, par exemple au survol ou à la prise de focus d'un lien vers une fiche. Appeler `queryClient.prefetchQuery` avec les mêmes options que l'écran de destination pour réutiliser son cache.
 

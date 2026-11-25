@@ -11,9 +11,10 @@ export type CatalogResult = {
 };
 
 // L'API pagine aussi les genres : TMDB en compte moins de 20, une seule page à 100 suffit.
-const GENRES_LIMIT = 100;
+const GENRES_PARAMS = { limit: "100" };
 
-export function moviesQuery(search: CatalogSearch) {
+export function moviesQuery(search: CatalogSearch, enabled: boolean) {
+    // L'URL omet les valeurs par défaut, l'API reçoit tous les paramètres pour ne pas dépendre de ses propres défauts.
     const params = catalogSearchParams(search);
     params.set("sort", search.sort);
     params.set("page", String(search.page));
@@ -26,14 +27,15 @@ export function moviesQuery(search: CatalogSearch) {
             movies: await apiFetch<Paginated<MovieSummary>>(`/movies?${params}`, { signal, session: null }),
         }),
         placeholderData: keepPreviousData,
+        enabled,
     });
 }
 
 export function genresQuery() {
     return queryOptions({
-        queryKey: ["genres"],
+        queryKey: ["genres", GENRES_PARAMS],
         queryFn: async ({ signal }) => {
-            const genres = await apiFetch<Paginated<Genre>>(`/genres?limit=${GENRES_LIMIT}`, { signal, session: null });
+            const genres = await apiFetch<Paginated<Genre>>(`/genres?${new URLSearchParams(GENRES_PARAMS)}`, { signal, session: null });
 
             return genres.items;
         },
