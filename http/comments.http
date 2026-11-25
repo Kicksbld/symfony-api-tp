@@ -1,0 +1,152 @@
+# Lancer d'abord la connexion de auth.http, puis la création de liste de lists.http pour récupérer movieListId.
+# L'identifiant du film dépend de la base : le récupérer avec GET /api/movies.
+
+### Journaliser un film avec une critique, pour avoir une entrée à commenter (201)
+POST {{baseURL}}/api/log-entries
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "movie": 1,
+  "review": "La fin reste ouverte."
+}
+
+> {%
+  client.global.set("commentedLogEntryId", response.body.id);
+%}
+
+### Commenter une critique (201)
+POST {{baseURL}}/api/log-entries/{{commentedLogEntryId}}/comments
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "content": "La toupie tombe, non ?"
+}
+
+> {%
+  client.global.set("logEntryCommentId", response.body.id);
+%}
+
+### Commentaire vide (422)
+POST {{baseURL}}/api/log-entries/{{commentedLogEntryId}}/comments
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "content": "  "
+}
+
+### Commenter une critique qui n'existe pas (404)
+POST {{baseURL}}/api/log-entries/999999/comments
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "content": "Bravo"
+}
+
+### Commenter sans token (401)
+POST {{baseURL}}/api/log-entries/{{commentedLogEntryId}}/comments
+Content-Type: application/json
+
+{
+  "content": "Bravo"
+}
+
+### Commentaires d'une critique, du plus ancien au plus récent (200)
+GET {{baseURL}}/api/log-entries/{{commentedLogEntryId}}/comments?page=1&limit=20
+
+### Modifier son commentaire (200)
+PATCH {{baseURL}}/api/log-entries/{{commentedLogEntryId}}/comments/{{logEntryCommentId}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "content": "Finalement, elle vacille."
+}
+
+### Modification invalide, contenu manquant (422)
+PATCH {{baseURL}}/api/log-entries/{{commentedLogEntryId}}/comments/{{logEntryCommentId}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "content": null
+}
+
+### Modifier le commentaire d'un autre membre, l'identifiant 1 s'il n'est pas à moi (403)
+PATCH {{baseURL}}/api/log-entries/1/comments/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "content": "À moi"
+}
+
+### Modifier un commentaire qui n'existe pas sur cette critique (404)
+PATCH {{baseURL}}/api/log-entries/{{commentedLogEntryId}}/comments/999999
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "content": "À moi"
+}
+
+### Supprimer sans token (401)
+DELETE {{baseURL}}/api/log-entries/{{commentedLogEntryId}}/comments/{{logEntryCommentId}}
+
+### Supprimer son commentaire, ou un commentaire posté sur sa critique (204)
+DELETE {{baseURL}}/api/log-entries/{{commentedLogEntryId}}/comments/{{logEntryCommentId}}
+Authorization: Bearer {{token}}
+
+### Commenter une liste (201)
+POST {{baseURL}}/api/lists/{{movieListId}}/comments
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "content": "Il manque Memento."
+}
+
+> {%
+  client.global.set("movieListCommentId", response.body.id);
+%}
+
+### Commentaire de liste vide (422)
+POST {{baseURL}}/api/lists/{{movieListId}}/comments
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "content": ""
+}
+
+### Commenter une liste qui n'existe pas, ou la liste privée d'un autre membre (404)
+POST {{baseURL}}/api/lists/999999/comments
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "content": "Bravo"
+}
+
+### Commentaires d'une liste, du plus ancien au plus récent (200)
+GET {{baseURL}}/api/lists/{{movieListId}}/comments
+
+### Modifier son commentaire de liste (200)
+PATCH {{baseURL}}/api/lists/{{movieListId}}/comments/{{movieListCommentId}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "content": "Il manque Memento et Le Prestige."
+}
+
+### Supprimer le commentaire d'un autre membre sur la liste d'un autre, l'identifiant 1 s'ils ne sont pas à moi (403)
+DELETE {{baseURL}}/api/lists/1/comments/1
+Authorization: Bearer {{token}}
+
+### Supprimer son commentaire de liste (204)
+DELETE {{baseURL}}/api/lists/{{movieListId}}/comments/{{movieListCommentId}}
+Authorization: Bearer {{token}}

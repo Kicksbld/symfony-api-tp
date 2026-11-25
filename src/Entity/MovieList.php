@@ -51,17 +51,31 @@ class MovieList
     private bool $public = true;
 
     /**
-     * EXTRA_LAZY : compter les films d'une liste fait un COUNT sans charger tous ses éléments.
+     * EXTRA_LAZY, comme les likes et les commentaires : les compter fait un COUNT sans tous les charger.
      *
      * @var Collection<int, MovieListItem>
      */
     #[ORM\OneToMany(targetEntity: MovieListItem::class, mappedBy: 'movieList', orphanRemoval: true, fetch: 'EXTRA_LAZY')]
     private Collection $items;
 
+    /**
+     * @var Collection<int, MovieListLike>
+     */
+    #[ORM\OneToMany(targetEntity: MovieListLike::class, mappedBy: 'movieList', fetch: 'EXTRA_LAZY')]
+    private Collection $likes;
+
+    /**
+     * @var Collection<int, MovieListComment>
+     */
+    #[ORM\OneToMany(targetEntity: MovieListComment::class, mappedBy: 'movieList', fetch: 'EXTRA_LAZY')]
+    private Collection $comments;
+
     public function __construct(User $user)
     {
         $this->user = $user;
         $this->items = new ArrayCollection();
+        $this->likes = new ArrayCollection();
+        $this->comments = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -126,6 +140,18 @@ class MovieList
     public function getItemCount(): int
     {
         return $this->items->count();
+    }
+
+    #[Groups(['movieList:read'])]
+    public function getLikeCount(): int
+    {
+        return $this->likes->count();
+    }
+
+    #[Groups(['movieList:read'])]
+    public function getCommentCount(): int
+    {
+        return $this->comments->count();
     }
 
     public function addItem(Movie $movie): MovieListItem

@@ -280,12 +280,48 @@ final class MovieListControllerTest extends ApiTestCase
         self::assertSame([1, 2], array_column($data['items'], 'itemCount'));
     }
 
+    public function testPopularListsAreSortedByLikeCount(): void
+    {
+        $likedTwice = $this->createList();
+        $likedOnce = $this->createList();
+        $unliked = $this->createList();
+        foreach ([$likedTwice, $likedTwice, $likedOnce] as $movieListId) {
+            $this->loginAs(UserFactory::createOne());
+            $this->requestJson('POST', '/api/lists/'.$movieListId.'/like');
+        }
+
+        $popular = $this->requestJson('GET', '/api/lists?sort=popular');
+        self::assertResponseIsSuccessful();
+        self::assertSame([$likedTwice, $likedOnce, $unliked], array_column($popular['items'], 'id'));
+        self::assertSame([2, 1, 0], array_column($popular['items'], 'likeCount'));
+
+        $recent = $this->requestJson('GET', '/api/lists?sort=recent');
+        self::assertSame([$unliked, $likedOnce, $likedTwice], array_column($recent['items'], 'id'));
+    }
+
+    public function testPopularListsWithTheSameLikeCountAreSortedFromTheMostRecent(): void
+    {
+        $first = $this->createList();
+        $last = $this->createList();
+
+        $data = $this->requestJson('GET', '/api/lists?sort=popular');
+
+        self::assertSame([$last, $first], array_column($data['items'], 'id'));
+    }
+
     public function testSearchRejectsInvalidFilters(): void
     {
         $data = $this->requestJson('GET', '/api/lists?movie=0&user=Not%20A%20Username');
 
         self::assertResponseStatusCodeSame(Response::HTTP_UNPROCESSABLE_ENTITY);
         self::assertSame(['user', 'movie'], array_column($data['violations'], 'propertyPath'));
+    }
+
+    public function testSearchRejectsAnUnknownSort(): void
+    {
+        $this->requestJson('GET', '/api/lists?sort=liked');
+
+        self::assertResponseStatusCodeSame(Response::HTTP_UNPROCESSABLE_ENTITY);
     }
 
     /**

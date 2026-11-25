@@ -128,7 +128,13 @@ Commencer par [`http/auth.http`](http/auth.http) : la requête de connexion enre
 | `GET` | `/api/log-entries/{id}` | Une entrée de journal | Non |
 | `PATCH` | `/api/log-entries/{id}` | Modifie une de mes entrées | Oui, auteur |
 | `DELETE` | `/api/log-entries/{id}` | Supprime une de mes entrées | Oui, auteur |
-| `GET` | `/api/lists` | Liste paginée des listes publiques, des plus récentes aux plus anciennes, avec recherche par nom et filtres par membre et par film | Non |
+| `POST` | `/api/log-entries/{id}/like` | Like une entrée de journal | Oui |
+| `DELETE` | `/api/log-entries/{id}/like` | Retire mon like d'une entrée de journal | Oui |
+| `GET` | `/api/log-entries/{id}/comments` | Commentaires paginés d'une entrée, du plus ancien au plus récent | Non |
+| `POST` | `/api/log-entries/{id}/comments` | Commente une entrée de journal | Oui |
+| `PATCH` | `/api/log-entries/{id}/comments/{commentId}` | Modifie un de mes commentaires | Oui, auteur du commentaire |
+| `DELETE` | `/api/log-entries/{id}/comments/{commentId}` | Supprime un commentaire | Oui, auteur du commentaire ou de l'entrée |
+| `GET` | `/api/lists` | Liste paginée des listes publiques, des plus récentes ou des plus likées, avec recherche par nom et filtres par membre et par film | Non |
 | `POST` | `/api/lists` | Crée une liste : nom, description, classée ou non, publique ou privée | Oui |
 | `GET` | `/api/lists/{id}` | Une liste (une liste privée n'est visible que par son auteur) | Non |
 | `PATCH` | `/api/lists/{id}` | Modifie une de mes listes | Oui, auteur |
@@ -137,6 +143,12 @@ Commencer par [`http/auth.http`](http/auth.http) : la requête de connexion enre
 | `POST` | `/api/lists/{id}/items` | Ajoute un film à la fin d'une de mes listes, avec une note facultative | Oui, auteur |
 | `PATCH` | `/api/lists/{id}/items/{itemId}` | Change la position ou la note d'un film dans une de mes listes | Oui, auteur |
 | `DELETE` | `/api/lists/{id}/items/{itemId}` | Retire un film d'une de mes listes | Oui, auteur |
+| `POST` | `/api/lists/{id}/like` | Like une liste | Oui |
+| `DELETE` | `/api/lists/{id}/like` | Retire mon like d'une liste | Oui |
+| `GET` | `/api/lists/{id}/comments` | Commentaires paginés d'une liste, du plus ancien au plus récent | Non |
+| `POST` | `/api/lists/{id}/comments` | Commente une liste | Oui |
+| `PATCH` | `/api/lists/{id}/comments/{commentId}` | Modifie un de mes commentaires | Oui, auteur du commentaire |
+| `DELETE` | `/api/lists/{id}/comments/{commentId}` | Supprime un commentaire | Oui, auteur du commentaire ou de la liste |
 | `GET` | `/api/people` | Liste paginée des personnes (acteurs et équipe), avec recherche par nom (`?q=`) | Non |
 | `GET` | `/api/people/{id}` | Fiche d'une personne : rôles joués (`cast`) et films par poste (`crew`) | Non |
 | `GET` | `/api/people/{id}/movies` | Liste paginée des films d'une personne, filtrable par poste (`?job=Director`, `?job=Actor`) | Non |
@@ -229,6 +241,8 @@ Chaque visionnage est une entrée de journal. Une critique est simplement une en
   "rewatch": false,
   "review": "Un rêve dans un rêve.",
   "containsSpoilers": false,
+  "likeCount": 4,
+  "commentCount": 2,
   "createdAt": "2026-11-25T09:12:00+00:00"
 }
 ```
@@ -249,7 +263,7 @@ Paramètres de `GET /api/log-entries`, tous facultatifs et combinables :
 
 ### Listes
 
-Une liste a un nom, une description facultative, et peut être classée (`ranked`, un top) ou non, publique ou privée (`public`). Par défaut, une nouvelle liste est publique et non classée. La fiche d'une liste donne son nombre de films (`itemCount`), les films eux-mêmes sont dans `GET /api/lists/{id}/items` :
+Une liste a un nom, une description facultative, et peut être classée (`ranked`, un top) ou non, publique ou privée (`public`). Par défaut, une nouvelle liste est publique et non classée. La fiche d'une liste donne son nombre de films (`itemCount`), de likes (`likeCount`) et de commentaires (`commentCount`), les films eux-mêmes sont dans `GET /api/lists/{id}/items` :
 
 ```json
 {
@@ -279,6 +293,27 @@ Paramètres de `GET /api/lists`, tous facultatifs et combinables :
 | `q` | `q=nolan` | Cherche dans le nom de la liste |
 | `user` | `user=jane_doe` | Listes publiques d'un membre, par son username |
 | `movie` | `movie=1` | Listes qui contiennent ce film |
+| `sort` | `sort=popular` | `recent` (par défaut, plus récentes d'abord) ou `popular` (plus likées d'abord, puis plus récentes à égalité) |
+
+### Likes et commentaires
+
+Les entrées de journal (et donc les critiques) et les listes se likent et se commentent. Une liste privée ne peut être likée ou commentée que par son auteur : les autres reçoivent une `404`, comme pour la liste elle-même.
+
+`POST /api/log-entries/{id}/like` et `POST /api/lists/{id}/like` renvoient une `201` avec l'entrée ou la liste likée, pour avoir son nouveau `likeCount`. `DELETE` sur la même route retire le like et renvoie une `204`. Liker deux fois renvoie une `409`, retirer un like absent une `404`.
+
+Un commentaire contient de 1 à 1000 caractères. `updatedAt` permet de savoir qu'il a été modifié :
+
+```json
+{
+  "id": 5,
+  "user": { "id": 4, "username": "arthur" },
+  "content": "La toupie tombe, non ?",
+  "createdAt": "2026-11-25T10:02:00+00:00",
+  "updatedAt": "2026-11-25T10:02:00+00:00"
+}
+```
+
+Seul l'auteur d'un commentaire peut le modifier. Il peut aussi le supprimer, tout comme l'auteur de l'entrée ou de la liste commentée, pour modérer ce qui est écrit chez lui. Les autres membres reçoivent une `403`.
 
 ### Profils
 
@@ -349,8 +384,9 @@ Règles de validation :
 - `note` (film d'une liste) : texte non vide de 1 000 caractères maximum, ou `null`.
 - `position` : entier à partir de 1.
 - `movies` (favoris) : liste de 4 identifiants de films existants au plus, sans doublon.
+- `content` (commentaire) : texte non vide de 1 000 caractères maximum.
 
-Codes de retour utilisés : `200` lecture et modification, `201` création, `204` suppression, `401` non connecté ou mauvais identifiants, `403` ressource d'un autre membre, `404` ressource introuvable, `422` données invalides, dans le corps de la requête comme dans les paramètres de l'URL (avec la liste des champs en erreur dans `violations`). Toutes les erreurs sont renvoyées en JSON.
+Codes de retour utilisés : `200` lecture et modification, `201` création, `204` suppression, `401` non connecté ou mauvais identifiants, `403` ressource d'un autre membre, `404` ressource introuvable, `409` like ou abonnement en double, `422` données invalides, dans le corps de la requête comme dans les paramètres de l'URL (avec la liste des champs en erreur dans `violations`). Toutes les erreurs sont renvoyées en JSON.
 
 ## Tests
 

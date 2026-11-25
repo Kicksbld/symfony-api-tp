@@ -2,6 +2,7 @@
 
 namespace App\Dto;
 
+use App\Enum\MovieListSort;
 use App\Validator\Username;
 use Symfony\Component\Validator\Constraints as Assert;
 
@@ -16,6 +17,8 @@ final readonly class MovieListSearchDto
 
         #[Assert\Positive]
         public ?int $movie = null,
+
+        public MovieListSort $sort = MovieListSort::Recent,
     ) {
     }
 }
