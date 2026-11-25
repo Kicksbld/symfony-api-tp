@@ -130,6 +130,12 @@ Le code est dans [`assets/`](assets) :
 | `components/ui/` | Composants [shadcn/ui](https://ui.shadcn.com), ajoutés avec `npx shadcn add <composant>` |
 | `lib/` | Client HTTP de l'API, configuration de TanStack Query, état de la session et types partagés |
 
+#### Inscription et connexion
+
+`/register` crée un compte avec `POST /api/register`, puis ouvre la session avec `POST /api/login_check`. Les erreurs de validation renvoyées par l'API s'affichent sous les champs concernés. Si le compte est créé mais que la connexion échoue, la page propose de se connecter avec l'email déjà rempli.
+
+La page d'origine passe d'un écran à l'autre dans le paramètre `redirect` (par exemple `/login?redirect=%2F%3Fpage%3D2`), avec son chemin et ses paramètres. Seuls les chemins du site sont acceptés : une adresse externe ou absente renvoie vers l'accueil. Quand l'API refuse le token (`401`), le membre est renvoyé vers `/login` et revient ensuite sur la page où il était. Le retour ne rejoue aucune action : le membre la relance lui-même.
+
 #### Thème et navigation
 
 Les couleurs, polices et rayons viennent d'un thème [TweakCN](https://tweakcn.com), appliqué dans [`assets/app.css`](assets/app.css) avec :
@@ -512,7 +518,7 @@ npm exec playwright install chromium
 npm run test:browser
 ```
 
-Les tests vérifient la pagination pendant une réponse lente, la relance après une erreur, puis la connexion avec Jane et Arthur. Ils vérifient aussi l'annulation d'une lecture du premier compte, une réponse de connexion tardive entre deux onglets et l'expiration de la session.
+Les tests vérifient la pagination pendant une réponse lente, la relance après une erreur, puis la connexion avec Jane et Arthur. Ils vérifient aussi l'annulation d'une lecture du premier compte, une réponse de connexion tardive entre deux onglets et l'expiration de la session. Pour l'inscription et la connexion, ils vérifient le retour à la page d'origine, le refus des destinations externes, les erreurs de validation et le repli quand la connexion échoue après l'inscription. Ces tests créent de vrais comptes dans la base de développement, avec un pseudo différent à chaque lancement.
 
 ## Qualité du code
 

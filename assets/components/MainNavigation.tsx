@@ -1,8 +1,9 @@
-import { NavLink } from "react-router";
+import { NavLink, useLocation } from "react-router";
 import { cn } from "cn";
 import { navigationItemClassName, type NavigationLayout } from "@/components/navigation-item";
 import { AccountControls } from "@/features/auth/AccountControls";
 import { useAuth } from "@/features/auth/auth";
+import { authPath, currentTarget } from "@/features/auth/redirect";
 
 type MainNavigationProps = {
     layout: NavigationLayout;
@@ -13,6 +14,7 @@ type MainNavigationProps = {
 
 export function MainNavigation({ layout, id, className, onNavigate }: MainNavigationProps) {
     const { session, logout } = useAuth();
+    const location = useLocation();
 
     return (
         <nav
@@ -24,7 +26,7 @@ export function MainNavigation({ layout, id, className, onNavigate }: MainNaviga
                 Films
             </NavLink>
             {session === null ? (
-                <NavLink to="/login" className={navigationItemClassName(layout, "outline")} onClick={onNavigate}>
+                <NavLink to={authPath("/login", currentTarget(location))} className={navigationItemClassName(layout, "outline")} onClick={onNavigate}>
                     Connexion
                 </NavLink>
             ) : (

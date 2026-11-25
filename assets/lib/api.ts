@@ -1,9 +1,16 @@
+import { authPath, currentTarget } from "@/features/auth/redirect";
 import { clearSession, getSession, isCurrentSession, type Session } from "@/lib/session";
+
+export type Violation = {
+    propertyPath: string;
+    title: string;
+};
 
 export class ApiError extends Error {
     constructor(
         public readonly status: number,
         message: string,
+        public readonly violations: Violation[] = [],
     ) {
         super(message);
     }
@@ -14,6 +21,7 @@ type ApiRequestInit = RequestInit & { session?: Session | null };
 type ErrorBody = {
     message?: string;
     detail?: string;
+    violations?: Violation[];
 };
 
 /**
@@ -35,11 +43,11 @@ export async function apiFetch<T>(path: string, { session = getSession(), ...ini
 
     assertCurrentSession(session);
     if (response.status === 401 && session !== null && clearSession(session)) {
-        window.location.assign("/login");
+        window.location.assign(authPath("/login", currentTarget(window.location)));
     }
     if (!response.ok) {
         const body: ErrorBody = await response.json().catch(() => ({}));
-        throw new ApiError(response.status, body.message ?? body.detail ?? response.statusText);
+        throw new ApiError(response.status, body.message ?? body.detail ?? response.statusText, body.violations);
     }
     if (response.status === 204) {
         return undefined as T;
