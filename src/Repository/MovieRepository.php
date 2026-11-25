@@ -77,6 +77,8 @@ class MovieRepository extends ServiceEntityRepository
 
         match ($movieSearchDto->sort) {
             MovieSort::Popular => $queryBuilder->orderBy('movie.popularity', 'DESC'),
+            // SQLite range les NULL en dernier en ordre décroissant : les films sans note finissent en bas.
+            MovieSort::Rating => $queryBuilder->orderBy('movie.averageRating', 'DESC')->addOrderBy('movie.ratingCount', 'DESC'),
             MovieSort::ReleaseDate => $queryBuilder->orderBy('movie.releaseDate', 'DESC'),
             MovieSort::Title => $queryBuilder->orderBy('movie.title', 'ASC'),
         };

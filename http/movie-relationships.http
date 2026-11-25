@@ -1,0 +1,78 @@
+# Lancer d'abord la connexion de auth.http pour récupérer le token.
+# L'identifiant du film dépend de la base : le récupérer avec GET /api/movies.
+
+### Mon état sur un film, valeurs par défaut si je n'ai encore rien fait (200)
+GET {{baseURL}}/api/movies/1/relationship
+Authorization: Bearer {{token}}
+
+### Mon état sans token (401)
+GET {{baseURL}}/api/movies/1/relationship
+
+### Mon état sur un film qui n'existe pas (404)
+GET {{baseURL}}/api/movies/999999/relationship
+Authorization: Bearer {{token}}
+
+### Marquer le film comme vu, aimé et noté 4,5 étoiles (200)
+PATCH {{baseURL}}/api/movies/1/relationship
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "watched": true,
+  "liked": true,
+  "rating": 4.5
+}
+
+### Ajouter le film à la watchlist, les autres champs ne changent pas (200)
+PATCH {{baseURL}}/api/movies/1/relationship
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "inWatchlist": true
+}
+
+### Retirer sa note avec null (200)
+PATCH {{baseURL}}/api/movies/1/relationship
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "rating": null
+}
+
+### Note qui n'est pas une demi-étoile (422)
+PATCH {{baseURL}}/api/movies/1/relationship
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "rating": 3.7
+}
+
+### Note hors limites et booléen invalide (422)
+PATCH {{baseURL}}/api/movies/1/relationship
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "rating": 6,
+  "liked": "yes"
+}
+
+### Modification sur un film qui n'existe pas (404)
+PATCH {{baseURL}}/api/movies/999999/relationship
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "liked": true
+}
+
+### Modification sans token (401)
+PATCH {{baseURL}}/api/movies/1/relationship
+Content-Type: application/json
+
+{
+  "liked": true
+}

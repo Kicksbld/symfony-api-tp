@@ -30,6 +30,8 @@ security:
     # Les routes protégées sont déclarées avec #[IsGranted] dans les contrôleurs.
     access_control:
         - { path: ^/api/login, roles: PUBLIC_ACCESS }
+        # #[IsGranted] est vérifié après le chargement du film : sans cette règle, un film inconnu donnerait 404 au lieu de 401.
+        - { path: ^/api/movies/\d+/relationship, roles: IS_AUTHENTICATED }
 
 when@test:
     security:

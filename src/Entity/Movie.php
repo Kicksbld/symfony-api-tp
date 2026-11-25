@@ -5,6 +5,7 @@ namespace App\Entity;
 use App\Entity\Trait\TimestampableTrait;
 use App\Enum\CreditType;
 use App\Enum\WatchProviderType;
+use App\Model\RatingDistribution;
 use App\Model\TmdbImage;
 use App\Repository\MovieRepository;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -67,6 +68,15 @@ class Movie
     #[ORM\Column]
     #[Groups(['movie:read'])]
     private int $voteCount = 0;
+
+    // Moyenne des notes des membres sur 5, recalculée à chaque changement de note pour pouvoir trier dessus.
+    #[ORM\Column(nullable: true)]
+    #[Groups(['movie:list', 'movie:read'])]
+    private ?float $averageRating = null;
+
+    #[ORM\Column(options: ['default' => 0])]
+    #[Groups(['movie:read'])]
+    private int $ratingCount = 0;
 
     /**
      * @var Collection<int, Genre>
@@ -241,6 +251,24 @@ class Movie
     public function setVoteCount(int $voteCount): static
     {
         $this->voteCount = $voteCount;
+
+        return $this;
+    }
+
+    public function getAverageRating(): ?float
+    {
+        return $this->averageRating;
+    }
+
+    public function getRatingCount(): int
+    {
+        return $this->ratingCount;
+    }
+
+    public function updateRatings(RatingDistribution $ratingDistribution): static
+    {
+        $this->averageRating = $ratingDistribution->average;
+        $this->ratingCount = $ratingDistribution->count;
 
         return $this;
     }

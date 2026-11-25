@@ -6,8 +6,10 @@ use App\Entity\Company;
 use App\Entity\Genre;
 use App\Entity\Movie;
 use App\Entity\Person;
+use App\Entity\User;
 use App\Entity\WatchProvider;
 use App\Tests\ApiTestCase;
+use App\Tests\Factory\UserFactory;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -36,6 +38,7 @@ final class MovieControllerTest extends ApiTestCase
             'title' => 'Inception',
             'originalTitle' => 'Inception',
             'releaseDate' => '2010-07-15',
+            'averageRating' => null,
             'posterUrl' => 'https://image.tmdb.org/t/p/w500/aej3LRUga5rhgkmRP6XMFw3ejbl.jpg',
         ], $data['items'][0]);
     }
@@ -265,10 +268,100 @@ final class MovieControllerTest extends ApiTestCase
         self::assertResponseStatusCodeSame(Response::HTTP_NOT_FOUND);
     }
 
+    public function testRatingsGiveTheHistogramCountAndAverageOfTheMembers(): void
+    {
+        $this->rateMovie(self::INCEPTION, 5);
+        $this->rateMovie(self::INCEPTION, 4.5);
+        $this->rateMovie(self::INCEPTION, 4.5);
+        $this->rateMovie(self::INCEPTION, 0.5);
+        $this->rateMovie(self::PULP_FICTION, 1);
+
+        $data = $this->requestJson('GET', '/api/movies/'.$this->findId(Movie::class, ['tmdbId' => self::INCEPTION]).'/ratings');
+
+        self::assertResponseIsSuccessful();
+        self::assertSame([0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5], array_column($data['histogram'], 'rating'));
+        self::assertSame([1, 0, 0, 0, 0, 0, 0, 0, 2, 1], array_column($data['histogram'], 'count'));
+        self::assertSame(4, $data['count']);
+        self::assertSame(3.63, $data['average']);
+    }
+
+    public function testRatingsCountOnlyTheCurrentRatingOfEachMember(): void
+    {
+        $user = UserFactory::createOne();
+        $this->rateMovie(self::INCEPTION, 2, $user);
+        $this->rateMovie(self::INCEPTION, 4, $user);
+
+        $data = $this->requestJson('GET', '/api/movies/'.$this->findId(Movie::class, ['tmdbId' => self::INCEPTION]).'/ratings');
+
+        self::assertSame(1, $data['count']);
+        self::assertSame(4, $data['average']);
+    }
+
+    public function testRatingsOfAMovieNobodyRatedAreEmpty(): void
+    {
+        $data = $this->requestJson('GET', '/api/movies/'.$this->findId(Movie::class, ['tmdbId' => self::INCEPTION]).'/ratings');
+
+        self::assertResponseIsSuccessful();
+        self::assertSame(array_fill(0, 10, 0), array_column($data['histogram'], 'count'));
+        self::assertSame(0, $data['count']);
+        self::assertNull($data['average']);
+    }
+
+    public function testRatingsOfAnUnknownMovieReturnNotFound(): void
+    {
+        $this->requestJson('GET', '/api/movies/999999/ratings');
+
+        self::assertResponseStatusCodeSame(Response::HTTP_NOT_FOUND);
+    }
+
+    public function testListAndSheetExposeTheAverageRatingOfTheMembers(): void
+    {
+        $this->rateMovie(self::PULP_FICTION, 4);
+        $this->rateMovie(self::PULP_FICTION, 3);
+        $pulpFictionId = $this->findId(Movie::class, ['tmdbId' => self::PULP_FICTION]);
+
+        $list = $this->requestJson('GET', '/api/movies?q=pulp');
+        $sheet = $this->requestJson('GET', '/api/movies/'.$pulpFictionId);
+
+        self::assertSame(3.5, $list['items'][0]['averageRating']);
+        self::assertSame(3.5, $sheet['averageRating']);
+        self::assertSame(2, $sheet['ratingCount']);
+    }
+
+    public function testRemovingARatingUpdatesTheAverage(): void
+    {
+        $user = UserFactory::createOne();
+        $this->rateMovie(self::PULP_FICTION, 4, $user);
+        $this->rateMovie(self::PULP_FICTION, null, $user);
+
+        $sheet = $this->requestJson('GET', '/api/movies/'.$this->findId(Movie::class, ['tmdbId' => self::PULP_FICTION]));
+
+        self::assertNull($sheet['averageRating']);
+        self::assertSame(0, $sheet['ratingCount']);
+    }
+
+    public function testListCanBeSortedByAverageRatingOfTheMembers(): void
+    {
+        $this->rateMovie(self::PULP_FICTION, 5);
+        $this->rateMovie(self::INCEPTION, 3);
+
+        $data = $this->requestJson('GET', '/api/movies?sort=rating');
+
+        self::assertResponseIsSuccessful();
+        self::assertSame(['Pulp Fiction', 'Inception', 'The Dark Knight : Le Chevalier noir'], array_column($data['items'], 'title'));
+    }
+
     public function testListRejectsAPageThatIsNotANumber(): void
     {
         $this->requestJson('GET', '/api/movies?page=abc');
 
         self::assertResponseStatusCodeSame(Response::HTTP_UNPROCESSABLE_ENTITY);
+    }
+
+    private function rateMovie(int $tmdbId, ?float $rating, ?User $user = null): void
+    {
+        $this->loginAs($user ?? UserFactory::createOne());
+        $this->requestJson('PATCH', '/api/movies/'.$this->findId(Movie::class, ['tmdbId' => $tmdbId]).'/relationship', ['rating' => $rating]);
+        self::assertResponseIsSuccessful();
     }
 }
