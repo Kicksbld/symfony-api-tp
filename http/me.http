@@ -52,3 +52,64 @@ Content-Type: application/json
 {
   "bio": "Pas connecté."
 }
+
+### Remplacer mes 4 films favoris, dans l'ordre d'affichage (200)
+# Les identifiants dépendent de la base : les récupérer avec GET /api/movies.
+PUT {{baseURL}}/api/me/favorites
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "movies": [1, 2, 3, 4]
+}
+
+### Retirer tous mes favoris (200)
+PUT {{baseURL}}/api/me/favorites
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "movies": []
+}
+
+### Plus de 4 films (422)
+PUT {{baseURL}}/api/me/favorites
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "movies": [1, 2, 3, 4, 5]
+}
+
+### Film en double (422)
+PUT {{baseURL}}/api/me/favorites
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "movies": [1, 1]
+}
+
+### Film inconnu (422)
+PUT {{baseURL}}/api/me/favorites
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "movies": [999999]
+}
+
+### Liste de films manquante (422)
+PUT {{baseURL}}/api/me/favorites
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{}
+
+### Remplacer les favoris sans token (401)
+PUT {{baseURL}}/api/me/favorites
+Content-Type: application/json
+
+{
+  "movies": [1]
+}

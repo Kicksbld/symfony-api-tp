@@ -4,6 +4,7 @@ namespace App\Repository;
 
 use App\Dto\MovieListSearchDto;
 use App\Entity\MovieList;
+use App\Entity\User;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\ORM\QueryBuilder;
 use Doctrine\Persistence\ManagerRegistry;
@@ -49,7 +50,30 @@ class MovieListRepository extends ServiceEntityRepository
                 ->setParameter('movie', $movieListSearchDto->movie);
         }
 
-        // Plusieurs listes peuvent être créées dans la même seconde : l'identifiant départage.
+        return $this->orderByMostRecent($queryBuilder);
+    }
+
+    /**
+     * Les listes privées ne sont ajoutées que lorsque c'est leur auteur qui consulte son profil.
+     */
+    public function createByUserQueryBuilder(User $user, bool $withPrivate): QueryBuilder
+    {
+        $queryBuilder = $this->createQueryBuilder('movieList')
+            ->addSelect('user')
+            ->innerJoin('movieList.user', 'user')
+            ->andWhere('movieList.user = :user')
+            ->setParameter('user', $user);
+
+        if (!$withPrivate) {
+            $queryBuilder->andWhere('movieList.public = true');
+        }
+
+        return $this->orderByMostRecent($queryBuilder);
+    }
+
+    // Plusieurs listes peuvent être créées dans la même seconde : l'identifiant départage.
+    private function orderByMostRecent(QueryBuilder $queryBuilder): QueryBuilder
+    {
         return $queryBuilder
             ->orderBy('movieList.createdAt', 'DESC')
             ->addOrderBy('movieList.id', 'DESC');

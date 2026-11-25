@@ -104,6 +104,14 @@ Commencer par [`http/auth.http`](http/auth.http) : la requête de connexion enre
 | `POST` | `/api/login_check` | Se connecte et renvoie le token JWT avec le profil | Non |
 | `GET` | `/api/me` | Profil du membre connecté | Oui |
 | `PATCH` | `/api/me` | Modifie le username et la bio du membre connecté | Oui |
+| `PUT` | `/api/me/favorites` | Remplace mes 4 films favoris, dans l'ordre d'affichage | Oui |
+| `GET` | `/api/users` | Liste paginée des membres, avec recherche par username (`?q=`) | Non |
+| `GET` | `/api/users/{username}` | Profil public d'un membre : bio, 4 favoris et nombre de films vus | Non |
+| `GET` | `/api/users/{username}/diary` | Journal paginé du membre, filtrable par année et mois (`?year=2026&month=11`) | Non |
+| `GET` | `/api/users/{username}/watched` | Liste paginée des films vus par le membre, avec sa note | Non |
+| `GET` | `/api/users/{username}/likes` | Liste paginée des films aimés par le membre | Non |
+| `GET` | `/api/users/{username}/watchlist` | Watchlist paginée du membre | Non |
+| `GET` | `/api/users/{username}/lists` | Listes paginées du membre (les privées seulement pour lui-même) | Non |
 | `GET` | `/api/movies` | Liste paginée des films, avec recherche, filtres et tri | Non |
 | `GET` | `/api/movies/{id}` | Fiche complète d'un film | Non |
 | `GET` | `/api/movies/{id}/ratings` | Répartition des notes des membres sur le film : histogramme, nombre de notes et moyenne | Non |
@@ -267,6 +275,46 @@ Paramètres de `GET /api/lists`, tous facultatifs et combinables :
 | `user` | `user=jane_doe` | Listes publiques d'un membre, par son username |
 | `movie` | `movie=1` | Listes qui contiennent ce film |
 
+### Profils
+
+`GET /api/users/{username}` renvoie le profil public d'un membre. `GET /api/me` renvoie le même profil avec l'email en plus :
+
+```json
+{
+  "id": 3,
+  "username": "jane_doe",
+  "bio": "Surtout des films d'horreur.",
+  "favorites": [
+    { "id": 1, "title": "Inception", "originalTitle": "Inception", "releaseDate": "2010-07-15", "averageRating": 4.2, "posterUrl": "https://image.tmdb.org/t/p/w500/..." }
+  ],
+  "watchedCount": 128
+}
+```
+
+`PUT /api/me/favorites` remplace tous les favoris d'un coup avec `{ "movies": [1, 2, 3, 4] }` : 4 films au plus, sans doublon, dans l'ordre d'affichage. Une liste vide retire tous les favoris. La réponse est la nouvelle liste des favoris.
+
+Le journal (`/diary`) ne contient que les entrées datées (`watchedOn`), de la plus récente à la plus ancienne, comme sur Letterboxd. `year` filtre sur une année, `month` (de 1 à 12) sur un mois de cette année et demande donc `year`.
+
+`/watched`, `/likes` et `/watchlist` renvoient l'état du membre sur chaque film, du plus récemment modifié au plus ancien :
+
+```json
+{
+  "items": [
+    {
+      "movie": { "id": 1, "title": "Inception", "originalTitle": "Inception", "releaseDate": "2010-07-15", "averageRating": 4.2, "posterUrl": "https://image.tmdb.org/t/p/w500/..." },
+      "watched": true,
+      "liked": true,
+      "rating": 4.5,
+      "inWatchlist": false
+    }
+  ],
+  "total": 1,
+  "lastPage": 1
+}
+```
+
+`/lists` ne montre que les listes publiques, sauf quand le membre consulte son propre profil en étant connecté : ses listes privées sont alors incluses.
+
 ### Validation
 
 Règles de validation :
@@ -285,6 +333,7 @@ Règles de validation :
 - `ranked`, `public` : booléens.
 - `note` (film d'une liste) : texte non vide de 1 000 caractères maximum, ou `null`.
 - `position` : entier à partir de 1.
+- `movies` (favoris) : liste de 4 identifiants de films existants au plus, sans doublon.
 
 Codes de retour utilisés : `200` lecture et modification, `201` création, `204` suppression, `401` non connecté ou mauvais identifiants, `403` ressource d'un autre membre, `404` ressource introuvable, `422` données invalides, dans le corps de la requête comme dans les paramètres de l'URL (avec la liste des champs en erreur dans `violations`). Toutes les erreurs sont renvoyées en JSON.
 

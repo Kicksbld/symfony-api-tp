@@ -2,8 +2,10 @@
 
 namespace App\Tests\Controller;
 
+use App\Entity\Movie;
 use App\Tests\ApiTestCase;
 use App\Tests\Factory\UserFactory;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Symfony\Component\HttpFoundation\Response;
 
 final class MeControllerTest extends ApiTestCase
@@ -30,6 +32,8 @@ final class MeControllerTest extends ApiTestCase
             'email' => 'jane@example.com',
             'username' => 'jane_doe',
             'bio' => 'Cinephile.',
+            'favorites' => [],
+            'watchedCount' => 0,
         ], $data);
     }
 
@@ -99,6 +103,65 @@ final class MeControllerTest extends ApiTestCase
     public function testUpdateProfileRequiresAuthentication(): void
     {
         $this->requestJson('PATCH', '/api/me', ['bio' => 'New bio.']);
+
+        self::assertResponseStatusCodeSame(Response::HTTP_UNAUTHORIZED);
+    }
+
+    public function testMemberCanReplaceTheirFavoritesInTheChosenOrder(): void
+    {
+        $this->importMovieCatalog();
+        $pulpFictionId = $this->findId(Movie::class, ['originalTitle' => 'Pulp Fiction']);
+        $inceptionId = $this->findId(Movie::class, ['originalTitle' => 'Inception']);
+        $darkKnightId = $this->findId(Movie::class, ['originalTitle' => 'The Dark Knight']);
+        $this->loginAs(UserFactory::createOne());
+
+        $this->requestJson('PUT', '/api/me/favorites', ['movies' => [$inceptionId, $darkKnightId]]);
+        $data = $this->requestJson('PUT', '/api/me/favorites', ['movies' => [$pulpFictionId, $inceptionId]]);
+
+        self::assertResponseIsSuccessful();
+        self::assertSame([$pulpFictionId, $inceptionId], array_column($data, 'id'));
+        self::assertSame([$pulpFictionId, $inceptionId], array_column($this->requestJson('GET', '/api/me')['favorites'], 'id'));
+    }
+
+    public function testMemberCanRemoveAllTheirFavorites(): void
+    {
+        $this->importMovieCatalog();
+        $this->loginAs(UserFactory::createOne());
+        $this->requestJson('PUT', '/api/me/favorites', ['movies' => [$this->findId(Movie::class, ['originalTitle' => 'Inception'])]]);
+
+        $data = $this->requestJson('PUT', '/api/me/favorites', ['movies' => []]);
+
+        self::assertResponseIsSuccessful();
+        self::assertSame([], $data);
+    }
+
+    /**
+     * @param array<string, mixed> $payload
+     */
+    #[DataProvider('provideInvalidFavoritesPayloads')]
+    public function testReplaceFavoritesRejectsInvalidData(array $payload, string $expectedPropertyPath): void
+    {
+        $this->importMovieCatalog();
+        $this->loginAs(UserFactory::createOne());
+
+        $data = $this->requestJson('PUT', '/api/me/favorites', $payload);
+
+        self::assertResponseStatusCodeSame(Response::HTTP_UNPROCESSABLE_ENTITY);
+        self::assertSame([$expectedPropertyPath], array_unique(array_column($data['violations'], 'propertyPath')));
+    }
+
+    public static function provideInvalidFavoritesPayloads(): iterable
+    {
+        yield 'missing movies' => [[], 'movies'];
+        yield 'more than four movies' => [['movies' => [1, 2, 3, 4, 5]], 'movies'];
+        yield 'duplicate movie' => [['movies' => [1, 1]], 'movies'];
+        yield 'unknown movie' => [['movies' => [999999]], 'movies[0]'];
+        yield 'not an identifier' => [['movies' => ['inception']], 'movies[0]'];
+    }
+
+    public function testReplaceFavoritesRequiresAuthentication(): void
+    {
+        $this->requestJson('PUT', '/api/me/favorites', ['movies' => []]);
 
         self::assertResponseStatusCodeSame(Response::HTTP_UNAUTHORIZED);
     }

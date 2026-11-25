@@ -7,6 +7,7 @@ use App\Model\Rating;
 use App\Repository\MovieRelationshipRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Attribute\Context;
 use Symfony\Component\Serializer\Attribute\Groups;
 
 #[ORM\Entity(repositoryClass: MovieRelationshipRepository::class)]
@@ -21,12 +22,14 @@ class MovieRelationship
     #[ORM\Column]
     private ?int $id = null;
 
-    #[ORM\ManyToOne]
+    #[ORM\ManyToOne(inversedBy: 'movieRelationships')]
     #[ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]
     private ?User $user = null;
 
     #[ORM\ManyToOne]
     #[ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]
+    #[Groups(['movieRelationship:list'])]
+    #[Context(normalizationContext: ['groups' => ['movie:list']])]
     private ?Movie $movie = null;
 
     #[ORM\Column]

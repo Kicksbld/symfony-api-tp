@@ -2,8 +2,10 @@
 
 namespace App\Repository;
 
+use App\Dto\UserSearchDto;
 use App\Entity\User;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\ORM\QueryBuilder;
 use Doctrine\Persistence\ManagerRegistry;
 use Symfony\Component\Security\Core\Exception\UnsupportedUserException;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
@@ -27,5 +29,19 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
 
         $user->setPassword($newHashedPassword);
         $this->getEntityManager()->flush();
+    }
+
+    public function createSearchQueryBuilder(UserSearchDto $userSearchDto): QueryBuilder
+    {
+        $queryBuilder = $this->createQueryBuilder('user')->orderBy('user.username', 'ASC');
+
+        // _ est autorisé dans un username mais sert de joker à LIKE : on l'échappe pour le chercher tel quel.
+        if (null !== $userSearchDto->q) {
+            $queryBuilder
+                ->andWhere("user.username LIKE :q ESCAPE '\\'")
+                ->setParameter('q', '%'.addcslashes($userSearchDto->q, '%_\\').'%');
+        }
+
+        return $queryBuilder;
     }
 }

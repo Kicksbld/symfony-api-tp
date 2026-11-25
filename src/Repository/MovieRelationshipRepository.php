@@ -6,6 +6,7 @@ use App\Entity\Movie;
 use App\Entity\MovieRelationship;
 use App\Entity\User;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\ORM\QueryBuilder;
 use Doctrine\Persistence\ManagerRegistry;
 
 /**
@@ -38,5 +39,33 @@ class MovieRelationshipRepository extends ServiceEntityRepository
             ->getArrayResult();
 
         return array_map(intval(...), array_column($rows, 'ratingCount', 'rating'));
+    }
+
+    public function createWatchedQueryBuilder(User $user): QueryBuilder
+    {
+        return $this->createByUserQueryBuilder($user)->andWhere('movieRelationship.watched = true');
+    }
+
+    public function createLikedQueryBuilder(User $user): QueryBuilder
+    {
+        return $this->createByUserQueryBuilder($user)->andWhere('movieRelationship.liked = true');
+    }
+
+    public function createWatchlistQueryBuilder(User $user): QueryBuilder
+    {
+        return $this->createByUserQueryBuilder($user)->andWhere('movieRelationship.inWatchlist = true');
+    }
+
+    // Le film est joint pour être sérialisé sans une requête par relation. Plusieurs relations peuvent changer dans
+    // la même seconde : l'identifiant départage.
+    private function createByUserQueryBuilder(User $user): QueryBuilder
+    {
+        return $this->createQueryBuilder('movieRelationship')
+            ->addSelect('movie')
+            ->innerJoin('movieRelationship.movie', 'movie')
+            ->andWhere('movieRelationship.user = :user')
+            ->setParameter('user', $user)
+            ->orderBy('movieRelationship.updatedAt', 'DESC')
+            ->addOrderBy('movieRelationship.id', 'DESC');
     }
 }
