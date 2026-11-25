@@ -126,7 +126,7 @@ Le code est dans [`assets/`](assets) :
 | --- | --- |
 | `pages/` | Composition des écrans par route et lecture des filtres ou de la page dans l’URL |
 | `features/` | Composants, requêtes et mutations propres à chaque fonctionnalité |
-| `components/` | Mise en page partagée |
+| `components/` | Mise en page et composants partagés (pagination, état vide) |
 | `components/ui/` | Composants [shadcn/ui](https://ui.shadcn.com), ajoutés avec `npx shadcn add <composant>` |
 | `lib/` | Client HTTP de l'API, configuration de TanStack Query, état de la session et types partagés |
 
@@ -147,6 +147,20 @@ Un paramètre invalide (titre vide ou trop long, genre inconnu, décennie hors l
 Chaque carte du catalogue ouvre la fiche `/movies/{id}`, lue avec `GET /api/movies/{id}`. La fiche est préchargée dès le survol ou la prise de focus de la carte, elle s'affiche donc sans attente au clic. Elle montre l'affiche, le synopsis, la durée, les genres, la réalisation, les têtes d'affiche et la moyenne des membres (ou « Pas encore noté » sans note). Un identifiant invalide ou un film absent (`404`) affiche « Film introuvable ».
 
 Un membre connecté voit son état avec `GET /api/movies/{id}/relationship`, et le bouton envoie `PATCH /api/movies/{id}/relationship` avec seulement `{ "inWatchlist": true }` ou `false`. Le bouton change tout de suite, un clic pendant l'envoi est ignoré, puis mon état sur le film et la watchlist du profil sont relus. En cas d'erreur, le bouton revient à son état précédent et un message s'affiche. Un visiteur est envoyé vers la connexion, puis revient sur la fiche.
+
+#### Profil public
+
+`/users/{username}` affiche le profil d'un membre, lu avec `GET /api/users/{username}` : pseudo, bio, nombre de films vus, d'abonnés et d'abonnements, et les 4 films favoris qui mènent à leur fiche. Le profil est public : il s'ouvre sans compte, et ses requêtes partent sans token. Un pseudo inconnu (`404`) affiche « Membre introuvable ». Le lien avec le pseudo dans la navigation ouvre le profil du membre connecté.
+
+Le profil a trois onglets, chacun avec son adresse :
+
+| Adresse | Endpoint | Contenu |
+| --- | --- | --- |
+| `/users/{username}/diary` | `GET /api/users/{username}/diary` | Journal : film, date de visionnage, note, aimé, revu et critique |
+| `/users/{username}/watched` | `GET /api/users/{username}/watched` | Films vus |
+| `/users/{username}/watchlist` | `GET /api/users/{username}/watchlist` | Watchlist |
+
+`/users/{username}` ouvre le journal. Chaque onglet est paginé par 20 avec `?page=2` dans l'adresse, comme le catalogue. Une page invalide revient à la première, une page au-delà de la dernière propose d'y aller. Un onglet vide l'indique, et une critique marquée spoiler reste cachée jusqu'au clic sur « Afficher la critique ». Ajouter ou retirer un film depuis sa fiche relit la watchlist du profil : elle est à jour au retour sur l'onglet.
 
 #### Thème et navigation
 

@@ -1,6 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
-import { useState, type ReactNode } from "react";
+import { useState } from "react";
 import { Link, Navigate, useLocation, useNavigate, useSearchParams } from "react-router";
+import { EmptyState } from "@/components/EmptyState";
+import { Pagination } from "@/components/Pagination";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -130,38 +132,13 @@ function CatalogResults({ result, isStale }: { result: CatalogResult; isStale: b
                     <MovieCard key={movie.id} movie={movie} />
                 ))}
             </div>
-            <nav className="flex items-center justify-center gap-4 text-sm" aria-label="Pagination des films">
-                <PageLink search={search} page={search.page - 1} disabled={isStale || search.page <= 1} label="Précédent" />
-                <span>
-                    Page {search.page} sur {movies.lastPage}
-                </span>
-                <PageLink search={search} page={search.page + 1} disabled={isStale || search.page >= movies.lastPage} label="Suivant" />
-            </nav>
+            <Pagination
+                page={search.page}
+                lastPage={movies.lastPage}
+                pathForPage={(page) => catalogPath({ ...search, page })}
+                label="Pagination des films"
+                disabled={isStale}
+            />
         </>
-    );
-}
-
-function EmptyState({ message, children }: { message: string; children?: ReactNode }) {
-    return (
-        <div className="flex flex-col items-center gap-3 rounded-lg border border-dashed p-10 text-center text-sm text-muted-foreground">
-            <p>{message}</p>
-            {children}
-        </div>
-    );
-}
-
-function PageLink({ search, page, disabled, label }: { search: CatalogSearch; page: number; disabled: boolean; label: string }) {
-    if (disabled) {
-        return (
-            <Button variant="outline" size="sm" disabled>
-                {label}
-            </Button>
-        );
-    }
-
-    return (
-        <Button asChild variant="outline" size="sm">
-            <Link to={catalogPath({ ...search, page })}>{label}</Link>
-        </Button>
     );
 }

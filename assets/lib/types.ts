@@ -62,3 +62,35 @@ export type LoginResponse = {
     ttl: number;
     user: CurrentUser;
 };
+
+export type UserSummary = {
+    id: number;
+    username: string;
+};
+
+export type UserProfile = UserSummary & {
+    bio: string | null;
+    favorites: MovieSummary[];
+    watchedCount: number;
+    followersCount: number;
+    followingCount: number;
+};
+
+export type LogEntry = {
+    id: number;
+    user: UserSummary;
+    movie: MovieSummary;
+    watchedOn: string | null;
+    rating: number | null;
+    liked: boolean;
+    rewatch: boolean;
+    review: string | null;
+    containsSpoilers: boolean;
+    createdAt: string;
+    likeCount: number;
+    commentCount: number;
+};
+
+export type MovieRelationshipItem = MovieRelationship & {
+    movie: MovieSummary;
+};
