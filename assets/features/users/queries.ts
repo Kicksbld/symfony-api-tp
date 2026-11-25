@@ -1,13 +1,15 @@
-import { queryOptions } from "@tanstack/react-query";
+import { keepPreviousData, queryOptions } from "@tanstack/react-query";
+import type { MovieList } from "@/features/movie-lists/types";
 import { diaryFilterParams, type DiaryFilters } from "@/features/users/diary-search";
 import { apiFetch } from "@/lib/api";
+import { sessionKey } from "@/lib/query-client";
+import type { Session } from "@/lib/session";
 import type { LogEntry, MovieRelationshipItem, Paginated, UserProfile } from "@/lib/types";
 
 const PROFILE_PAGE_SIZE = 20;
 
 export type MovieRelationshipList = "watched" | "likes" | "watchlist";
 
-// Un profil est public : ses clés ne dépendent pas de la session, et ses requêtes partent sans token.
 function userKey<T extends string>(username: string, resource: T): readonly ["users", string, T] {
     return ["users", username, resource];
 }
@@ -50,5 +52,17 @@ export function movieRelationshipsQuery(username: string, list: MovieRelationshi
         queryFn: ({ signal }) =>
             apiFetch<Paginated<MovieRelationshipItem>>(`${userPath(username, list)}?${new URLSearchParams(pageParams(page))}`, { signal, session: null }),
         placeholderData: (previous, query) => query?.queryKey[1] === username && query.queryKey[2] === list ? previous : undefined,
+    });
+}
+
+export function profileListsQuery(username: string, page: number, ownerSession: Session | null) {
+    const params = new URLSearchParams(pageParams(page));
+    const scope = ownerSession === null ? [] : sessionKey(ownerSession);
+
+    return queryOptions({
+        queryKey: [...scope, ...userKey(username, "lists"), { page }],
+        queryFn: ({ signal }) =>
+            apiFetch<Paginated<MovieList>>(`${userPath(username, "lists")}?${params}`, { signal, session: ownerSession }),
+        placeholderData: keepPreviousData,
     });
 }

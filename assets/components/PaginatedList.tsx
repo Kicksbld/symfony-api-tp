@@ -1,4 +1,4 @@
-import { useQuery, type QueryKey, type UseQueryOptions } from "@tanstack/react-query";
+import { useQuery, type QueryKey, type UseQueryOptions, type UseQueryResult } from "@tanstack/react-query";
 import { useState, type ReactNode } from "react";
 import { Link, type To } from "react-router";
 import { EmptyState } from "@/components/EmptyState";
@@ -8,8 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { Paginated } from "@/lib/types";
 
-type PaginatedListProps<T, TKey extends QueryKey> = {
-    query: UseQueryOptions<Paginated<T>, Error, Paginated<T>, TKey>;
+type PaginatedListProps<T> = {
     page: number;
     pathForPage: (page: number) => To;
     label: string;
@@ -19,10 +18,27 @@ type PaginatedListProps<T, TKey extends QueryKey> = {
 };
 
 // La clé de requête reste générique : TanStack Query refuse une clé élargie à « readonly unknown[] ».
-export function PaginatedList<T, TKey extends QueryKey>({ query, page, pathForPage, label, emptyMessage, errorMessage, children }: PaginatedListProps<T, TKey>) {
-    const { data, error, isFetching, isPlaceholderData, refetch } = useQuery(query);
+export function PaginatedList<T, TKey extends QueryKey>({
+    query,
+    ...props
+}: PaginatedListProps<T> & { query: UseQueryOptions<Paginated<T>, Error, Paginated<T>, TKey> }) {
+    const result = useQuery(query);
+
+    return <PaginatedResults {...props} result={result} keepPreviousPage={query.placeholderData !== undefined} />;
+}
+
+export function PaginatedResults<T>({
+    result: { data, error, isFetching, isPlaceholderData, refetch },
+    keepPreviousPage,
+    page,
+    pathForPage,
+    label,
+    emptyMessage,
+    errorMessage,
+    children,
+}: PaginatedListProps<T> & { result: UseQueryResult<Paginated<T>>; keepPreviousPage: boolean }) {
     const [previousPage, setPreviousPage] = useState<Paginated<T>>();
-    if (query.placeholderData !== undefined && data !== undefined && !isPlaceholderData && data !== previousPage) {
+    if (keepPreviousPage && data !== undefined && !isPlaceholderData && data !== previousPage) {
         setPreviousPage(data);
     }
 

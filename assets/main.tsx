@@ -7,12 +7,14 @@ import { AuthProvider } from "@/features/auth/AuthProvider";
 import { CompanyPage } from "@/pages/CompanyPage";
 import { EditProfilePage } from "@/pages/EditProfilePage";
 import { HomePage } from "@/pages/HomePage";
+import { ListPage } from "@/pages/ListPage";
+import { ListsPage } from "@/pages/ListsPage";
 import { LoginPage } from "@/pages/LoginPage";
 import { MoviePage } from "@/pages/MoviePage";
 import { NotFoundPage } from "@/pages/NotFoundPage";
 import { PeoplePage } from "@/pages/PeoplePage";
 import { PersonPage } from "@/pages/PersonPage";
-import { DiaryTab, MovieRelationshipsTab, ProfileIndex, ProfilePage } from "@/pages/ProfilePage";
+import { DiaryTab, MovieRelationshipsTab, ProfileIndex, ProfileListsTab, ProfilePage } from "@/pages/ProfilePage";
 import { RegisterPage } from "@/pages/RegisterPage";
 import { queryClient } from "@/lib/query-client";
 import "./app.css";
@@ -29,6 +31,8 @@ createRoot(document.getElementById("root")!).render(
                             <Route path="people" element={<PeoplePage />} />
                             <Route path="people/:id" element={<PersonPage />} />
                             <Route path="companies/:id" element={<CompanyPage />} />
+                            <Route path="lists" element={<ListsPage />} />
+                            <Route path="lists/:id" element={<ListPage />} />
                             <Route path="settings/profile" element={<EditProfilePage />} />
                             <Route path="users/:username" element={<ProfilePage />}>
                                 <Route index element={<ProfileIndex />} />
@@ -36,6 +40,7 @@ createRoot(document.getElementById("root")!).render(
                                 <Route path="watched" element={<MovieRelationshipsTab list="watched" />} />
                                 <Route path="likes" element={<MovieRelationshipsTab list="likes" />} />
                                 <Route path="watchlist" element={<MovieRelationshipsTab list="watchlist" />} />
+                                <Route path="lists" element={<ProfileListsTab />} />
                             </Route>
                             <Route path="login" element={<LoginPage />} />
                             <Route path="register" element={<RegisterPage />} />

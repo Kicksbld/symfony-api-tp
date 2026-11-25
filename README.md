@@ -171,9 +171,9 @@ Le suivi change tout de suite, puis la fiche et les onglets du profil se synchro
 
 #### Profil public
 
-`/users/{username}` affiche le profil d'un membre, lu avec `GET /api/users/{username}` : pseudo, bio, nombre de films vus, d'abonnés et d'abonnements, et les 4 films favoris qui mènent à leur fiche. Le profil est public : il s'ouvre sans compte, et ses requêtes partent sans token. Un pseudo inconnu (`404`) affiche « Membre introuvable ». Le lien avec le pseudo dans la navigation ouvre le profil du membre connecté.
+`/users/{username}` affiche le profil d'un membre, lu avec `GET /api/users/{username}` sans token : pseudo, bio, nombre de films vus, d'abonnés et d'abonnements, et les 4 films favoris qui mènent à leur fiche. Un pseudo inconnu (`404`) affiche « Membre introuvable ». Le lien avec le pseudo dans la navigation ouvre le profil du membre connecté.
 
-Le profil a quatre onglets, chacun avec son adresse :
+Le profil a cinq onglets, chacun avec son adresse :
 
 | Adresse | Endpoint | Contenu |
 | --- | --- | --- |
@@ -181,10 +181,17 @@ Le profil a quatre onglets, chacun avec son adresse :
 | `/users/{username}/watched` | `GET /api/users/{username}/watched` | Films vus |
 | `/users/{username}/likes` | `GET /api/users/{username}/likes` | Films aimés |
 | `/users/{username}/watchlist` | `GET /api/users/{username}/watchlist` | Watchlist |
+| `/users/{username}/lists` | `GET /api/users/{username}/lists` | Listes du membre, avec ses listes privées lorsqu'il consulte son propre profil |
 
 `/users/{username}` ouvre le journal. Chaque onglet est paginé par 20 avec `?page=2` dans l'adresse, comme le catalogue. Une page invalide revient à la première, une page au-delà de la dernière propose d'y aller. Un onglet vide l'indique, et une critique marquée spoiler reste cachée jusqu'au clic sur « Afficher la critique ».
 
 Le journal peut être filtré par année, puis par mois. Les filtres sont conservés dans l'adresse et dans les liens de pagination, par exemple `?year=2026&month=11&page=2`. Changer un filtre revient à la première page. Effacer l'année efface aussi le mois.
+
+#### Découvrir les listes
+
+Le lien « Listes » de la navigation ouvre l'annuaire public `/lists`, lu avec `GET /api/lists`. Le formulaire combine le nom de la liste (`q`), le pseudo de son auteur (`user`) et un film choisi dans le catalogue (`movie`). Les listes les plus récentes sont affichées par défaut. Le tri « Les plus populaires » (`sort=popular`) affiche les listes par nombre de mentions J'aime. Les filtres et la pagination restent dans l'adresse, par exemple `/lists?user=jane_doe&sort=popular&page=2`.
+
+La fiche `/lists/{id}` lit `GET /api/lists/{id}` et `GET /api/lists/{id}/items`. Elle affiche les films dans l'ordre renvoyé par l'API, avec leur position pour les listes classées et la note de l'auteur si elle existe. Les films et les listes sont paginés par 20. Le badge « Privée » apparaît sur le profil du propriétaire et sur la fiche qui lui est accessible. Pour les autres visiteurs, le lien direct d'une liste privée affiche « Liste introuvable », comme pour une liste absente.
 
 #### Modification du profil
 

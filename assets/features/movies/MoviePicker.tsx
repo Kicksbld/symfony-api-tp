@@ -16,9 +16,11 @@ type MoviePickerProps = {
     selected: MovieSummary[];
     disabled: boolean;
     onSelect: (movie: MovieSummary) => void;
+    triggerLabel?: string;
+    title?: string;
 };
 
-export function MoviePicker({ selected, disabled, onSelect }: MoviePickerProps) {
+export function MoviePicker({ selected, disabled, onSelect, triggerLabel = "Ajouter un film", title = "Ajouter un film favori" }: MoviePickerProps) {
     const [open, setOpen] = useState(false);
     const [search, setSearch] = useState({ title: "", page: 1 });
     const { data, error, isFetching, isPlaceholderData, refetch } = useQuery(
@@ -42,18 +44,18 @@ export function MoviePicker({ selected, disabled, onSelect }: MoviePickerProps) 
             <DialogTrigger asChild>
                 <Button type="button" variant="outline" aria-disabled={disabled} className="aria-disabled:opacity-50">
                     <Plus aria-hidden="true" />
-                    Ajouter un film
+                    {triggerLabel}
                 </Button>
             </DialogTrigger>
             <DialogContent className="max-h-[90dvh] overflow-y-auto sm:max-w-lg">
                 <DialogHeader>
-                    <DialogTitle>Ajouter un film favori</DialogTitle>
+                    <DialogTitle>{title}</DialogTitle>
                     <DialogDescription>Recherchez un film par son titre dans le catalogue.</DialogDescription>
                 </DialogHeader>
                 <form role="search" onSubmit={submit} className="flex items-end gap-2">
                     <div className="min-w-0 flex-1 space-y-2">
-                        <Label htmlFor="favorite-movie-title">Titre</Label>
-                        <Input id="favorite-movie-title" name="q" type="search" defaultValue={search.title} maxLength={MAX_TITLE_LENGTH} />
+                        <Label htmlFor="movie-picker-title">Titre</Label>
+                        <Input id="movie-picker-title" name="q" type="search" defaultValue={search.title} maxLength={MAX_TITLE_LENGTH} />
                     </div>
                     <Button type="submit" variant="outline">Rechercher</Button>
                 </form>
