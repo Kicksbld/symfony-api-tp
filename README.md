@@ -146,6 +146,11 @@ Un paramètre invalide (titre vide ou trop long, genre inconnu, décennie hors l
 
 Chaque carte du catalogue ouvre la fiche `/movies/{id}`, lue avec `GET /api/movies/{id}`. La fiche est préchargée dès le survol ou la prise de focus de la carte, elle s'affiche donc sans attente au clic. Elle montre l'affiche, le synopsis, la durée, les genres, la réalisation, les têtes d'affiche et la moyenne des membres (ou « Pas encore noté » sans note). Un identifiant invalide ou un film absent (`404`) affiche « Film introuvable ».
 
+Deux sections de la fiche ont leur propre requête, lancée une fois le film chargé. Si l'une échoue, elle affiche son erreur et un bouton « Réessayer » sans bloquer le reste de la fiche, et garde ce qu'elle affichait déjà.
+
+- « Notes des membres » lit `GET /api/movies/{id}/ratings` : un histogramme de 10 colonnes, de 0,5 à 5 étoiles, avec la moyenne et le nombre de notes, ou « Pas encore noté » sans note. Les colonnes sont aussi décrites dans un tableau lu par les lecteurs d'écran. Journaliser, modifier ou supprimer une entrée relit la répartition.
+- « Où regarder » lit `GET /api/movies/{id}/watch-providers?region=FR` et groupe les plateformes par abonnement, location et achat. Un menu change de pays (France par défaut, Belgique, Suisse, Canada, États-Unis), les offres du pays précédent restent affichées pendant le chargement. Un pays sans offre l'indique.
+
 Un membre connecté voit son état avec `GET /api/movies/{id}/relationship`, et le bouton envoie `PATCH /api/movies/{id}/relationship` avec seulement `{ "inWatchlist": true }` ou `false`. Le bouton change tout de suite, un clic pendant l'envoi est ignoré, puis mon état sur le film et la watchlist du profil sont relus. En cas d'erreur, le bouton revient à son état précédent et un message s'affiche. Un visiteur est envoyé vers la connexion, puis revient sur la fiche.
 
 #### Profil public

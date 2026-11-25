@@ -38,11 +38,29 @@ export type CrewCredit = {
 export type MovieDetail = MovieSummary & {
     overview: string | null;
     runtime: number | null;
-    ratingCount: number;
     genres: Genre[];
     cast: CastCredit[];
     crew: CrewCredit[];
 };
+
+export type RatingDistribution = {
+    histogram: { rating: number; count: number }[];
+    count: number;
+    average: number | null;
+};
+
+export const WATCH_REGIONS = ["FR", "BE", "CH", "CA", "US"] as const;
+
+export type WatchRegion = (typeof WATCH_REGIONS)[number];
+
+export type WatchProvider = {
+    id: number;
+    name: string;
+    logoUrl: string | null;
+};
+
+// Les clés reprennent celles de TMDB : flatrate correspond à l'abonnement.
+export type WatchProvidersByType = Record<"flatrate" | "rent" | "buy", WatchProvider[]>;
 
 export type MovieRelationship = {
     watched: boolean;

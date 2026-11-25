@@ -1,6 +1,6 @@
 import { keepPreviousData, queryOptions } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/api";
-import type { Genre, MovieDetail, MovieSummary, Paginated } from "@/lib/types";
+import type { Genre, MovieDetail, MovieSummary, Paginated, RatingDistribution, WatchProvidersByType, WatchRegion } from "@/lib/types";
 import { catalogSearchParams, type CatalogSearch } from "@/features/movies/catalog-search";
 
 export const CATALOG_PAGE_SIZE = 24;
@@ -47,5 +47,23 @@ export function movieQuery(id: number) {
     return queryOptions({
         queryKey: ["movies", id],
         queryFn: ({ signal }) => apiFetch<MovieDetail>(`/movies/${id}`, { signal, session: null }),
+    });
+}
+
+// Clé sous celle de la fiche : relire la fiche après un journal relit aussi la répartition des notes.
+export function movieRatingsQuery(id: number) {
+    return queryOptions({
+        queryKey: ["movies", id, "ratings"],
+        queryFn: ({ signal }) => apiFetch<RatingDistribution>(`/movies/${id}/ratings`, { signal, session: null }),
+    });
+}
+
+// Clé hors de celle de la fiche : un journal ne change pas les plateformes, inutile de les relire.
+export function movieWatchProvidersQuery(id: number, region: WatchRegion) {
+    return queryOptions({
+        queryKey: ["watch-providers", { movie: id, region }],
+        queryFn: ({ signal }) =>
+            apiFetch<WatchProvidersByType>(`/movies/${id}/watch-providers?${new URLSearchParams({ region })}`, { signal, session: null }),
+        placeholderData: keepPreviousData,
     });
 }
