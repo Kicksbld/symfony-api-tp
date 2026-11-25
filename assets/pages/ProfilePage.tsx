@@ -6,33 +6,38 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { DiaryEntry } from "@/features/log-entries/DiaryEntry";
 import { MovieGrid } from "@/features/movies/MovieGrid";
+import { DiaryFilterControls } from "@/features/users/DiaryFilterControls";
+import { diaryFilterParams, readDiaryFilters } from "@/features/users/diary-search";
 import { ProfileHeader } from "@/features/users/ProfileHeader";
-import { diaryQuery, movieRelationshipsQuery, profileQuery } from "@/features/users/queries";
+import { diaryQuery, movieRelationshipsQuery, profileQuery, type MovieRelationshipList } from "@/features/users/queries";
 import { ApiError } from "@/lib/api";
 import { pageSearch, parsePage } from "@/lib/pagination";
 
 const TABS = [
     { path: "diary", label: "Journal" },
     { path: "watched", label: "Films vus" },
+    { path: "likes", label: "Films aimés" },
     { path: "watchlist", label: "Watchlist" },
 ] as const;
 
 const TAB_ERROR_MESSAGE = "Impossible de charger cet onglet.";
 
-type ProfileTabContext = {
-    username: string;
-    page: number;
+const MOVIE_LIST_COPY = {
+    watched: { label: "Pagination des films vus", emptyMessage: "Aucun film vu pour l'instant." },
+    likes: { label: "Pagination des films aimés", emptyMessage: "Aucun film aimé pour l'instant." },
+    watchlist: { label: "Pagination de la watchlist", emptyMessage: "La watchlist est vide." },
 };
+
+export function ProfileIndex() {
+    const [searchParams] = useSearchParams();
+
+    return <Navigate to={{ pathname: "diary", search: searchParams.toString() }} replace />;
+}
 
 export function ProfilePage() {
     const { username = "" } = useParams();
-    const [searchParams] = useSearchParams();
-    const page = parsePage(searchParams);
     const { data: profile, error, isFetching, refetch } = useQuery(profileQuery(username));
 
-    if (page === null) {
-        return <Navigate to={pageSearch(1)} replace />;
-    }
     if (error instanceof ApiError && error.status === 404) {
         return <ProfileNotFound />;
     }
@@ -66,65 +71,66 @@ export function ProfilePage() {
                         </NavLink>
                     ))}
                 </nav>
-                <Outlet context={{ username, page } satisfies ProfileTabContext} />
+                <Outlet context={profile.username} />
             </section>
         </div>
     );
 }
 
 export function DiaryTab() {
-    const { username, page } = useOutletContext<ProfileTabContext>();
+    const username = useOutletContext<string>();
+    const [searchParams, setSearchParams] = useSearchParams();
+    const page = parsePage(searchParams);
+    const filters = readDiaryFilters(searchParams);
+    const params = diaryFilterParams(filters);
+
+    if (page === null || searchParams.get("year") !== (params.year ?? null) || searchParams.get("month") !== (params.month ?? null)) {
+        return <Navigate to={pageSearch(page ?? 1, params)} replace />;
+    }
 
     return (
-        <PaginatedList
-            query={diaryQuery(username, page)}
-            page={page}
-            pathForPage={pageSearch}
-            label="Pagination du journal"
-            emptyMessage="Aucun film dans le journal pour l'instant."
-            errorMessage={TAB_ERROR_MESSAGE}
-        >
-            {(entries) => (
-                <ul className="space-y-3">
-                    {entries.map((entry) => (
-                        <li key={entry.id}>
-                            <DiaryEntry entry={entry} />
-                        </li>
-                    ))}
-                </ul>
-            )}
-        </PaginatedList>
+        <div className="space-y-5">
+            <DiaryFilterControls filters={filters} onChange={(next) => setSearchParams(diaryFilterParams(next))} />
+            <PaginatedList
+                key={username}
+                query={diaryQuery(username, page, filters)}
+                page={page}
+                pathForPage={(nextPage) => pageSearch(nextPage, params)}
+                label="Pagination du journal"
+                emptyMessage={filters.year === null ? "Aucun film dans le journal pour l'instant." : "Aucun visionnage pour cette période."}
+                errorMessage={TAB_ERROR_MESSAGE}
+            >
+                {(entries) => (
+                    <ul className="space-y-3">
+                        {entries.map((entry) => (
+                            <li key={entry.id}>
+                                <DiaryEntry entry={entry} />
+                            </li>
+                        ))}
+                    </ul>
+                )}
+            </PaginatedList>
+        </div>
     );
 }
 
-export function WatchedTab() {
-    const { username, page } = useOutletContext<ProfileTabContext>();
+export function MovieRelationshipsTab({ list }: { list: MovieRelationshipList }) {
+    const username = useOutletContext<string>();
+    const [searchParams] = useSearchParams();
+    const page = parsePage(searchParams);
+
+    if (page === null) {
+        return <Navigate to={pageSearch(1)} replace />;
+    }
 
     return (
         <PaginatedList
-            query={movieRelationshipsQuery(username, "watched", page)}
+            key={`${username}:${list}`}
+            query={movieRelationshipsQuery(username, list, page)}
             page={page}
             pathForPage={pageSearch}
-            label="Pagination des films vus"
-            emptyMessage="Aucun film vu pour l'instant."
             errorMessage={TAB_ERROR_MESSAGE}
-        >
-            {(items) => <MovieGrid movies={items.map((item) => item.movie)} />}
-        </PaginatedList>
-    );
-}
-
-export function WatchlistTab() {
-    const { username, page } = useOutletContext<ProfileTabContext>();
-
-    return (
-        <PaginatedList
-            query={movieRelationshipsQuery(username, "watchlist", page)}
-            page={page}
-            pathForPage={pageSearch}
-            label="Pagination de la watchlist"
-            emptyMessage="La watchlist est vide."
-            errorMessage={TAB_ERROR_MESSAGE}
+            {...MOVIE_LIST_COPY[list]}
         >
             {(items) => <MovieGrid movies={items.map((item) => item.movie)} />}
         </PaginatedList>

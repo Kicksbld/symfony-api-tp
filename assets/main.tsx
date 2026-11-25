@@ -1,7 +1,7 @@
 import { QueryClientProvider } from "@tanstack/react-query";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-import { BrowserRouter, Navigate, Route, Routes } from "react-router";
+import { BrowserRouter, Route, Routes } from "react-router";
 import { Layout } from "@/components/Layout";
 import { AuthProvider } from "@/features/auth/AuthProvider";
 import { CompanyPage } from "@/pages/CompanyPage";
@@ -12,7 +12,7 @@ import { MoviePage } from "@/pages/MoviePage";
 import { NotFoundPage } from "@/pages/NotFoundPage";
 import { PeoplePage } from "@/pages/PeoplePage";
 import { PersonPage } from "@/pages/PersonPage";
-import { DiaryTab, ProfilePage, WatchedTab, WatchlistTab } from "@/pages/ProfilePage";
+import { DiaryTab, MovieRelationshipsTab, ProfileIndex, ProfilePage } from "@/pages/ProfilePage";
 import { RegisterPage } from "@/pages/RegisterPage";
 import { queryClient } from "@/lib/query-client";
 import "./app.css";
@@ -31,10 +31,11 @@ createRoot(document.getElementById("root")!).render(
                             <Route path="companies/:id" element={<CompanyPage />} />
                             <Route path="settings/profile" element={<EditProfilePage />} />
                             <Route path="users/:username" element={<ProfilePage />}>
-                                <Route index element={<Navigate to="diary" replace />} />
+                                <Route index element={<ProfileIndex />} />
                                 <Route path="diary" element={<DiaryTab />} />
-                                <Route path="watched" element={<WatchedTab />} />
-                                <Route path="watchlist" element={<WatchlistTab />} />
+                                <Route path="watched" element={<MovieRelationshipsTab list="watched" />} />
+                                <Route path="likes" element={<MovieRelationshipsTab list="likes" />} />
+                                <Route path="watchlist" element={<MovieRelationshipsTab list="watchlist" />} />
                             </Route>
                             <Route path="login" element={<LoginPage />} />
                             <Route path="register" element={<RegisterPage />} />
