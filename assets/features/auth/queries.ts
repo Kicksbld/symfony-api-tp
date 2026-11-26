@@ -1,5 +1,5 @@
 import { queryOptions } from "@tanstack/react-query";
-import { profileQuery, userQueriesKey } from "@/features/users/queries";
+import { followListsKey, memberSearchKey, profileQuery, userQueriesKey } from "@/features/users/queries";
 import { apiFetch } from "@/lib/api";
 import { queryClient, sessionKey } from "@/lib/query-client";
 import { getSession, subscribeToSession, type Session } from "@/lib/session";
@@ -25,12 +25,18 @@ subscribeToSession((previous) => {
 
     const oldUsername = cached?.username ?? previous.user.username;
     if (oldUsername === session.user.username) {
-        void queryClient.invalidateQueries({ queryKey: profileQuery(session.user.username).queryKey });
+        for (const viewer of [session, null]) {
+            void queryClient.invalidateQueries({ queryKey: profileQuery(session.user.username, viewer).queryKey });
+        }
         return;
     }
 
-    const oldKey = userQueriesKey(oldUsername);
-    queryClient.removeQueries({ queryKey: oldKey, type: "inactive" });
-    void queryClient.invalidateQueries({ queryKey: oldKey });
-    void queryClient.invalidateQueries({ queryKey: userQueriesKey(session.user.username) });
+    for (const viewer of [session, null]) {
+        const oldKey = userQueriesKey(oldUsername, viewer);
+        queryClient.removeQueries({ queryKey: oldKey, type: "inactive" });
+        void queryClient.invalidateQueries({ queryKey: oldKey });
+        void queryClient.invalidateQueries({ queryKey: userQueriesKey(session.user.username, viewer) });
+    }
+    void queryClient.invalidateQueries({ queryKey: memberSearchKey });
+    void queryClient.invalidateQueries({ queryKey: followListsKey });
 });

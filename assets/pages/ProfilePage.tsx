@@ -11,8 +11,9 @@ import { ListResults } from "@/features/movie-lists/ListResults";
 import { MovieGrid } from "@/features/movies/MovieGrid";
 import { DiaryFilterControls } from "@/features/users/DiaryFilterControls";
 import { diaryFilterParams, readDiaryFilters } from "@/features/users/diary-search";
+import { MemberResults } from "@/features/users/MemberResults";
 import { ProfileHeader } from "@/features/users/ProfileHeader";
-import { diaryQuery, movieRelationshipsQuery, profileListsQuery, profileQuery, type MovieRelationshipList } from "@/features/users/queries";
+import { diaryQuery, followListQuery, movieRelationshipsQuery, profileListsQuery, profileQuery, type FollowList, type MovieRelationshipList } from "@/features/users/queries";
 import { ApiError } from "@/lib/api";
 import { pageSearch, parsePage } from "@/lib/pagination";
 import type { UserProfile } from "@/lib/types";
@@ -33,6 +34,11 @@ const MOVIE_LIST_COPY = {
     watchlist: { label: "Pagination de la watchlist", emptyMessage: "La watchlist est vide." },
 };
 
+const FOLLOW_LIST_COPY = {
+    followers: { title: "Abonnés", label: "Pagination des abonnés", emptyMessage: "Ce membre n’a aucun abonné." },
+    following: { title: "Abonnements", label: "Pagination des abonnements", emptyMessage: "Ce membre ne suit encore personne." },
+};
+
 export function ProfileIndex() {
     const [searchParams] = useSearchParams();
 
@@ -41,16 +47,17 @@ export function ProfileIndex() {
 
 export function ProfilePage() {
     const { username = "" } = useParams();
-    const { data: profile, error, isFetching, refetch } = useQuery(profileQuery(username));
+    const { session } = useAuth();
+    const { data: profile, error, isFetching, refetch } = useQuery(profileQuery(username, session));
 
     if (error instanceof ApiError && error.status === 404) {
         return <ProfileNotFound />;
     }
-    if (error !== null) {
-        return <QueryError message="Impossible de charger le profil." error={error} onRetry={() => void refetch()} retrying={isFetching} />;
-    }
+    const requestError = error === null ? null : (
+        <QueryError message="Impossible de charger le profil." error={error} onRetry={() => void refetch()} retrying={isFetching} />
+    );
     if (profile === undefined) {
-        return (
+        return requestError ?? (
             <div className="space-y-4" aria-busy="true">
                 <p role="status" className="sr-only">
                     Chargement du profil…
@@ -63,6 +70,7 @@ export function ProfilePage() {
 
     return (
         <div className="space-y-8">
+            {requestError}
             <ProfileHeader profile={profile} />
             <section className="space-y-6">
                 <nav aria-label="Onglets du profil" className="flex gap-1 overflow-x-auto border-b">
@@ -78,6 +86,34 @@ export function ProfilePage() {
                 </nav>
                 <Outlet context={profile} />
             </section>
+        </div>
+    );
+}
+
+export function ProfileFollowTab({ list }: { list: FollowList }) {
+    const { username } = useOutletContext<UserProfile>();
+    const [searchParams] = useSearchParams();
+    const page = parsePage(searchParams);
+    const { title, label, emptyMessage } = FOLLOW_LIST_COPY[list];
+
+    if (page === null) {
+        return <Navigate to={pageSearch(1)} replace />;
+    }
+
+    return (
+        <div className="space-y-4">
+            <h2 className="text-lg font-semibold">{title}</h2>
+            <PaginatedList
+                key={`${username}:${list}`}
+                query={followListQuery(username, list, page)}
+                page={page}
+                pathForPage={pageSearch}
+                label={label}
+                emptyMessage={emptyMessage}
+                errorMessage={TAB_ERROR_MESSAGE}
+            >
+                {(members) => <MemberResults members={members} />}
+            </PaginatedList>
         </div>
     );
 }

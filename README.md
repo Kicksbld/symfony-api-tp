@@ -171,7 +171,7 @@ Le suivi change tout de suite, puis la fiche et les onglets du profil se synchro
 
 #### Profil public
 
-`/users/{username}` affiche le profil d'un membre, lu avec `GET /api/users/{username}` sans token : pseudo, bio, nombre de films vus, d'abonnés et d'abonnements, et les 4 films favoris qui mènent à leur fiche. Un pseudo inconnu (`404`) affiche « Membre introuvable ». Le lien avec le pseudo dans la navigation ouvre le profil du membre connecté.
+`/users/{username}` affiche le profil d'un membre, lu avec `GET /api/users/{username}`. Le profil est accessible sans compte et montre le pseudo, la bio, le nombre de films vus, d'abonnés et d'abonnements, et les 4 films favoris qui mènent à leur fiche. Un pseudo inconnu (`404`) affiche « Membre introuvable ». Le lien avec le pseudo dans la navigation ouvre le profil du membre connecté.
 
 Le profil a cinq onglets, chacun avec son adresse :
 
@@ -186,6 +186,21 @@ Le profil a cinq onglets, chacun avec son adresse :
 `/users/{username}` ouvre le journal. Chaque onglet est paginé par 20 avec `?page=2` dans l'adresse, comme le catalogue. Une page invalide revient à la première, une page au-delà de la dernière propose d'y aller. Un onglet vide l'indique, et une critique marquée spoiler reste cachée jusqu'au clic sur « Afficher la critique ».
 
 Le journal peut être filtré par année, puis par mois. Les filtres sont conservés dans l'adresse et dans les liens de pagination, par exemple `?year=2026&month=11&page=2`. Changer un filtre revient à la première page. Effacer l'année efface aussi le mois.
+
+#### Rechercher et suivre des membres
+
+Le lien « Membres » ouvre l'annuaire public `/users`, lu avec `GET /api/users`. La recherche par pseudo et la pagination restent dans l'adresse, par exemple `/users?q=jane&page=2`. Depuis un profil, les compteurs ouvrent les listes paginées « Abonnés » (`/users/{username}/followers`) et « Abonnements » (`/users/{username}/following`). Chaque pseudo mène à son profil.
+
+Le profil utilise `followedByMe` pour afficher « Suivre » ou « Ne plus suivre ». L'action envoie un `POST` ou un `DELETE` à `/api/users/{username}/followers`. Le bouton et le compteur d'abonnés changent dès le clic. En cas d'erreur, ils reprennent leur état précédent et un message s'affiche. Sur son propre profil, le membre voit le bouton « Modifier mon profil ». Un visiteur qui clique sur « Suivre » passe par la connexion et revient sur la même page pour relancer l'action.
+
+Pour vérifier le parcours avec les comptes de démonstration :
+
+1. Sans compte, rechercher `leo` depuis « Membres », ouvrir son profil et consulter les deux listes. Ouvrir un pseudo depuis une liste, puis revenir en arrière. Essayer aussi une recherche sans résultat et une adresse de liste avec `?page=999`.
+2. Depuis les abonnés de `leo`, cliquer sur « Suivre » et se connecter avec `jane@example.com` et `demo1234`. Vérifier le retour à la liste et cliquer à nouveau sur « Suivre ». Vérifier que le bouton et le compteur changent avant la fin de la requête, que `jane_doe` apparaît dans les abonnés de `leo` et que `leo` apparaît dans les abonnements de `jane_doe`. Vérifier l'absence du bouton de suivi sur son propre profil.
+3. Couper le réseau une fois le profil de `leo` chargé et cliquer sur « Ne plus suivre ». Vérifier le retour au compteur précédent et le message d'erreur. Rétablir le réseau et réessayer, puis vérifier que les deux listes ont été mises à jour.
+4. Se déconnecter, puis ouvrir le même profil avec `camille@example.com` et `demo1234`. La démo démarre avec `camille` déjà abonnée à `leo`, ce qui permet de vérifier que le bouton reflète le compte actif.
+
+Avec au moins 21 résultats dans l'annuaire ou dans une liste du profil, passer à la deuxième page et recharger. Vérifier que la page et, dans l'annuaire, le pseudo recherché restent dans l'adresse.
 
 #### Découvrir les listes
 

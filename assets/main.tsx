@@ -10,11 +10,12 @@ import { HomePage } from "@/pages/HomePage";
 import { ListPage } from "@/pages/ListPage";
 import { ListsPage } from "@/pages/ListsPage";
 import { LoginPage } from "@/pages/LoginPage";
+import { MembersPage } from "@/pages/MembersPage";
 import { MoviePage } from "@/pages/MoviePage";
 import { NotFoundPage } from "@/pages/NotFoundPage";
 import { PeoplePage } from "@/pages/PeoplePage";
 import { PersonPage } from "@/pages/PersonPage";
-import { DiaryTab, MovieRelationshipsTab, ProfileIndex, ProfileListsTab, ProfilePage } from "@/pages/ProfilePage";
+import { DiaryTab, MovieRelationshipsTab, ProfileFollowTab, ProfileIndex, ProfileListsTab, ProfilePage } from "@/pages/ProfilePage";
 import { RegisterPage } from "@/pages/RegisterPage";
 import { queryClient } from "@/lib/query-client";
 import "./app.css";
@@ -34,6 +35,7 @@ createRoot(document.getElementById("root")!).render(
                             <Route path="lists" element={<ListsPage />} />
                             <Route path="lists/:id" element={<ListPage />} />
                             <Route path="settings/profile" element={<EditProfilePage />} />
+                            <Route path="users" element={<MembersPage />} />
                             <Route path="users/:username" element={<ProfilePage />}>
                                 <Route index element={<ProfileIndex />} />
                                 <Route path="diary" element={<DiaryTab />} />
@@ -41,6 +43,8 @@ createRoot(document.getElementById("root")!).render(
                                 <Route path="likes" element={<MovieRelationshipsTab list="likes" />} />
                                 <Route path="watchlist" element={<MovieRelationshipsTab list="watchlist" />} />
                                 <Route path="lists" element={<ProfileListsTab />} />
+                                <Route path="followers" element={<ProfileFollowTab list="followers" />} />
+                                <Route path="following" element={<ProfileFollowTab list="following" />} />
                             </Route>
                             <Route path="login" element={<LoginPage />} />
                             <Route path="register" element={<RegisterPage />} />

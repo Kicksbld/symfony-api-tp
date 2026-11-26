@@ -77,7 +77,9 @@ export function useProfileMutation(session: Session, user: CurrentUser) {
 
             const current = queryClient.getQueryData<CurrentUser>(meKey) ?? user;
             queryClient.setQueryData(meKey, { ...current, favorites: change.favorites });
-            void queryClient.invalidateQueries({ queryKey: profileQuery(current.username).queryKey });
+            for (const viewer of [session, null]) {
+                void queryClient.invalidateQueries({ queryKey: profileQuery(current.username, viewer).queryKey });
+            }
         },
     });
 }

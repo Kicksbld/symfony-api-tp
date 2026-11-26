@@ -109,6 +109,8 @@ export type UserProfile = UserSummary & {
     followingCount: number;
 };
 
+export type PublicProfile = UserProfile & { followedByMe: boolean };
+
 export type CurrentUser = UserProfile & { email: string };
 
 export type LogEntry = {
