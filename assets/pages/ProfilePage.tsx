@@ -218,7 +218,7 @@ function ProfileNotFound() {
             <h1 className="text-2xl font-semibold">Membre introuvable</h1>
             <p className="text-muted-foreground">Ce membre n'existe pas ou a changé de pseudo.</p>
             <Button asChild variant="outline">
-                <Link to="/">Retour au catalogue</Link>
+                <Link to="/">Retour à l’accueil</Link>
             </Button>
         </section>
     );

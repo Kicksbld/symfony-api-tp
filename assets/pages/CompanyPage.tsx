@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { companyMoviesQuery, companyQuery } from "@/features/companies/queries";
 import { CatalogLink } from "@/features/movies/CatalogLink";
-import { catalogPathWith } from "@/features/movies/catalog-search";
+import { DEFAULT_CATALOG_SEARCH, catalogPath, catalogPathWith } from "@/features/movies/catalog-search";
 import { MovieGrid } from "@/features/movies/MovieGrid";
 import { ApiError } from "@/lib/api";
 import { parsePositiveInteger } from "@/lib/numbers";
@@ -101,7 +101,7 @@ function CompanyNotFound() {
             <h1 className="text-2xl font-semibold">Studio introuvable</h1>
             <p className="text-muted-foreground">Ce studio n'existe pas ou n'est plus dans le catalogue.</p>
             <Button asChild variant="outline">
-                <Link to="/">Retour au catalogue</Link>
+                <Link to={catalogPath(DEFAULT_CATALOG_SEARCH)}>Retour au catalogue</Link>
             </Button>
         </section>
     );

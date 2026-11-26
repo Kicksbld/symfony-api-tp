@@ -147,21 +147,30 @@ Les membres n'ont pas de photo : leur avatar affiche les deux premières lettres
 
 La page d'origine passe d'un écran à l'autre dans le paramètre `redirect` (par exemple `/login?redirect=%2F%3Fpage%3D2`), avec son chemin et ses paramètres. Seuls les chemins du site sont acceptés : une adresse externe ou absente renvoie vers l'accueil. Quand l'API refuse le token (`401`), le membre est renvoyé vers `/login` et revient ensuite sur la page où il était. Le retour ne rejoue aucune action : le membre la relance lui-même.
 
+#### Accueil
+
+L'accueil `/` s'ouvre sur un carrousel plein écran des 5 films les plus journalisés de la semaine (`GET /api/movies?sort=trending`, seuls les films avec une image de fond sont gardés). Les films défilent toutes les 8 secondes. Le défilement s'arrête au survol, au focus clavier, avec le bouton pause, et ne démarre pas quand le système demande de réduire les animations. Le tri « tendances » départage par popularité TMDB : sans activité récente, le carrousel montre les films populaires.
+
+Viennent ensuite des rangées qui défilent au doigt, à la souris ou avec leurs flèches, chacune avec un lien « Tout voir » : le top 10 de la semaine, les critiques récentes (`GET /api/log-entries?withReview=true`), les films populaires, les genres (chaque tuile ouvre le catalogue filtré), les listes les plus likées et les films les mieux notés par les membres. Un membre connecté voit en premier ce que ses abonnements ont vu (`GET /api/feed`). Une rangée sans contenu ou en erreur ne s'affiche pas, pour ne pas bloquer le reste de la page.
+
 #### Catalogue
 
-L'accueil `/` liste les films avec `GET /api/movies`, triés par popularité par défaut. On peut chercher par titre, filtrer par genre (liste lue avec `GET /api/genres`) et par décennie, et changer le tri (populaires, tendances de la semaine, mieux notés, plus récents, titre). Les critères et la page vivent dans l'URL, par exemple `/?q=nuit&genre=18&decade=1990&sort=rating&page=2` : un rechargement, un lien partagé ou les boutons Précédent et Suivant du navigateur retrouvent la même recherche. Seuls les critères différents des valeurs par défaut sont écrits dans l'URL, et changer un critère revient à la page 1.
+`/films` liste les films avec `GET /api/movies`, triés par popularité par défaut. Le titre se cherche pendant la frappe : la recherche part 300 ms après la dernière touche, sans bouton à valider, et remplace l'adresse au lieu d'ajouter une entrée d'historique par mot. Les filtres sont des pastilles qui ouvrent un panneau (genre, période, pays de production, plateforme, personne), avec un champ qui filtre les choix pendant la frappe. Le tri est dans un menu à part (populaires, tendances de la semaine, mieux notés, plus récents, titre). Sur mobile, les pastilles sont dans un tiroir ouvert par le bouton « Filtres », qui affiche le nombre de filtres actifs.
+
+Les critères et la page vivent dans l'URL, par exemple `/films?q=nuit&genre=18&decade=1990&sort=rating&page=2` : un rechargement, un lien partagé ou les boutons Précédent et Suivant du navigateur retrouvent la même recherche. Seuls les critères différents des valeurs par défaut sont écrits dans l'URL, et changer un critère revient à la page 1.
 
 Les filtres avancés reprennent ceux de l'API et se combinent entre eux (un film doit respecter tous les critères) :
 
 | Filtre | Paramètre | Liste de choix |
 | --- | --- | --- |
-| Année de sortie | `year` | Années de la décennie choisie, ou toutes depuis 1900 |
+| Genre | `genre` | `GET /api/genres` |
 | Pays de production | `country` (code ISO) | `GET /api/countries`, noms affichés en français |
-| Plateforme | `provider` et `region` | `GET /api/watch-providers?region=`, pour le pays de diffusion choisi (France par défaut) |
-| Personne | `person` | Recherche dans une fenêtre avec `GET /api/people?q=` |
+| Plateforme | `provider` et `region` | `GET /api/watch-providers?region=`, pour le pays de diffusion choisi en haut du panneau (France par défaut) |
+| Période | `decade` puis `year` | Décennies depuis 1900, puis les années de la décennie choisie |
+| Personne | `person` | Recherche pendant la frappe avec `GET /api/people?q=`, à partir de 2 lettres |
 | Studio | `company` | Pas de liste : bouton « Affiner dans le catalogue » sur la page du studio |
 
-La fiche d'une personne et la page d'un studio ont aussi ce bouton, qui ouvre le catalogue filtré (`/?person=38`, `/?company=1`), et les pays de production de la fiche film mènent à `/?country=FR`. L'adresse obtenue se partage et accepte d'autres filtres, par exemple `/?person=38&decade=2010&provider=7`. Les filtres actifs s'affichent sous le formulaire avec leur nom, chacun avec un bouton pour le retirer.
+La fiche d'une personne et la page d'un studio ont aussi ce bouton, qui ouvre le catalogue filtré (`/films?person=38`, `/films?company=1`), et les pays de production de la fiche film mènent à `/films?country=FR`. L'adresse obtenue se partage et accepte d'autres filtres, par exemple `/films?person=38&decade=2010&provider=7`. Les filtres actifs s'affichent sous les pastilles avec leur nom, chacun avec un bouton pour le retirer.
 
 Le pays de diffusion n'est envoyé à l'API qu'avec une plateforme, et chaque combinaison de critères a sa propre entrée dans le cache de TanStack Query. Si la plateforme choisie n'a aucun film du catalogue dans le nouveau pays de diffusion, le filtre est retiré avec un message. Les listes de genres, de pays et de plateformes sont lues en entier (100 par page, les États-Unis en comptent plus) et gardées en cache jusqu'au rechargement.
 
