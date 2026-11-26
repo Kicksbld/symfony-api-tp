@@ -1,0 +1,17 @@
+[Unit]
+Description=FrankenPHP (Letterboxd)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=ubuntu
+Group=ubuntu
+EnvironmentFile=/etc/frankenphp.env
+ExecStart=/usr/local/bin/frankenphp run --config /var/www/letterboxd/deploy/Caddyfile
+ExecReload=/usr/local/bin/frankenphp reload --config /var/www/letterboxd/deploy/Caddyfile
+# Permet d'écouter sur les ports 80 et 443 sans lancer le serveur en root.
+AmbientCapabilities=CAP_NET_BIND_SERVICE
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
