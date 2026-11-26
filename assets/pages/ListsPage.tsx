@@ -23,7 +23,7 @@ export function ListsPage() {
 
     return (
         <section className="space-y-8">
-            <PageHeader eyebrow="Sélections des membres" title="Listes" description="Tops, thématiques, coups de cœur : les listes publiques des membres.">
+            <PageHeader title="Listes">
                 {session !== null && <CreateListButton session={session} />}
             </PageHeader>
             <ListFilterForm filters={filters} onChange={(next, options) => setSearchParams(listFilterParams(next), { replace: options?.replace })} />

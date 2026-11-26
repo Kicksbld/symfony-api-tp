@@ -16,7 +16,7 @@ type LikeButtonProps = {
 };
 
 // Le cœur passe en rouge une fois aimé, comme la mention « Aimé » des entrées de journal.
-const LIKE_BUTTON_CLASS_NAME = "h-8 rounded-full bg-white/5 px-3 hover:bg-white/10 aria-pressed:text-chart-5";
+const LIKE_BUTTON_CLASS_NAME = "h-8 rounded-full bg-white/5 px-3 hover:bg-white/10 aria-pressed:text-chart-5 aria-pressed:[&_svg]:animate-pop";
 
 export function LikeButton(props: LikeButtonProps) {
     const { session } = useAuth();

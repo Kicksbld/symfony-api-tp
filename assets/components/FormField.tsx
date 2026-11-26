@@ -1,5 +1,6 @@
+import { Field } from "@/components/form/Field";
+import { fieldDescription } from "@/components/form/field-description";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 
 type FormFieldProps = {
     id: string;
@@ -13,34 +14,18 @@ type FormFieldProps = {
 };
 
 export function FormField({ id, label, hint, type = "text", autoComplete, value, error, onChange }: FormFieldProps) {
-    const hintId = `${id}-hint`;
-    const errorId = `${id}-error`;
-    const describedBy = [hint && hintId, error && errorId].filter(Boolean).join(" ") || undefined;
-
     return (
-        <div className="space-y-2">
-            <Label htmlFor={id} className="text-sm text-muted-foreground">{label}</Label>
+        <Field id={id} label={label} hint={hint} error={error}>
             <Input
                 id={id}
                 type={type}
-                className="h-11 rounded-xl px-4 text-base"
                 autoComplete={autoComplete}
                 required
                 value={value}
                 aria-invalid={error !== undefined}
-                aria-describedby={describedBy}
+                aria-describedby={fieldDescription(id, { hint, error })}
                 onChange={(event) => onChange(event.target.value)}
             />
-            {hint && (
-                <p id={hintId} className="text-sm text-muted-foreground">
-                    {hint}
-                </p>
-            )}
-            {error && (
-                <p id={errorId} className="text-sm text-destructive">
-                    {error}
-                </p>
-            )}
-        </div>
+        </Field>
     );
 }

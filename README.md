@@ -149,9 +149,9 @@ La page d'origine passe d'un écran à l'autre dans le paramètre `redirect` (pa
 
 #### Accueil
 
-L'accueil `/` s'ouvre sur un carrousel plein écran des 5 films les plus journalisés de la semaine (`GET /api/movies?sort=trending`, seuls les films avec une image de fond sont gardés). Les films défilent toutes les 8 secondes. Le défilement s'arrête au survol, au focus clavier, avec le bouton pause, et ne démarre pas quand le système demande de réduire les animations. Le tri « tendances » départage par popularité TMDB : sans activité récente, le carrousel montre les films populaires.
+L'accueil `/` s'ouvre sur un carrousel plein écran des 5 films les plus journalisés de la semaine (`GET /api/movies?sort=trending`, seuls les films avec une image de fond sont gardés). Les films défilent toutes les 8 secondes. C'est la fin de l'animation de la barre de progression qui fait passer au film suivant : la barre et le défilement restent synchronisés. Le défilement s'arrête au survol ou au focus clavier du panneau « À la une », avec le bouton pause, et ne démarre pas quand le système demande de réduire les animations. Le tri « tendances » départage par popularité TMDB : sans activité récente, le carrousel montre les films populaires.
 
-Viennent ensuite des rangées qui défilent au doigt, à la souris ou avec leurs flèches, chacune avec un lien « Tout voir » : le top 10 de la semaine, les critiques récentes (`GET /api/log-entries?withReview=true`), les films populaires, les genres (chaque tuile ouvre le catalogue filtré), les listes les plus likées et les films les mieux notés par les membres. Un membre connecté voit en premier ce que ses abonnements ont vu (`GET /api/feed`). Une rangée sans contenu ou en erreur ne s'affiche pas, pour ne pas bloquer le reste de la page.
+Viennent ensuite des rangées qui défilent au doigt, à la souris ou avec leurs flèches, chacune avec un lien « Tout voir » : le top 10 de la semaine (le rang s'affiche devant le titre, toutes les affiches gardent la même taille), les critiques récentes (`GET /api/log-entries?withReview=true`), les films populaires, les genres (chaque tuile a une icône et ouvre le catalogue filtré), les listes les plus likées et les films les mieux notés par les membres. Un membre connecté voit en premier ce que ses abonnements ont vu (`GET /api/feed`). Une rangée sans contenu ou en erreur ne s'affiche pas, pour ne pas bloquer le reste de la page.
 
 #### Catalogue
 
@@ -298,13 +298,17 @@ Une personne sans photo garde le même format, avec une icône à la place. Un s
 
 #### Journaliser un film
 
-Sur la fiche, le bouton « Journaliser » ouvre un formulaire : date de visionnage (obligatoire, préremplie avec le jour local du navigateur), note facultative de 0,5 à 5 en cliquant sur les étoiles, coup de cœur, revisionnage, critique et case « spoilers » (active seulement avec une critique). Il envoie `POST /api/log-entries` avec tous les champs, une note ou une critique vide part à `null`. Un visiteur est envoyé vers la connexion, puis revient sur la fiche.
+Sur la fiche, le bouton « Journaliser » ouvre un formulaire avec l'affiche du film en en-tête : date de visionnage (obligatoire, préremplie avec le jour local du navigateur, avec des raccourcis « Aujourd'hui » et « Hier »), note facultative de 0,5 à 5 en cliquant sur les étoiles, boutons « Coup de cœur » et « Je l'avais déjà vu », critique avec compteur de caractères, et option spoilers qui n'apparaît qu'une fois la critique commencée. Il envoie `POST /api/log-entries` avec tous les champs, une note ou une critique vide part à `null`. Un visiteur est envoyé vers la connexion, puis revient sur la fiche.
 
 Le succès n'est affiché qu'après la réponse de l'API, avec un lien « Voir mon journal ». Mon état sur le film, la moyenne du film et les onglets et compteurs de mon profil sont alors relus : le film sort de la watchlist, passe dans les films vus et l'entrée apparaît dans le journal. En cas d'erreur, le brouillon reste dans le formulaire, même après avoir fermé la fenêtre, et les erreurs de validation (`422`) s'affichent sous les champs concernés. Il est aussi gardé dans le `sessionStorage` de l'onglet, par membre et par film : si la session expire pendant la saisie, le membre se reconnecte et retrouve son brouillon sur la fiche. Il est effacé après l'enregistrement.
 
 Dans mon journal, chaque entrée a les boutons « Modifier » et « Supprimer ». Les autres visiteurs ne les voient pas, et l'API répond de toute façon `403` à un autre membre. La modification envoie `PATCH /api/log-entries/{id}` avec tous les champs. La suppression demande une confirmation puis envoie `DELETE /api/log-entries/{id}`. Le front ne calcule pas lui-même mon état sur le film : il relit les mêmes vues qu'à la création, et c'est l'API qui applique ses règles (seule la dernière entrée change la note et le coup de cœur, une suppression laisse le film vu).
 
 #### Thème et navigation
+
+Le thème sombre utilise un gris-bleu pour les fonds et les cartes, et garde le vert comme couleur d'action. Les formulaires partagent les mêmes briques ([`assets/components/form/`](assets/components/form)) : libellé visible, mention « Facultatif », aide et compteur de caractères sous le champ, erreur juste en dessous, bascules en pastilles et choix exclusifs en cartes (visibilité et type d'une liste).
+
+Les animations restent légères : entrée douce à chaque nouvelle page, apparition décalée des cartes dans les grilles, rebond du cœur quand on aime. Elles utilisent toutes la même courbe de décélération et sont coupées quand le système demande de réduire les animations.
 
 Les couleurs, polices et rayons viennent d'un thème [TweakCN](https://tweakcn.com), appliqué dans [`assets/app.css`](assets/app.css) avec :
 

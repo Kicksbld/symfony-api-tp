@@ -5,7 +5,6 @@ import type { To } from "react-router";
 
 type ContentRowProps<T> = {
     id: string;
-    eyebrow?: string;
     title: ReactNode;
     link?: { to: To; label: string };
     items: T[];
@@ -15,11 +14,11 @@ type ContentRowProps<T> = {
 };
 
 // Rangée horizontale de l'accueil : on fait défiler au doigt, à la souris ou avec les flèches de l'en-tête.
-export function ContentRow<T>({ id, eyebrow, title, link, items, itemKey, itemClassName, renderItem }: ContentRowProps<T>) {
+export function ContentRow<T>({ id, title, link, items, itemKey, itemClassName, renderItem }: ContentRowProps<T>) {
     return (
         <section aria-labelledby={id}>
             <Carousel opts={{ align: "start", dragFree: true }} className="space-y-5">
-                <SectionHeader id={id} eyebrow={eyebrow} title={title} link={link}>
+                <SectionHeader id={id} title={title} link={link}>
                     <div className="hidden gap-2 sm:flex">
                         <CarouselPrevious className="static size-9 translate-none" />
                         <CarouselNext className="static size-9 translate-none" />

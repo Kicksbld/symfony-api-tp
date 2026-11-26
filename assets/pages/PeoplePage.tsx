@@ -6,6 +6,7 @@ import { SearchField } from "@/components/SearchField";
 import { PersonCard } from "@/features/people/PersonCard";
 import { MAX_PERSON_NAME_LENGTH, peopleQuery } from "@/features/people/queries";
 import { pageSearch, parsePage } from "@/lib/pagination";
+import { staggerStyle } from "@/lib/utils";
 
 export function PeoplePage() {
     const [searchParams] = useSearchParams();
@@ -27,7 +28,7 @@ export function PeoplePage() {
 
     return (
         <section className="space-y-8">
-            <PageHeader eyebrow="Devant et derrière la caméra" title="Personnes" />
+            <PageHeader title="Personnes" />
             <SearchField
                 value={name}
                 onSearch={search}
@@ -53,8 +54,8 @@ export function PeoplePage() {
                                 {total.toLocaleString("fr-FR")} {total > 1 ? "personnes" : "personne"}
                             </p>
                             <ul className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-4 lg:grid-cols-6">
-                                {people.map((person) => (
-                                    <li key={person.id}>
+                                {people.map((person, index) => (
+                                    <li key={person.id} className="animate-rise" style={staggerStyle(index)}>
                                         <PersonCard person={person} />
                                     </li>
                                 ))}

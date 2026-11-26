@@ -27,16 +27,17 @@ export type LogEntryPayload = {
 };
 
 // Le champ date attend le jour local : toISOString() donnerait celui de Greenwich, qui peut être la veille ou le lendemain.
-export function localToday(): string {
-    const today = new Date();
-    const month = String(today.getMonth() + 1).padStart(2, "0");
-    const day = String(today.getDate()).padStart(2, "0");
+export function localDate(daysAgo = 0): string {
+    const date = new Date();
+    date.setDate(date.getDate() - daysAgo);
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
 
-    return `${today.getFullYear()}-${month}-${day}`;
+    return `${date.getFullYear()}-${month}-${day}`;
 }
 
 export function newDraft(): LogEntryDraft {
-    return { watchedOn: localToday(), rating: "", liked: false, rewatch: false, review: "", containsSpoilers: false };
+    return { watchedOn: localDate(), rating: "", liked: false, rewatch: false, review: "", containsSpoilers: false };
 }
 
 export function draftFromEntry(entry: LogEntry): LogEntryDraft {

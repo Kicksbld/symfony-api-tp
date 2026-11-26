@@ -1,18 +1,26 @@
+import { EyeOff, Heart, Loader2, Repeat } from "lucide-react";
 import { useId, type FormEvent, type ReactNode } from "react";
+import { Field } from "@/components/form/Field";
+import { fieldDescription } from "@/components/form/field-description";
+import { ToggleChip } from "@/components/form/ToggleChip";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
 import { DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { localToday, type DraftErrors, type LogEntryDraft } from "@/features/log-entries/draft";
+import { localDate, type DraftErrors, type LogEntryDraft } from "@/features/log-entries/draft";
+import { MoviePoster } from "@/features/movies/MoviePoster";
 import { StarRatingInput } from "@/features/movies/StarRatingInput";
+import { releaseYear } from "@/features/movies/format";
+import type { MovieSummary } from "@/lib/types";
 
 // Même limite que LogEntry::REVIEW_MAX_LENGTH côté API.
 const REVIEW_MAX_LENGTH = 10_000;
 
-type BooleanField = "liked" | "rewatch" | "containsSpoilers";
+const QUICK_DATES = [
+    { label: "Aujourd'hui", daysAgo: 0 },
+    { label: "Hier", daysAgo: 1 },
+];
 
 type LogEntryFormProps = {
     draft: LogEntryDraft;
@@ -38,99 +46,102 @@ export function LogEntryForm({ draft, errors, submitting, submitLabel, onChange,
         onChange({ ...draft, [field]: value });
     }
 
-    function checkbox(field: BooleanField, label: string, disabled = false): ReactNode {
-        return (
-            <div className="flex items-center gap-3">
-                <Checkbox
-                    id={`${id}-${field}`}
-                    checked={draft[field] && !disabled}
-                    disabled={disabled}
-                    onCheckedChange={(checked) => update(field, checked === true)}
-                />
-                <Label htmlFor={`${id}-${field}`}>{label}</Label>
-            </div>
-        );
-    }
-
     return (
-        <form onSubmit={handleSubmit} className="space-y-5" aria-busy={submitting}>
+        <form onSubmit={handleSubmit} className="space-y-6" aria-busy={submitting}>
             {errors.others.length > 0 && (
                 <Alert variant="destructive">
                     <AlertDescription>{errors.others.join(" ")}</AlertDescription>
                 </Alert>
             )}
-            <div className="grid gap-5 sm:grid-cols-2">
-                <Field id={`${id}-watchedOn`} label="Date de visionnage" error={errors.fields.watchedOn}>
+            <Field id={`${id}-watchedOn`} label="Vu le" error={errors.fields.watchedOn}>
+                <div className="flex flex-wrap gap-2">
                     <Input
                         id={`${id}-watchedOn`}
                         type="date"
                         required
-                        max={localToday()}
+                        max={localDate()}
                         value={draft.watchedOn}
+                        className="w-auto flex-1 basis-40"
                         aria-invalid={errors.fields.watchedOn !== undefined}
-                        aria-describedby={errors.fields.watchedOn && `${id}-watchedOn-error`}
+                        aria-describedby={fieldDescription(`${id}-watchedOn`, { error: errors.fields.watchedOn })}
                         onChange={(event) => update("watchedOn", event.target.value)}
                     />
-                </Field>
-                <Field id={`${id}-rating`} label="Note" error={errors.fields.rating}>
-                    <StarRatingInput
-                        id={`${id}-rating`}
-                        label="Note"
-                        value={draft.rating === "" ? null : Number(draft.rating)}
-                        invalid={errors.fields.rating !== undefined}
-                        describedBy={errors.fields.rating && `${id}-rating-error`}
-                        onChange={(rating) => update("rating", rating === null ? "" : String(rating))}
-                    />
-                </Field>
+                    {QUICK_DATES.map(({ label, daysAgo }) => (
+                        <ToggleChip key={label} pressed={draft.watchedOn === localDate(daysAgo)} onToggle={() => update("watchedOn", localDate(daysAgo))}>
+                            {label}
+                        </ToggleChip>
+                    ))}
+                </div>
+            </Field>
+            <Field id={`${id}-rating`} label="Note" optional error={errors.fields.rating}>
+                <StarRatingInput
+                    id={`${id}-rating`}
+                    label="Note"
+                    value={draft.rating === "" ? null : Number(draft.rating)}
+                    invalid={errors.fields.rating !== undefined}
+                    describedBy={fieldDescription(`${id}-rating`, { error: errors.fields.rating })}
+                    onChange={(rating) => update("rating", rating === null ? "" : String(rating))}
+                    size="lg"
+                />
+            </Field>
+            <div role="group" aria-label="Ce visionnage" className="flex flex-wrap gap-2">
+                <ToggleChip tone="heart" pressed={draft.liked} onToggle={() => update("liked", !draft.liked)} icon={<Heart aria-hidden="true" />}>
+                    Coup de cœur
+                </ToggleChip>
+                <ToggleChip pressed={draft.rewatch} onToggle={() => update("rewatch", !draft.rewatch)} icon={<Repeat aria-hidden="true" />}>
+                    Je l'avais déjà vu
+                </ToggleChip>
             </div>
-            <div className="flex flex-wrap gap-x-6 gap-y-3">
-                {checkbox("liked", "Coup de cœur")}
-                {checkbox("rewatch", "Je l'avais déjà vu")}
-            </div>
-            <Field id={`${id}-review`} label="Critique (facultative)" error={errors.fields.review}>
+            <Field id={`${id}-review`} label="Critique" optional error={errors.fields.review} count={{ value: draft.review.length, max: REVIEW_MAX_LENGTH }}>
                 <Textarea
                     id={`${id}-review`}
                     rows={5}
                     maxLength={REVIEW_MAX_LENGTH}
-                    className="max-h-64"
+                    placeholder="Qu'avez-vous pensé du film ?"
+                    className="max-h-72"
                     value={draft.review}
                     aria-invalid={errors.fields.review !== undefined}
-                    aria-describedby={errors.fields.review && `${id}-review-error`}
+                    aria-describedby={fieldDescription(`${id}-review`, { error: errors.fields.review })}
                     onChange={(event) => update("review", event.target.value)}
                 />
             </Field>
-            {/* Sans critique, il n'y a rien à cacher : la case est désactivée et l'entrée part sans spoiler. */}
-            {checkbox("containsSpoilers", "La critique contient des spoilers", !hasReview)}
-            <Button type="submit" className="h-11 w-full sm:w-auto sm:px-6" disabled={submitting}>
-                {submitLabel}
+            {/* Sans critique, il n'y a rien à cacher : l'option n'apparaît qu'une fois la critique commencée. */}
+            {hasReview && (
+                <ToggleChip pressed={draft.containsSpoilers} onToggle={() => update("containsSpoilers", !draft.containsSpoilers)} icon={<EyeOff aria-hidden="true" />}>
+                    Ma critique révèle l'intrigue
+                </ToggleChip>
+            )}
+            <Button type="submit" size="lg" className="h-12 w-full rounded-full text-base" disabled={submitting}>
+                {submitting && <Loader2 aria-hidden="true" className="animate-spin" />}
+                {submitting ? "Enregistrement…" : submitLabel}
             </Button>
         </form>
     );
 }
 
+type LogEntryDialogContentProps = {
+    movie: MovieSummary;
+    title: string;
+    description: string;
+    children: ReactNode;
+};
+
 // Le formulaire est long : la fenêtre défile sur un petit écran au lieu de sortir de l'écran.
-export function LogEntryDialogContent({ title, description, children }: { title: string; description: string; children: ReactNode }) {
+export function LogEntryDialogContent({ movie, title, description, children }: LogEntryDialogContentProps) {
     return (
         <DialogContent className="max-h-[90dvh] overflow-y-auto sm:max-w-lg">
-            <DialogHeader>
-                <DialogTitle>{title}</DialogTitle>
-                <DialogDescription>{description}</DialogDescription>
+            <DialogHeader className="flex-row items-center gap-4 text-left">
+                <MoviePoster movie={movie} alt="" className="w-14 shrink-0 rounded-md text-[0.5rem] ring-1 ring-white/10" />
+                <div className="min-w-0 space-y-1">
+                    <DialogTitle>{title}</DialogTitle>
+                    <p className="text-sm text-muted-foreground">
+                        {movie.title}
+                        {releaseYear(movie.releaseDate) !== undefined && ` · ${releaseYear(movie.releaseDate)}`}
+                    </p>
+                    <DialogDescription className="text-xs">{description}</DialogDescription>
+                </div>
             </DialogHeader>
             {children}
         </DialogContent>
-    );
-}
-
-function Field({ id, label, error, children }: { id: string; label: string; error?: string; children: ReactNode }) {
-    return (
-        <div className="space-y-2">
-            <Label htmlFor={id}>{label}</Label>
-            {children}
-            {error && (
-                <p id={`${id}-error`} className="text-sm text-destructive">
-                    {error}
-                </p>
-            )}
-        </div>
     );
 }

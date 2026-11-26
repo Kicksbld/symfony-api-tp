@@ -107,7 +107,10 @@ export function Layout({ immersive = false }: LayoutProps) {
                 tabIndex={-1}
                 className={cn("w-full flex-1 focus:outline-none", !immersive && "mx-auto max-w-7xl px-4 py-10 sm:px-6")}
             >
-                <Outlet />
+                {/* Entrée douce à chaque nouvelle page. Les onglets d'une même page (profil) ne la rejouent pas. */}
+                <div key={pageKey(location.pathname)} className="animate-page-in">
+                    <Outlet />
+                </div>
             </main>
             <footer className="border-t border-white/5">
                 <div className="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-10 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between sm:px-6">
@@ -134,5 +137,10 @@ function useScrolled(): boolean {
     }, []);
 
     return scrolled;
+}
+
+// « /users/jane/diary » et « /users/jane/lists » sont la même page : seuls les deux premiers segments comptent.
+function pageKey(pathname: string): string {
+    return pathname.split("/").slice(0, 3).join("/");
 }
 

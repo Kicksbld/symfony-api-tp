@@ -8,16 +8,15 @@ import { moviesQuery } from "@/features/movies/queries";
 
 type MovieRowProps = {
     id: string;
-    eyebrow: string;
     title: string;
     sort: MovieSort;
-    // Classement affiché en gros chiffres devant chaque affiche, pour les tops.
+    // Classement affiché devant le titre de chaque film, pour les tops.
     ranked?: boolean;
 };
 
 const RANKED_COUNT = 10;
 
-export function MovieRow({ id, eyebrow, title, sort, ranked = false }: MovieRowProps) {
+export function MovieRow({ id, title, sort, ranked = false }: MovieRowProps) {
     const { data, error, isFetching, refetch } = useQuery(moviesQuery({ ...DEFAULT_CATALOG_SEARCH, sort }, true));
 
     if (error !== null) {
@@ -32,26 +31,12 @@ export function MovieRow({ id, eyebrow, title, sort, ranked = false }: MovieRowP
     return (
         <ContentRow
             id={id}
-            eyebrow={eyebrow}
             title={title}
             link={{ to: catalogPathWith({ sort }), label: "Tout voir" }}
             items={movies}
             itemKey={(movie) => movie.id}
-            itemClassName={ranked ? "basis-[62%] sm:basis-[38%] lg:basis-[24%]" : "basis-[42%] sm:basis-[26%] lg:basis-[16.66%]"}
-            renderItem={(movie) =>
-                ranked ? (
-                    <div className="flex items-end gap-1">
-                        <span aria-hidden="true" className="font-heading text-[5.5rem] leading-[0.8] font-extrabold tracking-tighter text-transparent [-webkit-text-stroke:2px_var(--color-primary)]">
-                            {movies.indexOf(movie) + 1}
-                        </span>
-                        <div className="min-w-0 flex-1">
-                            <MovieCard movie={movie} />
-                        </div>
-                    </div>
-                ) : (
-                    <MovieCard movie={movie} />
-                )
-            }
+            itemClassName="basis-[42%] sm:basis-[26%] lg:basis-[16.66%]"
+            renderItem={(movie) => <MovieCard movie={movie} rank={ranked ? movies.indexOf(movie) + 1 : undefined} />}
         />
     );
 }

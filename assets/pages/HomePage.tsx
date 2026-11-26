@@ -15,12 +15,12 @@ export function HomePage() {
             <HeroCarousel />
             <div className="mx-auto max-w-7xl space-y-20 px-4 py-16 sm:px-6">
                 {session !== null && <FeedRow key={session.cacheId} session={session} />}
-                <MovieRow id="home-trending" eyebrow="Les plus journalisés" title="Top 10 de la semaine" sort="trending" ranked />
+                <MovieRow id="home-trending" title="Top 10 de la semaine" sort="trending" ranked />
                 <RecentReviews />
-                <MovieRow id="home-popular" eyebrow="Le catalogue" title="Populaires en ce moment" sort="popular" />
+                <MovieRow id="home-popular" title="Populaires" sort="popular" />
                 <GenreTiles />
                 <PopularLists />
-                <MovieRow id="home-top-rated" eyebrow="Selon les membres" title="Les mieux notés" sort="rating" />
+                <MovieRow id="home-top-rated" title="Les mieux notés" sort="rating" />
             </div>
         </>
     );

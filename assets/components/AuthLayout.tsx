@@ -11,12 +11,8 @@ export function AuthLayout() {
                 <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-background/20" />
                 <div className="absolute inset-0 hidden bg-gradient-to-r from-transparent to-background lg:block" />
                 <div className="absolute inset-x-0 bottom-0 hidden max-w-xl space-y-4 p-12 lg:block">
-                    <p className="display">
-                        Chaque film vu mérite une <em className="text-primary">trace.</em>
-                    </p>
-                    <p className="max-w-md text-lg text-muted-foreground">
-                        Tenez votre journal, notez, écrivez vos critiques et suivez ce que regardent les autres membres.
-                    </p>
+                    <p className="display">Votre journal de films.</p>
+                    <p className="max-w-md text-lg text-muted-foreground">Notez ce que vous regardez, écrivez des critiques, faites des listes et suivez d'autres membres.</p>
                 </div>
             </div>
             <div className="relative flex min-h-screen flex-col bg-background/85 px-6 py-8 backdrop-blur-md sm:px-12 lg:bg-background lg:backdrop-blur-none">

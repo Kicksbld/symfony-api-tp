@@ -14,6 +14,7 @@ type StarRatingInputProps = {
     disabled?: boolean;
     invalid?: boolean;
     describedBy?: string;
+    size?: "md" | "lg";
     className?: string;
 };
 
@@ -21,7 +22,7 @@ type StarRatingInputProps = {
  * Note par demi-étoile : chaque étoile a deux zones cliquables (gauche pour la demie, droite pour l'étoile pleine).
  * Au clavier, c'est un groupe de boutons radio : les flèches changent la note d'une demi-étoile.
  */
-export function StarRatingInput({ id, label, value, onChange, disabled = false, invalid = false, describedBy, className }: StarRatingInputProps) {
+export function StarRatingInput({ id, label, value, onChange, disabled = false, invalid = false, describedBy, size = "md", className }: StarRatingInputProps) {
     const [hovered, setHovered] = useState<number | null>(null);
     const shown = hovered ?? value ?? 0;
     // Sans note, la première demi-étoile reçoit le focus de la touche Tab.
@@ -58,8 +59,8 @@ export function StarRatingInput({ id, label, value, onChange, disabled = false, 
                 className="flex aria-disabled:opacity-60"
             >
                 {STARS.map((star) => (
-                    <span key={star} className="relative flex size-8 items-center justify-center text-primary">
-                        <StarShape fill={shown >= star ? "full" : shown >= star - STEP ? "half" : "empty"} />
+                    <span key={star} className={cn("relative flex items-center justify-center text-primary [&>svg]:transition-transform [&>svg]:duration-150 hover:[&>svg]:scale-110 [&>span]:transition-transform [&>span]:duration-150 hover:[&>span]:scale-110", size === "lg" ? "size-11" : "size-8")}>
+                        <StarShape fill={shown >= star ? "full" : shown >= star - STEP ? "half" : "empty"} className={size === "lg" ? "size-9" : "size-6"} />
                         {[star - STEP, star].map((rating, half) => (
                             <button
                                 key={rating}
@@ -94,15 +95,15 @@ export function StarRatingInput({ id, label, value, onChange, disabled = false, 
     );
 }
 
-function StarShape({ fill }: { fill: "full" | "half" | "empty" }) {
+function StarShape({ fill, className }: { fill: "full" | "half" | "empty"; className: string }) {
     if (fill === "half") {
         return (
             <span aria-hidden="true" className="relative inline-flex">
-                <Star className="size-6 text-muted-foreground/40" />
-                <StarHalf className="absolute inset-0 size-6 fill-current" />
+                <Star className={cn(className, "text-muted-foreground/40")} />
+                <StarHalf className={cn(className, "absolute inset-0 fill-current")} />
             </span>
         );
     }
 
-    return <Star aria-hidden="true" className={cn("size-6", fill === "full" ? "fill-current" : "text-muted-foreground/40")} />;
+    return <Star aria-hidden="true" className={cn(className, fill === "full" ? "fill-current" : "text-muted-foreground/40")} />;
 }

@@ -60,7 +60,7 @@ export function ProfileHeader({ profile }: { profile: PublicProfile }) {
                     <li>
                         <Link to={reviewsPath({ user: profile.username })} className={STAT_CLASS_NAME}>
                             <span className="font-heading text-2xl font-extrabold">Critiques</span>
-                            <span className="text-xs text-muted-foreground">tout lire</span>
+                            <span className="text-xs text-muted-foreground">voir la liste</span>
                         </Link>
                     </li>
                 </ul>

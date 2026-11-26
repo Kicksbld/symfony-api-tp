@@ -104,7 +104,7 @@ function ToggleAction({ label, pressed, pending, onToggle, children }: ToggleAct
             aria-pressed={pressed}
             aria-disabled={pending}
             onClick={onToggle}
-            className="flex flex-col items-center gap-1.5 rounded-xl py-3 text-xs font-semibold text-muted-foreground transition-colors hover:bg-white/5 hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none aria-pressed:text-primary [&_svg]:size-6"
+            className="flex flex-col items-center gap-1.5 rounded-xl py-3 text-xs font-semibold text-muted-foreground transition-colors hover:bg-white/5 hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none aria-pressed:text-primary aria-pressed:[&_svg]:animate-pop [&_svg]:size-6"
         >
             {children}
             {label}

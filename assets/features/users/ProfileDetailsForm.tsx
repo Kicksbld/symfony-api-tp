@@ -1,11 +1,17 @@
+import { Check, Loader2 } from "lucide-react";
 import { useState, type FormEvent } from "react";
 import { FormField } from "@/components/FormField";
+import { Field } from "@/components/form/Field";
+import { fieldDescription } from "@/components/form/field-description";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { profileErrors, type ProfileErrors, type ProfileFields } from "@/features/users/profile-editing";
+import { UserAvatar } from "@/features/users/UserAvatar";
 import { USERNAME_PATTERN } from "@/features/users/username";
+
+// Même limite que l'API.
+const BIO_MAX_LENGTH = 500;
 
 type ProfileDetailsFormProps = {
     username: string;
@@ -57,11 +63,21 @@ export function ProfileDetailsForm({ username, bio, saving, onSave }: ProfileDet
     }
 
     const bioError = errors?.fields.bio;
+    // Aperçu de l'avatar : il suit le pseudo tapé tant qu'il reste valide.
+    const previewName = USERNAME_PATTERN.test(values.username) ? values.username : username;
 
     return (
         <form aria-labelledby="profile-details-title" onSubmit={submit} noValidate>
-            <fieldset disabled={saving} className="space-y-4">
-                <h2 id="profile-details-title" className="text-2xl font-bold">Pseudo et bio</h2>
+            <fieldset disabled={saving} className="space-y-6">
+                <div className="flex items-center gap-4">
+                    <UserAvatar username={previewName} className="size-16 text-xl" />
+                    <div>
+                        <h2 id="profile-details-title" className="text-2xl font-bold">
+                            Pseudo et bio
+                        </h2>
+                        <p className="text-sm text-muted-foreground">Votre avatar reprend les deux premières lettres du pseudo.</p>
+                    </div>
+                </div>
                 {errors && errors.others.length > 0 && (
                     <Alert variant="destructive">
                         <AlertDescription>{errors.others.join(" ")}</AlertDescription>
@@ -70,28 +86,36 @@ export function ProfileDetailsForm({ username, bio, saving, onSave }: ProfileDet
                 <FormField
                     id="profile-username"
                     label="Pseudo"
-                    hint="3 à 20 caractères parmi les lettres minuscules, les chiffres et le signe _."
+                    hint="3 à 20 caractères : lettres minuscules, chiffres et _."
                     autoComplete="username"
                     value={values.username}
                     error={errors?.fields.username}
                     onChange={(value) => change("username", value)}
                 />
-                <div className="space-y-2">
-                    <Label htmlFor="profile-bio">Bio</Label>
+                <Field id="profile-bio" label="Bio" optional error={bioError} count={{ value: values.bio.length, max: BIO_MAX_LENGTH }}>
                     <Textarea
                         id="profile-bio"
                         rows={4}
+                        placeholder="Vos genres préférés, vos réalisateurs fétiches…"
                         value={values.bio}
                         aria-invalid={bioError !== undefined}
-                        aria-describedby={bioError ? "profile-bio-hint profile-bio-error" : "profile-bio-hint"}
+                        aria-describedby={fieldDescription("profile-bio", { error: bioError })}
                         onChange={(event) => change("bio", event.target.value)}
                     />
-                    <p id="profile-bio-hint" className="text-sm text-muted-foreground">Facultative, 500 caractères maximum.</p>
-                    {bioError && <p id="profile-bio-error" className="text-sm text-destructive">{bioError}</p>}
-                </div>
+                </Field>
                 <div className="flex flex-wrap items-center gap-3">
-                    <Button type="submit" disabled={!dirty}>Enregistrer le profil</Button>
-                    <span role="status" className="text-sm text-muted-foreground">{saved && "Profil enregistré."}</span>
+                    <Button type="submit" className="h-11 rounded-full px-6" disabled={!dirty}>
+                        {saving && <Loader2 aria-hidden="true" className="animate-spin" />}
+                        {saving ? "Enregistrement…" : "Enregistrer le profil"}
+                    </Button>
+                    <span role="status" className="inline-flex items-center gap-1.5 text-sm text-primary">
+                        {saved && (
+                            <>
+                                <Check aria-hidden="true" className="size-4" />
+                                Profil enregistré
+                            </>
+                        )}
+                    </span>
                 </div>
             </fieldset>
         </form>

@@ -63,20 +63,23 @@ function MemberLogMovieButton({ session, movie, className }: { session: Session;
                     Journaliser
                 </Button>
             </DialogTrigger>
-            <LogEntryDialogContent title={`Journaliser ${movie.title}`} description="Le film passe dans vos films vus et sort de votre watchlist.">
+            <LogEntryDialogContent movie={movie} title="Journaliser" description="Le film passe dans vos films vus et sort de votre watchlist.">
                 {logged ? (
                     <>
-                        <p role="status" className="flex items-center gap-2 font-medium">
-                            <CircleCheck aria-hidden="true" className="size-5 text-primary" />
-                            Visionnage ajouté à votre journal.
-                        </p>
+                        <div role="status" className="flex flex-col items-center gap-3 py-6 text-center">
+                            <span className="flex size-14 items-center justify-center rounded-full bg-primary/15 text-primary">
+                                <CircleCheck aria-hidden="true" className="size-7" />
+                            </span>
+                            <p className="text-lg font-bold">Visionnage ajouté à votre journal</p>
+                            <p className="text-sm text-muted-foreground">Le film est dans vos films vus et sorti de votre watchlist.</p>
+                        </div>
                         <DialogFooter>
                             <DialogClose asChild>
-                                <Button variant="outline" className="h-11">
+                                <Button variant="ghost" className="h-11 rounded-full px-5">
                                     Fermer
                                 </Button>
                             </DialogClose>
-                            <Button asChild className="h-11">
+                            <Button asChild className="h-11 rounded-full px-5">
                                 <Link to={`/users/${encodeURIComponent(session.user.username)}/diary`}>Voir mon journal</Link>
                             </Button>
                         </DialogFooter>

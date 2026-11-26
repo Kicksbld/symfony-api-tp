@@ -28,7 +28,7 @@ function EditProfileLoader({ session }: { session: Session }) {
 
     return (
         <div className="mx-auto max-w-2xl space-y-6">
-            <PageHeader eyebrow="Paramètres" title="Modifier mon profil">
+            <PageHeader title="Modifier mon profil">
                 <Button asChild variant="outline" className="h-10 rounded-full px-5">
                     <Link to={`/users/${encodeURIComponent(data?.username ?? session.user.username)}`}>Voir mon profil public</Link>
                 </Button>

@@ -6,6 +6,7 @@ import { useAuth } from "@/features/auth/auth";
 import { MemberCard } from "@/features/users/MemberCard";
 import { MAX_USERNAME_LENGTH, membersQuery } from "@/features/users/queries";
 import { pageSearch, parsePage } from "@/lib/pagination";
+import { staggerStyle } from "@/lib/utils";
 
 export function MembersPage() {
     const { session } = useAuth();
@@ -26,7 +27,7 @@ export function MembersPage() {
 
     return (
         <section className="space-y-8">
-            <PageHeader eyebrow="Communauté" title="Membres" description="Trouvez des cinéphiles à suivre et découvrez leurs films favoris." />
+            <PageHeader title="Membres" />
             <SearchField
                 value={username}
                 onSearch={search}
@@ -46,8 +47,8 @@ export function MembersPage() {
             >
                 {(members) => (
                     <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                        {members.map((member) => (
-                            <li key={member.id}>
+                        {members.map((member, index) => (
+                            <li key={member.id} className="animate-rise" style={staggerStyle(index)}>
                                 <MemberCard member={member} />
                             </li>
                         ))}

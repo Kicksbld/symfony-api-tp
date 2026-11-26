@@ -20,7 +20,7 @@ export function RecentReviews() {
 
     return (
         <section aria-labelledby="home-reviews" className="space-y-5">
-            <SectionHeader id="home-reviews" eyebrow="Ce qu'en pensent les membres" title="Critiques récentes" link={{ to: reviewsPath(), label: "Toutes les critiques" }} />
+            <SectionHeader id="home-reviews" title="Critiques récentes" link={{ to: reviewsPath(), label: "Toutes les critiques" }} />
             <ul className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                 {data.items.slice(0, REVIEW_COUNT).map((entry) => (
                     <li key={entry.id}>

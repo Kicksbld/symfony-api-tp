@@ -27,11 +27,7 @@ export function ReviewsPage() {
 
     return (
         <section className="mx-auto max-w-3xl space-y-8">
-            <PageHeader
-                eyebrow="Ce qu'en pensent les membres"
-                title={user === null ? "Critiques" : `Critiques de ${user}`}
-                description={movie === null && user === null ? "Les dernières critiques écrites par les membres, de la plus récente à la plus ancienne." : undefined}
-            />
+            <PageHeader title={user === null ? "Critiques" : `Critiques de ${user}`} />
             {(movie !== null || user !== null) && (
                 <nav aria-label="Autres critiques" className="flex flex-wrap gap-2">
                     <Link to={reviewsPath()} className={CHIP_LINK_CLASS_NAME}>Toutes les critiques</Link>

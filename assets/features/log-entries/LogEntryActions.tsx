@@ -69,7 +69,8 @@ function EditLogEntryButton({ session, entry }: { session: Session; entry: LogEn
                 </Button>
             </DialogTrigger>
             <LogEntryDialogContent
-                title={`Modifier le visionnage de ${entry.movie.title}`}
+                movie={entry.movie}
+                title="Modifier le visionnage"
                 description="Votre note et votre coup de cœur sur le film suivent votre dernière entrée."
             >
                 <LogEntryForm

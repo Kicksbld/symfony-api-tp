@@ -1,8 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
-import { cn } from "cn";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { ArrowRight, Pause, Play } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/features/auth/auth";
@@ -33,20 +32,18 @@ function HeroSlides({ movies }: { movies: MovieSummary[] }) {
     const { session } = useAuth();
     const reduceMotion = useReducedMotion();
     const [index, setIndex] = useState(0);
-    const [hovered, setHovered] = useState(false);
+    // Seul le panneau de sélection met en pause : le héros occupe tout l'écran, la souris est presque toujours dessus.
+    const [panelActive, setPanelActive] = useState(false);
     const [stopped, setStopped] = useState(reduceMotion === true);
     const movie = movies[index];
     const { data: detail } = useQuery(movieQuery(movie.id));
-    const playing = !stopped && !hovered;
+    const playing = !stopped && !panelActive;
 
-    useEffect(() => {
-        if (!playing) {
-            return;
-        }
-        const timeout = window.setTimeout(() => setIndex((current) => (current + 1) % movies.length), SLIDE_DURATION);
-
-        return () => window.clearTimeout(timeout);
-    }, [playing, index, movies.length]);
+    // C'est la fin de l'animation de la barre qui fait avancer : la barre et le défilement restent synchronisés,
+    // et une pause fige les deux au même endroit.
+    function showNext(): void {
+        setIndex((current) => (current + 1) % movies.length);
+    }
 
     const facts = [releaseYear(movie.releaseDate), detail?.runtime != null && formatRuntime(detail.runtime), ...(detail?.genres.slice(0, 2).map((genre) => genre.name) ?? [])].filter(Boolean);
 
@@ -55,14 +52,6 @@ function HeroSlides({ movies }: { movies: MovieSummary[] }) {
             aria-roledescription="carrousel"
             aria-label="Films à la une"
             className="relative isolate flex h-[min(88vh,820px)] min-h-[560px] items-end overflow-hidden"
-            onPointerEnter={() => setHovered(true)}
-            onPointerLeave={() => setHovered(false)}
-            onFocus={() => setHovered(true)}
-            onBlur={(event) => {
-                if (!event.currentTarget.contains(event.relatedTarget)) {
-                    setHovered(false);
-                }
-            }}
         >
             <AnimatePresence initial={false}>
                 <motion.img
@@ -81,7 +70,7 @@ function HeroSlides({ movies }: { movies: MovieSummary[] }) {
 
             <div className="mx-auto grid w-full max-w-7xl gap-10 px-4 pb-14 sm:px-6 lg:grid-cols-[1fr_22rem] lg:items-end">
                 <motion.div key={movie.id} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }} className="max-w-2xl space-y-5" aria-live={playing ? "off" : "polite"}>
-                    <p className="eyebrow text-primary">Tendance cette semaine</p>
+                    <p className="eyebrow text-primary">Tendance n° {index + 1}</p>
                     <h2 className="display">{movie.title}</h2>
                     {facts.length > 0 && <p className="text-sm font-medium text-foreground/80">{facts.join(" · ")}</p>}
                     {detail?.overview != null && detail.overview !== "" && (
@@ -98,7 +87,17 @@ function HeroSlides({ movies }: { movies: MovieSummary[] }) {
                     </div>
                 </motion.div>
 
-                <div className="rounded-2xl border border-white/10 bg-background/55 p-4 backdrop-blur-xl">
+                <div
+                    className="rounded-2xl border border-white/10 bg-background/55 p-4 backdrop-blur-xl"
+                    onPointerEnter={() => setPanelActive(true)}
+                    onPointerLeave={() => setPanelActive(false)}
+                    onFocus={() => setPanelActive(true)}
+                    onBlur={(event) => {
+                        if (!event.currentTarget.contains(event.relatedTarget)) {
+                            setPanelActive(false);
+                        }
+                    }}
+                >
                     <div className="mb-3 flex items-center justify-between">
                         <p className="eyebrow">À la une</p>
                         <div className="flex items-center gap-2">
@@ -129,12 +128,14 @@ function HeroSlides({ movies }: { movies: MovieSummary[] }) {
                                     <span className="min-w-0 flex-1">
                                         <span className="line-clamp-1 text-sm font-semibold">{candidate.title}</span>
                                         <span className="mt-1.5 block h-0.5 overflow-hidden rounded-full bg-white/10">
-                                            {/* La barre se remplit pendant la durée de la diapositive, et reste pleine à l'arrêt. */}
-                                            <span
-                                                key={`${index}-${playing}`}
-                                                className={cn("block h-full origin-left bg-primary", position === index ? (playing ? "animate-slide-progress" : "") : "scale-x-0")}
-                                                style={{ animationDuration: `${SLIDE_DURATION}ms` }}
-                                            />
+                                            {position === index && (
+                                                <span
+                                                    key={index}
+                                                    onAnimationEnd={showNext}
+                                                    className="animate-slide-progress block h-full origin-left bg-primary"
+                                                    style={{ animationDuration: `${SLIDE_DURATION}ms`, animationPlayState: playing ? "running" : "paused" }}
+                                                />
+                                            )}
                                         </span>
                                     </span>
                                 </button>

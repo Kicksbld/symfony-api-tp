@@ -14,6 +14,7 @@ import { catalogPath, hasCatalogFilters, parseCatalogSearch, withoutFilters, typ
 import { CATALOG_PAGE_SIZE, moviesQuery, type CatalogResult } from "@/features/movies/queries";
 import { countryName } from "@/features/movies/regions";
 import { useCatalogReferences, type CatalogCorrection } from "@/features/movies/useCatalogReferences";
+import { staggerStyle } from "@/lib/utils";
 
 type CorrectionState = Pick<CatalogCorrection, "invalidParams" | "unavailableProvider">;
 
@@ -58,10 +59,7 @@ export function CatalogPage() {
     return (
         <section className="space-y-8">
             <header className="flex flex-wrap items-end justify-between gap-x-6 gap-y-2">
-                <div className="space-y-1.5">
-                    <p className="eyebrow">Catalogue</p>
-                    <h1 className="text-4xl font-extrabold sm:text-5xl">Tous les films</h1>
-                </div>
+                <h1 className="text-4xl font-extrabold sm:text-5xl">Films</h1>
                 <p role="status" className="text-sm text-muted-foreground tabular-nums">
                     {statusText(isFetching, result)}
                 </p>
@@ -140,8 +138,10 @@ function CatalogResults({ result, isStale }: { result: CatalogResult; isStale: b
     return (
         <>
             <div className="grid grid-cols-2 gap-x-4 gap-y-8 transition-opacity aria-busy:opacity-60 sm:grid-cols-4 lg:grid-cols-6" aria-busy={isStale}>
-                {movies.items.map((movie) => (
-                    <MovieCard key={movie.id} movie={movie} />
+                {movies.items.map((movie, index) => (
+                    <div key={movie.id} className="animate-rise" style={staggerStyle(index)}>
+                        <MovieCard movie={movie} />
+                    </div>
                 ))}
             </div>
             <Pagination

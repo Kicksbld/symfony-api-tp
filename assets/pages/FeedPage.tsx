@@ -24,7 +24,7 @@ export function FeedPage() {
 
     return (
         <section className="mx-auto max-w-3xl space-y-8">
-            <PageHeader eyebrow="Votre réseau" title="Activité" description="Les derniers films vus par les membres que vous suivez." />
+            <PageHeader title="Activité" description="Les derniers films vus par les membres que vous suivez." />
             <PaginatedList
                 key={session.cacheId}
                 query={feedQuery(session, page)}

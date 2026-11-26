@@ -22,8 +22,7 @@ export function FeedRow({ session }: { session: Session }) {
     return (
         <ContentRow
             id="home-feed"
-            eyebrow="Votre réseau"
-            title="Vos abonnements ont vu"
+            title="Vu par vos abonnements"
             link={{ to: "/feed", label: "Toute l'activité" }}
             items={data.items}
             itemKey={(entry) => entry.id}
