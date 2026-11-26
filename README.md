@@ -126,11 +126,22 @@ Le code est dans [`assets/`](assets) :
 | --- | --- |
 | `pages/` | Composition des écrans par route et lecture des filtres ou de la page dans l’URL |
 | `features/` | Composants, requêtes et mutations propres à chaque fonctionnalité |
-| `components/` | Mise en page et composants partagés (pagination, état vide) |
+| `components/` | Mise en page (en-tête, pied de page, écrans de connexion) et composants partagés (pagination numérotée, état vide) |
 | `components/ui/` | Composants [shadcn/ui](https://ui.shadcn.com), ajoutés avec `npx shadcn add <composant>` |
 | `lib/` | Client HTTP de l'API, configuration de TanStack Query, état de la session et types partagés |
 
+#### En-tête et recherche globale
+
+L'en-tête reste visible en haut de chaque page. Il donne accès aux sections du site, à la recherche et au compte : boutons « Connexion » et « Créer un compte » pour un visiteur, menu avec avatar pour un membre (profil, journal, watchlist, listes, modification du profil, déconnexion). Sur mobile, la navigation s'ouvre dans un panneau latéral.
+
+La recherche s'ouvre avec le champ de l'en-tête ou le raccourci `Ctrl K` (`Cmd K` sur Mac). Les résultats arrivent pendant la frappe, 300 ms après la dernière touche et à partir de 2 caractères, sans bouton à valider : 5 films, 5 personnes et 5 membres, lus en parallèle avec `GET /api/movies`, `GET /api/people` et `GET /api/users`. Les flèches du clavier parcourent les résultats et `Entrée` ouvre la page choisie. Un lien mène au catalogue filtré sur le titre tapé quand il y a plus de 5 films.
+
+Les membres n'ont pas de photo : leur avatar affiche les deux premières lettres du pseudo sur une couleur tirée du pseudo, toujours la même pour un membre donné.
+
 #### Inscription et connexion
+
+`/login` et `/register` s'affichent en plein écran, sans la navigation, à côté d'un mur d'affiches des films populaires qui défile lentement (l'animation est coupée quand le système demande de réduire les animations). Les identifiants du compte de démo ne sont donnés que dans ce README.
+
 
 `/register` crée un compte avec `POST /api/register`, puis ouvre la session avec `POST /api/login_check`. Les erreurs de validation renvoyées par l'API s'affichent sous les champs concernés. Si le compte est créé mais que la connexion échoue, la page propose de se connecter avec l'email déjà rempli.
 

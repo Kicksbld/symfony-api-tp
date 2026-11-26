@@ -3,7 +3,6 @@ import { Link, Navigate, useSearchParams } from "react-router";
 import { FormField } from "@/components/FormField";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/features/auth/auth";
 import { register, registerErrors, type RegisterErrors, type RegisterField, type RegisterValues } from "@/features/auth/register";
 import { ApiError } from "@/lib/api";
@@ -59,12 +58,12 @@ export function RegisterPage() {
     }
 
     return (
-        <Card className="mx-auto max-w-sm">
-            <CardHeader>
-                <CardTitle>Inscription</CardTitle>
-                <CardDescription>Tenez votre journal de films, notez-les et suivez d'autres membres.</CardDescription>
-            </CardHeader>
-            <CardContent>
+        <section className="space-y-8">
+            <header className="space-y-2">
+                <h1 className="text-4xl font-extrabold">Rejoignez les membres.</h1>
+                <p className="text-muted-foreground">Tenez votre journal de films, notez-les et suivez d'autres membres.</p>
+            </header>
+            <div>
                 {loginFailed ? (
                     <Alert>
                         <AlertDescription>
@@ -78,7 +77,7 @@ export function RegisterPage() {
                     </Alert>
                 ) : (
                     // noValidate : les règles sont celles de l'API, ses messages s'affichent sous chaque champ.
-                    <form onSubmit={handleSubmit} className="space-y-4" noValidate>
+                    <form onSubmit={handleSubmit} className="space-y-5" noValidate>
                         {errors.others.length > 0 && (
                             <Alert variant="destructive">
                                 <AlertDescription>{errors.others.join(" ")}</AlertDescription>
@@ -112,18 +111,18 @@ export function RegisterPage() {
                             error={errors.fields.password}
                             onChange={updateField("password")}
                         />
-                        <Button type="submit" className="w-full" disabled={submitting}>
-                            Créer mon compte
+                        <Button type="submit" size="lg" className="h-11 w-full rounded-full text-base" disabled={submitting}>
+                            {submitting ? "Création du compte…" : "Créer mon compte"}
                         </Button>
                         <p className="text-center text-sm text-muted-foreground">
                             Déjà membre ?{" "}
-                            <Link to={authPath("/login", target)} className="text-primary underline-offset-4 hover:underline">
+                            <Link to={authPath("/login", target)} className="font-medium text-primary underline-offset-4 hover:underline">
                                 Se connecter
                             </Link>
                         </p>
                     </form>
                 )}
-            </CardContent>
-        </Card>
+            </div>
+        </section>
     );
 }
