@@ -1,8 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link, Navigate, useParams, useSearchParams, type To } from "react-router";
 import { EmptyState } from "@/components/EmptyState";
+import { PageHeader } from "@/components/PageHeader";
 import { PaginatedList } from "@/components/PaginatedList";
 import { QueryError } from "@/components/QueryError";
+import { NotFoundMessage } from "@/components/NotFoundMessage";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CatalogLink } from "@/features/movies/CatalogLink";
@@ -61,22 +63,24 @@ function PersonSheet({ person }: { person: PersonDetail }) {
     const movieCount = personMovieCount(person);
 
     return (
-        <article className="space-y-10">
-            <header className="grid gap-8 md:grid-cols-[12rem_1fr]">
-                <PersonPhoto person={person} alt={`Photo de ${person.name}`} className="max-w-48 rounded-xl" />
-                <div className="space-y-2">
-                    <h1 className="text-3xl font-semibold">{person.name}</h1>
-                    {jobs.length > 0 && <p className="text-muted-foreground">{jobs.map((job) => job.label).join(" · ")}</p>}
-                    <p className="text-sm text-muted-foreground">
-                        {movieCount.toLocaleString("fr-FR")} {movieCount > 1 ? "films" : "film"} dans le catalogue
-                    </p>
+        <article className="space-y-14">
+            <header className="grid gap-8 sm:grid-cols-[11rem_1fr] sm:items-end md:grid-cols-[14rem_1fr]">
+                <PersonPhoto person={person} alt={`Photo de ${person.name}`} className="max-w-44 rounded-2xl shadow-2xl ring-1 ring-white/15 sm:max-w-none" />
+                <div className="space-y-4">
+                    <PageHeader
+                        eyebrow={jobs.length > 0 ? jobs.map((job) => job.label).join(" · ") : undefined}
+                        title={person.name}
+                        description={`${movieCount.toLocaleString("fr-FR")} ${movieCount > 1 ? "films" : "film"} dans le catalogue`}
+                    />
                     {movieCount > 0 && <CatalogLink to={catalogPathWith({ person: person.id })} />}
                 </div>
             </header>
             {person.cast.length > 0 && (
-                <section className="space-y-3">
-                    <h2 className="text-lg font-semibold">Rôles joués</h2>
-                    <ul className="grid gap-x-6 gap-y-2 sm:grid-cols-2">
+                <section aria-labelledby="roles-title" className="space-y-5">
+                    <h2 id="roles-title" className="text-2xl font-bold sm:text-3xl">
+                        Rôles joués
+                    </h2>
+                    <ul className="grid gap-x-8 gap-y-2.5 sm:grid-cols-2 lg:grid-cols-3">
                         {/* Deux rôles dans le même film donnent deux crédits avec le même film : l'id ne suffit pas comme clé. */}
                         {person.cast.map((credit, index) => (
                             <li key={index} className="text-sm">
@@ -116,8 +120,10 @@ function Filmography({ personId, jobs, movieCount }: FilmographyProps) {
     }
 
     return (
-        <section className="space-y-6">
-            <h2 className="text-lg font-semibold">Filmographie</h2>
+        <section aria-labelledby="filmography-title" className="space-y-6">
+            <h2 id="filmography-title" className="text-2xl font-bold sm:text-3xl">
+                Filmographie
+            </h2>
             {jobs.length === 0 ? (
                 <EmptyState message="Aucun film de cette personne dans le catalogue." />
             ) : (
@@ -160,7 +166,7 @@ type JobLinkProps = {
 // NavLink ne compare que le chemin, pas le paramètre job : on marque nous-mêmes le poste affiché.
 function JobLink({ to, active, label, movieCount }: JobLinkProps) {
     return (
-        <Button asChild variant={active ? "default" : "outline"} size="sm">
+        <Button asChild variant={active ? "default" : "outline"} className="h-9 rounded-full px-4">
             <Link to={to} aria-current={active ? "page" : undefined}>
                 {label}
                 <span className={active ? "opacity-80" : "text-muted-foreground"}>{movieCount}</span>
@@ -170,13 +176,5 @@ function JobLink({ to, active, label, movieCount }: JobLinkProps) {
 }
 
 function PersonNotFound() {
-    return (
-        <section className="space-y-4 text-center">
-            <h1 className="text-2xl font-semibold">Personne introuvable</h1>
-            <p className="text-muted-foreground">Cette personne n'existe pas ou n'est plus dans le catalogue.</p>
-            <Button asChild variant="outline">
-                <Link to="/people">Rechercher une personne</Link>
-            </Button>
-        </section>
-    );
+    return <NotFoundMessage title="Personne introuvable" message="Cette personne n'existe pas ou n'est plus dans le catalogue." action={{ to: "/people", label: "Rechercher une personne" }} />;
 }

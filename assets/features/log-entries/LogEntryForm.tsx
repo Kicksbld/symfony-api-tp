@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { localToday, type DraftErrors, type LogEntryDraft } from "@/features/log-entries/draft";
-import { RatingSelect } from "@/features/movies/RatingSelect";
+import { StarRatingInput } from "@/features/movies/StarRatingInput";
 
 // Même limite que LogEntry::REVIEW_MAX_LENGTH côté API.
 const REVIEW_MAX_LENGTH = 10_000;
@@ -73,13 +73,13 @@ export function LogEntryForm({ draft, errors, submitting, submitLabel, onChange,
                     />
                 </Field>
                 <Field id={`${id}-rating`} label="Note" error={errors.fields.rating}>
-                    <RatingSelect
+                    <StarRatingInput
                         id={`${id}-rating`}
-                        className="w-full"
-                        value={draft.rating}
-                        aria-invalid={errors.fields.rating !== undefined}
-                        aria-describedby={errors.fields.rating && `${id}-rating-error`}
-                        onChange={(event) => update("rating", event.target.value)}
+                        label="Note"
+                        value={draft.rating === "" ? null : Number(draft.rating)}
+                        invalid={errors.fields.rating !== undefined}
+                        describedBy={errors.fields.rating && `${id}-rating-error`}
+                        onChange={(rating) => update("rating", rating === null ? "" : String(rating))}
                     />
                 </Field>
             </div>

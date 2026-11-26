@@ -1,8 +1,8 @@
-import { queryOptions } from "@tanstack/react-query";
+import { keepPreviousData, queryOptions } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/api";
 import type { MovieSummary, Paginated, PersonDetail, PersonSummary } from "@/lib/types";
 
-export const PEOPLE_PAGE_SIZE = 24;
+const PEOPLE_PAGE_SIZE = 24;
 
 // L'API refuse une recherche de plus de 255 caractères.
 export const MAX_PERSON_NAME_LENGTH = 255;
@@ -13,6 +13,8 @@ export function peopleQuery(q: string, page: number) {
     return queryOptions({
         queryKey: ["people", Object.fromEntries(params)],
         queryFn: ({ signal }) => apiFetch<Paginated<PersonSummary>>(`/people?${params}`, { signal, session: null }),
+        // La recherche part pendant la frappe : on garde les résultats précédents au lieu de faire clignoter la liste.
+        placeholderData: keepPreviousData,
     });
 }
 

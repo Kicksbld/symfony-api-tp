@@ -1,3 +1,4 @@
+import { cn } from "cn";
 import { CircleCheck, NotebookPen } from "lucide-react";
 import { useState } from "react";
 import { Link, useLocation } from "react-router";
@@ -12,15 +13,15 @@ import { authPath, returnPathFor } from "@/lib/redirect";
 import type { Session } from "@/lib/session";
 import type { MovieSummary } from "@/lib/types";
 
-const BUTTON_CLASS_NAME = "h-11 px-4";
+const BUTTON_CLASS_NAME = "h-11 rounded-full px-5 text-base";
 
-export function LogMovieButton({ movie }: { movie: MovieSummary }) {
+export function LogMovieButton({ movie, className }: { movie: MovieSummary; className?: string }) {
     const { session } = useAuth();
     const location = useLocation();
 
     if (session === null) {
         return (
-            <Button asChild className={BUTTON_CLASS_NAME}>
+            <Button asChild className={cn(BUTTON_CLASS_NAME, className)}>
                 <Link to={authPath("/login", returnPathFor(location))}>
                     <NotebookPen aria-hidden="true" />
                     Journaliser
@@ -30,10 +31,10 @@ export function LogMovieButton({ movie }: { movie: MovieSummary }) {
     }
 
     // La clé recrée le formulaire au changement de compte : le brouillon d'un membre ne passe pas au suivant.
-    return <MemberLogMovieButton key={session.cacheId} session={session} movie={movie} />;
+    return <MemberLogMovieButton key={session.cacheId} session={session} movie={movie} className={className} />;
 }
 
-function MemberLogMovieButton({ session, movie }: { session: Session; movie: MovieSummary }) {
+function MemberLogMovieButton({ session, movie, className }: { session: Session; movie: MovieSummary; className?: string }) {
     const [open, setOpen] = useState(false);
     const { draft, change, errors, reset, submit } = useLogEntryDraft(newDraft, `log-entry-draft:${session.user.id}:${movie.id}`);
     const [logged, setLogged] = useState(false);
@@ -57,7 +58,7 @@ function MemberLogMovieButton({ session, movie }: { session: Session; movie: Mov
     return (
         <Dialog open={open} onOpenChange={changeOpen}>
             <DialogTrigger asChild>
-                <Button className={BUTTON_CLASS_NAME}>
+                <Button className={cn(BUTTON_CLASS_NAME, className)}>
                     <NotebookPen aria-hidden="true" />
                     Journaliser
                 </Button>

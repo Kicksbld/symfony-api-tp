@@ -15,13 +15,16 @@ type LikeButtonProps = {
     viewsFor: (viewer: Session | null) => LikeViews;
 };
 
+// Le cœur passe en rouge une fois aimé, comme la mention « Aimé » des entrées de journal.
+const LIKE_BUTTON_CLASS_NAME = "h-8 rounded-full bg-white/5 px-3 hover:bg-white/10 aria-pressed:text-chart-5";
+
 export function LikeButton(props: LikeButtonProps) {
     const { session } = useAuth();
     const location = useLocation();
 
     if (session === null) {
         return (
-            <Button asChild variant="outline" size="sm">
+            <Button asChild variant="ghost" size="sm" className={LIKE_BUTTON_CLASS_NAME}>
                 <Link to={authPath("/login", returnPathFor(location))} aria-label={`Se connecter pour aimer ${props.title} (${props.target.likeCount})`}>
                     <LikeCount count={props.target.likeCount} />
                 </Link>
@@ -50,8 +53,9 @@ function ConnectedLikeButton({ target, title, path, viewsFor, session }: LikeBut
     return (
         <div className="space-y-1">
             <Button
-                variant="outline"
+                variant="ghost"
                 size="sm"
+                className={LIKE_BUTTON_CLASS_NAME}
                 aria-label={`J’aime ${title}`}
                 aria-describedby={countId}
                 aria-pressed={liked}

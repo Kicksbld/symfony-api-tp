@@ -62,7 +62,7 @@ export function FavoriteMoviesForm({ favorites, saving, onSave }: FavoriteMovies
     return (
         <section aria-labelledby="favorite-movies-title" className="space-y-4">
             <div className="space-y-1">
-                <h2 id="favorite-movies-title" className="text-lg font-semibold">Films favoris</h2>
+                <h2 id="favorite-movies-title" className="text-2xl font-bold">Films favoris</h2>
                 <p className="text-sm text-muted-foreground">
                     Choisissez jusqu'à {MAX_FAVORITES} films. Ils apparaîtront dans cet ordre sur votre profil.
                 </p>
@@ -80,7 +80,7 @@ export function FavoriteMoviesForm({ favorites, saving, onSave }: FavoriteMovies
 
                                 return (
                                     <li key={movie.id}>
-                                        <div className="flex items-center gap-2 rounded-lg border p-2">
+                                        <div className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/[0.03] p-2">
                                             <MoviePoster movie={movie} alt="" className="w-8 shrink-0 overflow-hidden rounded text-[0.5rem]" loading="lazy" />
                                             <p className="min-w-0 flex-1 text-sm font-medium">{movie.title}{year && ` (${year})`}</p>
                                             <div className="flex shrink-0">

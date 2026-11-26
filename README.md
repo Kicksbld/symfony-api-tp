@@ -178,26 +178,26 @@ Un paramètre invalide (titre vide ou trop long, genre, pays, personne ou studio
 
 #### Fiche film et suivi personnel
 
-Chaque carte du catalogue ouvre la fiche `/movies/{id}`, lue avec `GET /api/movies/{id}`. La fiche est préchargée dès le survol ou la prise de focus de la carte, elle s'affiche donc sans attente au clic. Elle montre l'affiche, le synopsis, la durée, les genres, les têtes d'affiche, l'équipe par poste (réalisation, scénario, image, musique, montage), les studios, les pays de production et la moyenne des membres (ou « Pas encore noté » sans note). Un identifiant invalide ou un film absent (`404`) affiche « Film introuvable ».
+Chaque carte du catalogue ouvre la fiche `/movies/{id}`, lue avec `GET /api/movies/{id}`. La fiche est préchargée dès le survol ou la prise de focus de la carte, elle s'affiche donc sans attente au clic. Elle s'ouvre sur un bandeau avec l'image de fond du film (ou son affiche floutée s'il n'en a pas), l'affiche, le titre, l'année, la durée, la réalisation et les genres, qui mènent au catalogue filtré. Viennent ensuite le synopsis, la distribution en rangée de photos, l'équipe par poste (réalisation, scénario, image, musique, montage), les 3 dernières critiques du film et la production (studios et pays). Une colonne latérale, fixe au défilement sur grand écran, regroupe le journal, le suivi personnel, les notes des membres et « Où regarder ». Un identifiant invalide ou un film absent (`404`) affiche « Film introuvable ».
 
 Deux sections de la fiche ont leur propre requête, lancée une fois le film chargé. Si l'une échoue, elle affiche son erreur et un bouton « Réessayer » sans bloquer le reste de la fiche, et garde ce qu'elle affichait déjà.
 
 - « Notes des membres » lit `GET /api/movies/{id}/ratings` : un histogramme de 10 colonnes, de 0,5 à 5 étoiles, avec la moyenne et le nombre de notes, ou « Pas encore noté » sans note. Les colonnes sont aussi décrites dans un tableau lu par les lecteurs d'écran. Journaliser, modifier ou supprimer une entrée relit la répartition.
-- « Où regarder » lit `GET /api/movies/{id}/watch-providers?region=FR` et groupe les plateformes par abonnement, location et achat. Un menu change de pays (France par défaut, Belgique, Suisse, Canada, États-Unis), les offres du pays précédent restent affichées pendant le chargement. Un pays sans offre l'indique.
+- « Où regarder » lit `GET /api/movies/{id}/watch-providers?region=FR` et groupe les plateformes par abonnement, location et achat. Des boutons changent de pays (France par défaut, Belgique, Suisse, Canada, États-Unis), les offres du pays précédent restent affichées pendant le chargement. Un pays sans offre l'indique.
 
-Un membre connecté voit son état avec `GET /api/movies/{id}/relationship`. Depuis la fiche, il peut marquer le film comme vu ou aimé, l'ajouter à sa watchlist ou changer sa note par demi-étoile. Chaque action envoie seulement le champ modifié à `PATCH /api/movies/{id}/relationship`. L'option « Pas de note » envoie `{ "rating": null }`. Ces actions ne créent aucune entrée de journal.
+Un membre connecté voit son état avec `GET /api/movies/{id}/relationship`. Depuis la fiche, il peut marquer le film comme vu ou aimé, l'ajouter à sa watchlist ou changer sa note en cliquant sur les étoiles : la moitié gauche d'une étoile donne la demi-étoile, la moitié droite l'étoile pleine, et les flèches du clavier changent la note d'une demi-étoile. Chaque action envoie seulement le champ modifié à `PATCH /api/movies/{id}/relationship`. Le bouton de la croix retire la note et envoie `{ "rating": null }`. Ces actions ne créent aucune entrée de journal.
 
 Le suivi change tout de suite, puis la fiche et les onglets du profil se synchronisent avec le serveur. Un changement de note actualise aussi l'histogramme. En cas d'erreur, le suivi revient à son état précédent et un message s'affiche. Depuis la watchlist, un visiteur est envoyé vers la connexion, puis revient sur la fiche.
 
 #### Profil public
 
-`/users/{username}` affiche le profil d'un membre, lu avec `GET /api/users/{username}`. Le profil est accessible sans compte et montre le pseudo, la bio, le nombre de films vus, d'abonnés et d'abonnements, et les 4 films favoris qui mènent à leur fiche. Un pseudo inconnu (`404`) affiche « Membre introuvable ». Le lien avec le pseudo dans la navigation ouvre le profil du membre connecté.
+`/users/{username}` affiche le profil d'un membre, lu avec `GET /api/users/{username}`. Le profil est accessible sans compte et montre l'avatar, le pseudo, la bio, le nombre de films vus, d'abonnés et d'abonnements, un lien vers ses critiques et les 4 films favoris qui mènent à leur fiche. Le bandeau reprend en flou l'image de fond du premier favori. Un pseudo inconnu (`404`) affiche « Membre introuvable ». Le lien avec le pseudo dans la navigation ouvre le profil du membre connecté.
 
 Le profil a cinq onglets, chacun avec son adresse :
 
 | Adresse | Endpoint | Contenu |
 | --- | --- | --- |
-| `/users/{username}/diary` | `GET /api/users/{username}/diary` | Journal : film, date de visionnage, note, aimé, revu et critique |
+| `/users/{username}/diary` | `GET /api/users/{username}/diary` | Journal rangé par mois : jour, film, note, aimé, revu et critique |
 | `/users/{username}/watched` | `GET /api/users/{username}/watched` | Films vus |
 | `/users/{username}/likes` | `GET /api/users/{username}/likes` | Films aimés |
 | `/users/{username}/watchlist` | `GET /api/users/{username}/watchlist` | Watchlist |
@@ -205,18 +205,20 @@ Le profil a cinq onglets, chacun avec son adresse :
 
 `/users/{username}` ouvre le journal. Chaque onglet est paginé par 20 avec `?page=2` dans l'adresse, comme le catalogue. Une page invalide revient à la première, une page au-delà de la dernière propose d'y aller. Un onglet vide l'indique, et une critique marquée spoiler reste cachée jusqu'au clic sur « Afficher la critique ».
 
-Le journal peut être filtré par année, puis par mois. Les filtres sont conservés dans l'adresse et dans les liens de pagination, par exemple `?year=2026&month=11&page=2`. Changer un filtre revient à la première page. Effacer l'année efface aussi le mois.
+Le journal peut être filtré par année, puis par mois, avec deux pastilles qui ouvrent une liste de choix. Les filtres sont conservés dans l'adresse et dans les liens de pagination, par exemple `?year=2026&month=11&page=2`. Changer un filtre revient à la première page. Effacer l'année efface aussi le mois.
 
 #### Rechercher et suivre des membres
 
-Le lien « Membres » ouvre l'annuaire public `/users`, lu avec `GET /api/users`. La recherche par pseudo et la pagination restent dans l'adresse, par exemple `/users?q=jane&page=2`. Depuis un profil, les compteurs ouvrent les listes paginées « Abonnés » (`/users/{username}/followers`) et « Abonnements » (`/users/{username}/following`). Chaque pseudo mène à son profil.
+Le lien « Membres » ouvre l'annuaire public `/users`, lu avec `GET /api/users`. Le pseudo se cherche pendant la frappe, sans bouton à valider. La recherche et la pagination restent dans l'adresse, par exemple `/users?q=jane&page=2`. Chaque membre a une carte avec son avatar, sa bio, ses compteurs, ses 4 films favoris et le bouton « Suivre ».
+
+Depuis un profil, les compteurs d'abonnés et d'abonnements ouvrent un panneau latéral par-dessus l'onglet affiché, au lieu de le remplacer. Le panneau vit dans l'adresse (`?panel=followers` ou `?panel=following`, et `panelPage` pour sa pagination) : le lien se partage, et Précédent ou la croix le ferment. Deux boutons en haut du panneau passent des abonnés aux abonnements.
 
 Le profil utilise `followedByMe` pour afficher « Suivre » ou « Ne plus suivre ». L'action envoie un `POST` ou un `DELETE` à `/api/users/{username}/followers`. Le bouton et le compteur d'abonnés changent dès le clic. En cas d'erreur, ils reprennent leur état précédent et un message s'affiche. Sur son propre profil, le membre voit le bouton « Modifier mon profil ». Un visiteur qui clique sur « Suivre » passe par la connexion et revient sur la même page pour relancer l'action.
 
 Pour vérifier le parcours avec les comptes de démonstration :
 
 1. Sans compte, rechercher `leo` depuis « Membres », ouvrir son profil et consulter les deux listes. Ouvrir un pseudo depuis une liste, puis revenir en arrière. Essayer aussi une recherche sans résultat et une adresse de liste avec `?page=999`.
-2. Depuis les abonnés de `leo`, cliquer sur « Suivre » et se connecter avec `jane@example.com` et `demo1234`. Vérifier le retour à la liste et cliquer à nouveau sur « Suivre ». Vérifier que le bouton et le compteur changent avant la fin de la requête, que `jane_doe` apparaît dans les abonnés de `leo` et que `leo` apparaît dans les abonnements de `jane_doe`. Vérifier l'absence du bouton de suivi sur son propre profil.
+2. Depuis le panneau des abonnés de `leo`, cliquer sur « Suivre » et se connecter avec `jane@example.com` et `demo1234`. Vérifier le retour à la liste et cliquer à nouveau sur « Suivre ». Vérifier que le bouton et le compteur changent avant la fin de la requête, que `jane_doe` apparaît dans les abonnés de `leo` et que `leo` apparaît dans les abonnements de `jane_doe`. Vérifier l'absence du bouton de suivi sur son propre profil.
 3. Couper le réseau une fois le profil de `leo` chargé et cliquer sur « Ne plus suivre ». Vérifier le retour au compteur précédent et le message d'erreur. Rétablir le réseau et réessayer, puis vérifier que les deux listes ont été mises à jour.
 4. Se déconnecter, puis ouvrir le même profil avec `camille@example.com` et `demo1234`. La démo démarre avec `camille` déjà abonnée à `leo`, ce qui permet de vérifier que le bouton reflète le compte actif.
 
@@ -248,9 +250,9 @@ Pour vérifier le parcours avec les données de démonstration :
 
 #### Découvrir les listes
 
-Le lien « Listes » de la navigation ouvre l'annuaire public `/lists`, lu avec `GET /api/lists`. Le formulaire combine le nom de la liste (`q`), le pseudo de son auteur (`user`) et un film choisi dans le catalogue (`movie`). Les listes les plus récentes sont affichées par défaut. Le tri « Les plus populaires » (`sort=popular`) affiche les listes par nombre de mentions J'aime. Les filtres et la pagination restent dans l'adresse, par exemple `/lists?user=jane_doe&sort=popular&page=2`.
+Le lien « Listes » de la navigation ouvre l'annuaire public `/lists`, lu avec `GET /api/lists`. Les filtres combinent le nom de la liste (`q`) et le pseudo de son auteur (`user`), cherchés pendant la frappe, et un film choisi dans le catalogue (`movie`). Il n'y a pas de bouton à valider : chaque changement met la liste à jour. Un pseudo incomplet n'est pas envoyé tant qu'il ne fait pas 3 caractères. Chaque liste est une carte avec l'aperçu de ses 4 premières affiches. Les listes les plus récentes sont affichées par défaut. Le tri « Les plus populaires » (`sort=popular`) affiche les listes par nombre de mentions J'aime. Les filtres et la pagination restent dans l'adresse, par exemple `/lists?user=jane_doe&sort=popular&page=2`.
 
-La fiche `/lists/{id}` lit `GET /api/lists/{id}` et `GET /api/lists/{id}/items`. Elle affiche les films dans l'ordre renvoyé par l'API, avec leur position pour les listes classées et la note de l'auteur si elle existe. Les films et les listes sont paginés par 20. Le badge « Privée » apparaît sur le profil du propriétaire et sur la fiche qui lui est accessible. Pour les autres visiteurs, le lien direct d'une liste privée affiche « Liste introuvable », comme pour une liste absente.
+La fiche `/lists/{id}` lit `GET /api/lists/{id}` et `GET /api/lists/{id}/items`. Son en-tête reprend le collage des affiches. Elle affiche les films dans l'ordre renvoyé par l'API, avec leur position en gros chiffres pour les listes classées et la note de l'auteur si elle existe. Les films et les listes sont paginés par 20. Le badge « Privée » apparaît sur le profil du propriétaire et sur la fiche qui lui est accessible. Pour les autres visiteurs, le lien direct d'une liste privée affiche « Liste introuvable », comme pour une liste absente.
 
 #### Gérer ses listes
 
@@ -277,7 +279,7 @@ Pour vérifier le parcours avec les comptes de démonstration :
 
 Depuis son propre profil, le membre connecté peut ouvrir « Modifier mon profil » (`/settings/profile`). Le pseudo et la bio sont enregistrés avec `PATCH /api/me`. Une bio vide efface la bio existante. Si le pseudo change, la navigation et le lien « Voir mon profil public » utilisent la nouvelle adresse.
 
-La recherche du catalogue permet d'ajouter jusqu'à quatre films distincts. Les flèches changent leur ordre, et « Enregistrer les favoris » envoie la liste complète à `PUT /api/me/favorites`. Chaque formulaire conserve ses saisies si l'enregistrement échoue.
+Le bouton « Ajouter un film » ouvre une recherche dans le catalogue, qui affiche les films pendant la frappe, et permet d'ajouter jusqu'à quatre films distincts. Les flèches changent leur ordre, et « Enregistrer les favoris » envoie la liste complète à `PUT /api/me/favorites`. Chaque formulaire conserve ses saisies si l'enregistrement échoue.
 
 #### Personnes et studios
 
@@ -290,13 +292,13 @@ Sur la fiche film, chaque nom de la distribution et de l'équipe ouvre la fiche 
 | `/people/{id}?job=Director` | `GET /api/people/{id}/movies?job=` | Filmographie paginée, filtrée par poste |
 | `/companies/{id}` | `GET /api/companies/{id}` et `GET /api/movies?company={id}` | Logo, nom et films du studio, des plus populaires aux moins connus |
 
-Le lien « Personnes » de la navigation ouvre la recherche. Sans nom, la page invite à en taper un plutôt que de lister toutes les personnes du catalogue. Sur la fiche d'une personne, la filmographie a un bouton par poste avec son nombre de films (« Tous », « Interprétation », « Réalisation », « Scénario »...) : le poste et la page vivent dans l'URL. Un poste que la personne n'a jamais occupé renvoie vers toute sa filmographie, et une page invalide revient à la première.
+Le lien « Personnes » de la navigation ouvre la recherche, qui part pendant la frappe. Sans nom, la page invite à en taper un plutôt que de lister toutes les personnes du catalogue. Sur la fiche d'une personne, la filmographie a un bouton par poste avec son nombre de films (« Tous », « Interprétation », « Réalisation », « Scénario »...) : le poste et la page vivent dans l'URL. Un poste que la personne n'a jamais occupé renvoie vers toute sa filmographie, et une page invalide revient à la première.
 
 Une personne sans photo garde le même format, avec une icône à la place. Un studio sans logo affiche seulement son nom. Une recherche sans résultat l'indique, et une personne ou un studio absent (`404`) affiche « Personne introuvable » ou « Studio introuvable ».
 
 #### Journaliser un film
 
-Sur la fiche, le bouton « Journaliser » ouvre un formulaire : date de visionnage (obligatoire, préremplie avec le jour local du navigateur), note facultative de 0,5 à 5 par demi-étoile, coup de cœur, revisionnage, critique et case « spoilers » (active seulement avec une critique). Il envoie `POST /api/log-entries` avec tous les champs, une note ou une critique vide part à `null`. Un visiteur est envoyé vers la connexion, puis revient sur la fiche.
+Sur la fiche, le bouton « Journaliser » ouvre un formulaire : date de visionnage (obligatoire, préremplie avec le jour local du navigateur), note facultative de 0,5 à 5 en cliquant sur les étoiles, coup de cœur, revisionnage, critique et case « spoilers » (active seulement avec une critique). Il envoie `POST /api/log-entries` avec tous les champs, une note ou une critique vide part à `null`. Un visiteur est envoyé vers la connexion, puis revient sur la fiche.
 
 Le succès n'est affiché qu'après la réponse de l'API, avec un lien « Voir mon journal ». Mon état sur le film, la moyenne du film et les onglets et compteurs de mon profil sont alors relus : le film sort de la watchlist, passe dans les films vus et l'entrée apparaît dans le journal. En cas d'erreur, le brouillon reste dans le formulaire, même après avoir fermé la fenêtre, et les erreurs de validation (`422`) s'affichent sous les champs concernés. Il est aussi gardé dans le `sessionStorage` de l'onglet, par membre et par film : si la session expire pendant la saisie, le membre se reconnecte et retrouve son brouillon sur la fiche. Il est effacé après l'enregistrement.
 
@@ -312,7 +314,7 @@ npx shadcn@latest add https://tweakcn.com/r/themes/cmww4uejt000104l52cis7jqp
 
 Le thème fournit une variante claire et une variante sombre. Le front est toujours affiché en sombre grâce à la classe `dark` posée sur `<html>` dans [`templates/front.html.twig`](templates/front.html.twig). Après une nouvelle application du thème, vérifier `assets/app.css` : la commande remet l'import de police et des variables propres à l'éditeur de TweakCN, et écrit les ombres avec une syntaxe de couleur invalide. Les autres variables du thème (ombres, polices serif et mono, espacement des lettres) sont gardées telles quelles pour les composants shadcn à venir. La variante claire n'est pas utilisée et n'a pas été vérifiée : son texte blanc sur les couleurs vert, bleu et orange est sous le contraste AA.
 
-La navigation ([`MainNavigation`](assets/components/MainNavigation.tsx)) s'affiche dans l'en-tête sur desktop et dans un menu dépliant sur mobile, avec des entrées de 44 px de haut. Échap ferme le menu et rend le focus au bouton, et un lien « Aller au contenu » apparaît à la première tabulation. Une nouvelle page s'y ajoute avec un `NavLink`, qui marque l'entrée active avec `aria-current="page"`.
+La navigation ([`MainNavigation`](assets/components/MainNavigation.tsx)) s'affiche dans l'en-tête sur desktop et dans un panneau latéral sur mobile, avec des entrées de 48 px de haut. Échap ferme le panneau et rend le focus au bouton, et un lien « Aller au contenu » apparaît à la première tabulation. Les titres utilisent Inter Tight, le texte Inter. L'accueil et la fiche film utilisent la variante immersive du layout : l'en-tête est posé sur l'image et devient opaque au défilement. Une nouvelle page s'y ajoute avec un `NavLink`, qui marque l'entrée active avec `aria-current="page"`.
 
 #### Requêtes et cache
 

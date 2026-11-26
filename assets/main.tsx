@@ -20,7 +20,7 @@ import { MoviePage } from "@/pages/MoviePage";
 import { NotFoundPage } from "@/pages/NotFoundPage";
 import { PeoplePage } from "@/pages/PeoplePage";
 import { PersonPage } from "@/pages/PersonPage";
-import { DiaryTab, MovieRelationshipsTab, ProfileFollowTab, ProfileIndex, ProfileListsTab, ProfilePage } from "@/pages/ProfilePage";
+import { DiaryTab, MovieRelationshipsTab, ProfileIndex, ProfileListsTab, ProfilePage } from "@/pages/ProfilePage";
 import { RegisterPage } from "@/pages/RegisterPage";
 import { ReviewsPage } from "@/pages/ReviewsPage";
 import { queryClient } from "@/lib/query-client";
@@ -36,10 +36,10 @@ createRoot(document.getElementById("root")!).render(
                         <Routes>
                             <Route element={<Layout immersive />}>
                                 <Route index element={<HomePage />} />
+                                <Route path="movies/:id" element={<MoviePage />} />
                             </Route>
                             <Route element={<Layout />}>
                                 <Route path="films" element={<CatalogPage />} />
-                                <Route path="movies/:id" element={<MoviePage />} />
                                 <Route path="people" element={<PeoplePage />} />
                                 <Route path="people/:id" element={<PersonPage />} />
                                 <Route path="companies/:id" element={<CompanyPage />} />
@@ -54,8 +54,6 @@ createRoot(document.getElementById("root")!).render(
                                     <Route path="likes" element={<MovieRelationshipsTab list="likes" />} />
                                     <Route path="watchlist" element={<MovieRelationshipsTab list="watchlist" />} />
                                     <Route path="lists" element={<ProfileListsTab />} />
-                                    <Route path="followers" element={<ProfileFollowTab list="followers" />} />
-                                    <Route path="following" element={<ProfileFollowTab list="following" />} />
                                 </Route>
                                 <Route path="reviews" element={<ReviewsPage />} />
                                 <Route path="feed" element={<FeedPage />} />

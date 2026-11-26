@@ -1,5 +1,6 @@
-import { Heart, LockKeyhole } from "lucide-react";
+import { LockKeyhole } from "lucide-react";
 import { Link } from "react-router";
+import { ListLikeButton } from "@/features/movie-lists/ListLikeButton";
 import { MoviePoster } from "@/features/movies/MoviePoster";
 import type { MovieList } from "@/features/movie-lists/types";
 import { UserAvatar } from "@/features/users/UserAvatar";
@@ -52,10 +53,9 @@ export function ListCard({ list }: { list: MovieList }) {
                     <span>
                         {list.itemCount} {list.itemCount > 1 ? "films" : "film"}
                     </span>
-                    <span className="inline-flex items-center gap-1">
-                        <Heart aria-hidden="true" className="size-3" />
-                        <span className="sr-only">Likes :</span>
-                        {list.likeCount}
+                    {/* Au-dessus du lien qui couvre la carte, pour rester cliquable. */}
+                    <span className="relative z-10">
+                        <ListLikeButton list={list} />
                     </span>
                 </span>
             </div>

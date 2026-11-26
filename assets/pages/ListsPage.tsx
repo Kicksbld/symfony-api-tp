@@ -1,4 +1,5 @@
 import { Navigate, useSearchParams } from "react-router";
+import { PageHeader } from "@/components/PageHeader";
 import { PaginatedList } from "@/components/PaginatedList";
 import { useAuth } from "@/features/auth/auth";
 import { CreateListButton } from "@/features/movie-lists/CreateListButton";
@@ -21,16 +22,11 @@ export function ListsPage() {
     }
 
     return (
-        <section className="space-y-6">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-                <h1 className="text-2xl font-semibold">Listes publiques</h1>
+        <section className="space-y-8">
+            <PageHeader eyebrow="Sélections des membres" title="Listes" description="Tops, thématiques, coups de cœur : les listes publiques des membres.">
                 {session !== null && <CreateListButton session={session} />}
-            </div>
-            <ListFilterForm
-                key={new URLSearchParams(params).toString()}
-                filters={filters}
-                onSubmit={(next) => setSearchParams(listFilterParams(next))}
-            />
+            </PageHeader>
+            <ListFilterForm filters={filters} onChange={(next, options) => setSearchParams(listFilterParams(next), { replace: options?.replace })} />
             <PaginatedList
                 key={session?.cacheId ?? "public"}
                 query={publicListsQuery(filters, page, session)}
@@ -40,7 +36,7 @@ export function ListsPage() {
                 emptyMessage="Aucune liste publique ne correspond à cette recherche."
                 errorMessage="Impossible de charger les listes publiques."
             >
-                {(lists) => <ListResults lists={lists} showAuthor />}
+                {(lists) => <ListResults lists={lists} />}
             </PaginatedList>
         </section>
     );

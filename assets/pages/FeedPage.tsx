@@ -1,4 +1,5 @@
 import { Link, Navigate, useLocation, useSearchParams } from "react-router";
+import { PageHeader } from "@/components/PageHeader";
 import { PaginatedList } from "@/components/PaginatedList";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/features/auth/auth";
@@ -22,8 +23,8 @@ export function FeedPage() {
     }
 
     return (
-        <section className="max-w-3xl space-y-6">
-            <h1 className="text-3xl font-semibold">Activité des membres suivis</h1>
+        <section className="mx-auto max-w-3xl space-y-8">
+            <PageHeader eyebrow="Votre réseau" title="Activité" description="Les derniers films vus par les membres que vous suivez." />
             <PaginatedList
                 key={session.cacheId}
                 query={feedQuery(session, page)}
@@ -32,7 +33,7 @@ export function FeedPage() {
                 label="Pagination de l’activité"
                 emptyMessage="Aucune activité des membres que vous suivez pour le moment."
                 emptyAction={
-                    <Button asChild variant="outline" size="sm">
+                    <Button asChild variant="outline" className="rounded-full">
                         <Link to="/users">Rechercher des membres</Link>
                     </Button>
                 }

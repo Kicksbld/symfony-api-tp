@@ -61,7 +61,7 @@ export function ProfileDetailsForm({ username, bio, saving, onSave }: ProfileDet
     return (
         <form aria-labelledby="profile-details-title" onSubmit={submit} noValidate>
             <fieldset disabled={saving} className="space-y-4">
-                <h2 id="profile-details-title" className="text-lg font-semibold">Pseudo et bio</h2>
+                <h2 id="profile-details-title" className="text-2xl font-bold">Pseudo et bio</h2>
                 {errors && errors.others.length > 0 && (
                     <Alert variant="destructive">
                         <AlertDescription>{errors.others.join(" ")}</AlertDescription>

@@ -30,7 +30,7 @@ export function Comments({ thread, ownerId, page, pathForPage, result, session, 
 
     return (
         <section aria-labelledby="comments" className="space-y-4">
-            <h2 id="comments" className="text-lg font-semibold">Commentaires{total !== undefined && ` (${total})`}</h2>
+            <h2 id="comments" className="text-2xl font-bold">Commentaires{total !== undefined && <span className="ml-2 text-muted-foreground">{total}</span>}</h2>
             {session === null ? (
                 <Button asChild variant="outline" size="sm">
                     <Link to={authPath("/login", returnPathFor(location))}>Se connecter pour commenter</Link>
@@ -52,7 +52,7 @@ export function Comments({ thread, ownerId, page, pathForPage, result, session, 
                 errorMessage="Impossible de charger les commentaires."
             >
                 {(comments) => (
-                    <ul className="divide-y border-y">
+                    <ul className="divide-y divide-white/5">
                         {comments.map((comment) => <CommentRow key={comment.id} comment={comment} thread={thread} ownerId={ownerId} session={session} />)}
                     </ul>
                 )}
