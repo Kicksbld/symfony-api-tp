@@ -25,7 +25,7 @@ export function AccountMenu({ session }: { session: Session }) {
         <DropdownMenu>
             <DropdownMenuTrigger className="flex h-10 items-center gap-2 rounded-full py-1 pr-2 pl-1 transition-colors hover:bg-white/10 focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none">
                 <UserAvatar username={username} className="size-8 text-xs" />
-                <span className="hidden max-w-32 truncate text-sm font-medium md:inline">{username}</span>
+                <span className="hidden max-w-32 truncate text-sm font-medium md:inline lg:hidden xl:inline">{username}</span>
                 <ChevronDown aria-hidden="true" className="size-4 text-muted-foreground" />
                 <span className="sr-only">Menu du compte</span>
             </DropdownMenuTrigger>

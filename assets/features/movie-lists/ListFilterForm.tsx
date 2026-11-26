@@ -40,7 +40,7 @@ export function ListFilterForm({ filters, onChange }: ListFilterFormProps) {
                     label="Pseudo de l'auteur (3 à 20 lettres, chiffres ou tirets bas)"
                     placeholder="Pseudo de l'auteur"
                     maxLength={20}
-                    className="basis-56"
+                    className="flex-1 basis-56"
                 />
             </div>
             <div className="flex flex-wrap items-center gap-2">

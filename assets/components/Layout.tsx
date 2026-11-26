@@ -32,7 +32,7 @@ export function Layout({ immersive = false }: LayoutProps) {
     }
 
     return (
-        <div className="flex min-h-screen flex-col bg-background text-foreground">
+        <div className="flex min-h-dvh flex-col overflow-x-clip bg-background text-foreground">
             <a
                 href="#content"
                 onClick={skipToContent}
@@ -49,7 +49,7 @@ export function Layout({ immersive = false }: LayoutProps) {
                         : "border-white/5 bg-background/75 backdrop-blur-xl",
                 )}
             >
-                <div className="mx-auto flex h-16 max-w-7xl items-center gap-4 px-4 sm:px-6 lg:gap-8">
+                <div className="mx-auto flex h-16 max-w-7xl items-center gap-3 px-4 sm:gap-4 sm:px-6 xl:gap-8">
                     <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
                         <SheetTrigger asChild>
                             <Button variant="ghost" size="icon-lg" className="-ml-2 size-11 lg:hidden" aria-label="Ouvrir le menu">
@@ -91,7 +91,7 @@ export function Layout({ immersive = false }: LayoutProps) {
                                 <Button asChild variant="ghost" className="hidden h-10 rounded-full px-4 sm:inline-flex">
                                     <Link to={loginPath}>Connexion</Link>
                                 </Button>
-                                <Button asChild className="hidden h-10 rounded-full bg-foreground px-4 text-background hover:bg-foreground/85 sm:inline-flex">
+                                <Button asChild className="hidden h-10 rounded-full bg-foreground px-4 text-background hover:bg-foreground/85 sm:inline-flex lg:hidden xl:inline-flex">
                                     <Link to={registerPath}>Créer un compte</Link>
                                 </Button>
                             </>

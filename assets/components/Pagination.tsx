@@ -17,17 +17,25 @@ const SIBLING_COUNT = 1;
 
 export function Pagination({ page, lastPage, pathForPage, label, disabled = false }: PaginationProps) {
     return (
-        <nav className="flex items-center justify-center gap-1 pt-2" aria-label={label}>
+        <nav className="flex items-center justify-center gap-0.5 pt-2 sm:gap-1" aria-label={label}>
             <PageLink to={pathForPage(page - 1)} disabled={disabled || page <= 1} label="Page précédente">
                 <ChevronLeft aria-hidden="true" />
             </PageLink>
             {visiblePages(page, lastPage).map((item, index) =>
                 item === null ? (
-                    <span key={`gap-${index}`} aria-hidden="true" className="w-6 text-center text-muted-foreground">
+                    <span key={`gap-${index}`} aria-hidden="true" className="w-4 text-center text-muted-foreground sm:w-6">
                         …
                     </span>
                 ) : (
-                    <PageLink key={item} to={pathForPage(item)} disabled={disabled} current={item === page} label={`Page ${item}`}>
+                    <PageLink
+                        key={item}
+                        to={pathForPage(item)}
+                        disabled={disabled}
+                        current={item === page}
+                        label={`Page ${item}`}
+                        // Sur mobile, on ne garde que la première, la courante et la dernière : la barre tient en largeur.
+                        className={hiddenOnMobile(item, page, lastPage) ? "hidden sm:inline-flex" : undefined}
+                    >
                         {item}
                     </PageLink>
                 ),
@@ -37,6 +45,10 @@ export function Pagination({ page, lastPage, pathForPage, label, disabled = fals
             </PageLink>
         </nav>
     );
+}
+
+function hiddenOnMobile(candidate: number, page: number, lastPage: number): boolean {
+    return candidate !== page && candidate !== 1 && candidate !== lastPage;
 }
 
 // null marque un trou entre deux groupes de pages.
@@ -59,14 +71,16 @@ type PageLinkProps = {
     disabled: boolean;
     current?: boolean;
     label: string;
+    className?: string;
     children: ReactNode;
 };
 
-function PageLink({ to, disabled, current = false, label, children }: PageLinkProps) {
+function PageLink({ to, disabled, current = false, label, className: extraClassName, children }: PageLinkProps) {
     const className = cn(
         buttonVariants({ variant: current ? "default" : "ghost", size: "icon-lg" }),
-        "rounded-full font-semibold tabular-nums",
+        "size-10 rounded-full font-semibold tabular-nums sm:size-9",
         disabled && !current && "pointer-events-none opacity-40",
+        extraClassName,
     );
 
     if (current) {

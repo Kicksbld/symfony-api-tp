@@ -18,7 +18,7 @@ export function HeroCarousel() {
     const { data: movies, isPending } = useQuery(featuredMoviesQuery());
 
     if (isPending) {
-        return <Skeleton className="h-[min(88vh,820px)] min-h-[560px] w-full rounded-none" aria-hidden="true" />;
+        return <Skeleton className="h-[520px] w-full rounded-none lg:h-[min(88vh,820px)]" aria-hidden="true" />;
     }
     // Sans film à mettre en avant (catalogue vide, erreur), l'accueil commence directement par les rangées.
     if (movies === undefined || movies.length === 0) {
@@ -48,10 +48,11 @@ function HeroSlides({ movies }: { movies: MovieSummary[] }) {
     const facts = [releaseYear(movie.releaseDate), detail?.runtime != null && formatRuntime(detail.runtime), ...(detail?.genres.slice(0, 2).map((genre) => genre.name) ?? [])].filter(Boolean);
 
     return (
+        // La hauteur est un minimum : sur mobile, le contenu peut la dépasser sans passer sous l'en-tête posé dessus.
         <section
             aria-roledescription="carrousel"
             aria-label="Films à la une"
-            className="relative isolate flex h-[min(88vh,820px)] min-h-[560px] items-end overflow-hidden"
+            className="relative isolate flex min-h-[520px] items-end overflow-hidden pt-24 lg:min-h-[min(88vh,820px)]"
         >
             <AnimatePresence initial={false}>
                 <motion.img
@@ -68,13 +69,13 @@ function HeroSlides({ movies }: { movies: MovieSummary[] }) {
             <div className="absolute inset-0 -z-10 bg-gradient-to-t from-background via-background/50 to-background/10" />
             <div className="absolute inset-0 -z-10 bg-gradient-to-r from-background/95 via-background/40 to-transparent" />
 
-            <div className="mx-auto grid w-full max-w-7xl gap-10 px-4 pb-14 sm:px-6 lg:grid-cols-[1fr_22rem] lg:items-end">
-                <motion.div key={movie.id} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }} className="max-w-2xl space-y-5" aria-live={playing ? "off" : "polite"}>
+            <div className="mx-auto grid w-full max-w-7xl gap-6 px-4 pb-10 sm:px-6 lg:grid-cols-[1fr_22rem] lg:items-end lg:gap-10 lg:pb-14">
+                <motion.div key={movie.id} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }} className="max-w-2xl space-y-4 sm:space-y-5" aria-live={playing ? "off" : "polite"}>
                     <p className="eyebrow text-primary">Tendance n° {index + 1}</p>
                     <h2 className="display">{movie.title}</h2>
                     {facts.length > 0 && <p className="text-sm font-medium text-foreground/80">{facts.join(" · ")}</p>}
                     {detail?.overview != null && detail.overview !== "" && (
-                        <p className="line-clamp-3 max-w-xl text-base leading-relaxed text-foreground/75">{detail.overview}</p>
+                        <p className="line-clamp-2 max-w-xl text-base leading-relaxed text-foreground/75 sm:line-clamp-3">{detail.overview}</p>
                     )}
                     <div className="flex flex-wrap items-center gap-3 pt-1">
                         <Button asChild size="lg" className="h-11 rounded-full px-5 text-base">
@@ -88,7 +89,7 @@ function HeroSlides({ movies }: { movies: MovieSummary[] }) {
                 </motion.div>
 
                 <div
-                    className="rounded-2xl border border-white/10 bg-background/55 p-4 backdrop-blur-xl"
+                    className="rounded-2xl border border-white/10 bg-background/55 p-3 backdrop-blur-xl lg:p-4"
                     onPointerEnter={() => setPanelActive(true)}
                     onPointerLeave={() => setPanelActive(false)}
                     onFocus={() => setPanelActive(true)}
@@ -98,7 +99,7 @@ function HeroSlides({ movies }: { movies: MovieSummary[] }) {
                         }
                     }}
                 >
-                    <div className="mb-3 flex items-center justify-between">
+                    <div className="mb-2 flex items-center justify-between lg:mb-3">
                         <p className="eyebrow">À la une</p>
                         <div className="flex items-center gap-2">
                             <span className="text-xs font-semibold tabular-nums text-muted-foreground">
@@ -115,19 +116,21 @@ function HeroSlides({ movies }: { movies: MovieSummary[] }) {
                             </Button>
                         </div>
                     </div>
-                    <ol className="space-y-1">
+                    {/* Sur mobile, chaque film n'est plus qu'une barre de progression : la liste avec vignettes prendrait tout l'écran. */}
+                    <ol className="grid grid-cols-5 gap-1.5 lg:block lg:space-y-1">
                         {movies.map((candidate, position) => (
                             <li key={candidate.id}>
                                 <button
                                     type="button"
                                     aria-current={position === index ? "true" : undefined}
+                                    aria-label={candidate.title}
                                     onClick={() => setIndex(position)}
-                                    className="group flex w-full items-center gap-3 rounded-lg p-1.5 text-left transition-colors hover:bg-white/10 focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none aria-[current=true]:bg-white/10"
+                                    className="group flex w-full items-center gap-3 rounded-lg px-0.5 py-2.5 text-left lg:p-1.5 transition-colors hover:bg-white/10 focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none aria-[current=true]:bg-white/10"
                                 >
-                                    <img src={candidate.backdropUrl ?? undefined} alt="" className="aspect-video w-16 shrink-0 rounded-md object-cover" loading="lazy" />
+                                    <img src={candidate.backdropUrl ?? undefined} alt="" className="hidden aspect-video w-16 shrink-0 rounded-md object-cover lg:block" loading="lazy" />
                                     <span className="min-w-0 flex-1">
-                                        <span className="line-clamp-1 text-sm font-semibold">{candidate.title}</span>
-                                        <span className="mt-1.5 block h-0.5 overflow-hidden rounded-full bg-white/10">
+                                        <span aria-hidden="true" className="hidden text-sm font-semibold lg:line-clamp-1">{candidate.title}</span>
+                                        <span className="block h-1 lg:mt-1.5 lg:h-0.5 overflow-hidden rounded-full bg-white/10">
                                             {position === index && (
                                                 <span
                                                     key={index}

@@ -88,8 +88,8 @@ function MovieSheet({ movie }: { movie: MovieDetail }) {
                     <div className="absolute inset-0 bg-gradient-to-t from-background via-background/70 to-background/10" />
                     <div className="absolute inset-0 bg-gradient-to-r from-background/80 via-transparent to-transparent" />
                 </div>
-                <div className="mx-auto grid max-w-7xl gap-8 px-4 pt-[min(38vh,340px)] sm:px-6 md:grid-cols-[15rem_1fr] md:items-end lg:grid-cols-[17rem_1fr]">
-                    <MoviePoster movie={movie} alt={`Affiche de ${movie.title}`} className="mx-auto max-w-56 rounded-xl shadow-2xl ring-1 ring-white/15 md:max-w-none" />
+                <div className="mx-auto grid max-w-7xl gap-6 px-4 pt-[max(6rem,min(38vh,340px))] sm:gap-8 sm:px-6 md:grid-cols-[15rem_1fr] md:items-end lg:grid-cols-[17rem_1fr]">
+                    <MoviePoster movie={movie} alt={`Affiche de ${movie.title}`} className="mx-auto max-w-44 rounded-xl shadow-2xl ring-1 ring-white/15 sm:max-w-56 md:max-w-none" />
                     <div className="space-y-4 pb-2">
                         <h1 className="display">{movie.title}</h1>
                         <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-foreground/80">
@@ -125,8 +125,14 @@ function MovieSheet({ movie }: { movie: MovieDetail }) {
                 </div>
             </header>
 
-            <div className="mx-auto grid max-w-7xl gap-12 px-4 py-12 sm:px-6 lg:grid-cols-[1fr_20rem]">
-                <div className="min-w-0 space-y-14">
+            {/* Sur mobile, le journal et le suivi viennent juste sous l'en-tête, les notes et plateformes après le contenu.
+                Sur grand écran, ils forment la colonne de droite. */}
+            <div className="mx-auto grid max-w-7xl gap-x-12 gap-y-8 px-4 py-10 sm:px-6 lg:grid-cols-[1fr_20rem] lg:grid-rows-[auto_1fr] lg:gap-y-4 lg:py-12">
+                <div className="space-y-4 rounded-2xl border border-white/10 bg-card/70 p-4 backdrop-blur lg:col-start-2 lg:row-start-1">
+                    <LogMovieButton movie={movie} className="w-full" />
+                    <MovieRelationshipControls movieId={movie.id} />
+                </div>
+                <div className="min-w-0 space-y-14 lg:col-start-1 lg:row-span-2 lg:row-start-1">
                     {movie.overview !== null && movie.overview !== "" && (
                         <section aria-labelledby="synopsis-title" className="space-y-3">
                             <h2 id="synopsis-title" className="eyebrow">
@@ -140,11 +146,7 @@ function MovieSheet({ movie }: { movie: MovieDetail }) {
                     <MovieReviews movieId={movie.id} />
                     <ProductionSection movie={movie} />
                 </div>
-                <aside className="space-y-4 lg:sticky lg:top-24 lg:self-start">
-                    <div className="space-y-4 rounded-2xl border border-white/10 bg-card/70 p-4 backdrop-blur">
-                        <LogMovieButton movie={movie} className="w-full" />
-                        <MovieRelationshipControls movieId={movie.id} />
-                    </div>
+                <aside className="space-y-4 lg:col-start-2 lg:row-start-2 lg:self-start">
                     <div className="rounded-2xl border border-white/10 bg-card/70 p-4">
                         <MovieRatings movieId={movie.id} />
                     </div>

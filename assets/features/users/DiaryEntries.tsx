@@ -40,7 +40,7 @@ function DiaryEntryRow({ entry }: { entry: LogEntry }) {
     const day = entry.watchedOn?.slice(8, 10);
 
     return (
-        <article className="flex items-center gap-4 py-3">
+        <article className="flex flex-wrap items-center gap-x-4 gap-y-2 py-3">
             <time dateTime={entry.watchedOn ?? undefined} className="w-10 shrink-0 text-center font-heading text-2xl font-extrabold text-muted-foreground tabular-nums">
                 {day}
             </time>
@@ -76,7 +76,10 @@ function DiaryEntryRow({ entry }: { entry: LogEntry }) {
                     )}
                 </p>
             </div>
-            <LogEntryActions entry={entry} />
+            {/* Sur mobile, les actions passent sous la ligne, alignées sur le titre (jour + affiche + écarts = 7,5rem). */}
+            <div className="w-full pl-[7.5rem] sm:w-auto sm:pl-0">
+                <LogEntryActions entry={entry} />
+            </div>
         </article>
     );
 }

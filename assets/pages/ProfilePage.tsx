@@ -68,7 +68,7 @@ export function ProfilePage() {
             <ProfileHeader profile={profile} />
             <FollowSheet profile={profile} />
             <section className="space-y-8">
-                <nav aria-label="Onglets du profil" className="flex gap-1 overflow-x-auto rounded-full border border-white/5 bg-white/[0.03] p-1 sm:w-fit">
+                <nav aria-label="Onglets du profil" className="flex gap-1 overflow-x-auto [scrollbar-width:none] rounded-full border border-white/5 bg-white/[0.03] p-1 sm:w-fit">
                     {TABS.map((tab) => (
                         <NavLink
                             key={tab.path}

@@ -308,6 +308,8 @@ Dans mon journal, chaque entrée a les boutons « Modifier » et « Supprimer »
 
 Le thème sombre utilise un gris-bleu pour les fonds et les cartes, et garde le vert comme couleur d'action. Les formulaires partagent les mêmes briques ([`assets/components/form/`](assets/components/form)) : libellé visible, mention « Facultatif », aide et compteur de caractères sous le champ, erreur juste en dessous, bascules en pastilles et choix exclusifs en cartes (visibilité et type d'une liste).
 
+Sur mobile, le héros de l'accueil grandit avec son contenu et réserve la place de l'en-tête posé dessus, et ses 5 films deviennent une rangée de barres de progression cliquables. La fiche film place le journal et le suivi juste sous l'en-tête, avant le synopsis. La pagination ne garde que la première page, la page courante et la dernière, avec des boutons de 40 px. Entre 1024 et 1280 px, l'en-tête masque le bouton « Créer un compte » et le pseudo du menu de compte pour que la navigation tienne sur une ligne.
+
 Les animations restent légères : entrée douce à chaque nouvelle page, apparition décalée des cartes dans les grilles, rebond du cœur quand on aime. Elles utilisent toutes la même courbe de décélération et sont coupées quand le système demande de réduire les animations.
 
 Les couleurs, polices et rayons viennent d'un thème [TweakCN](https://tweakcn.com), appliqué dans [`assets/app.css`](assets/app.css) avec :
