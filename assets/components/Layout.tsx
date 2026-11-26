@@ -36,12 +36,12 @@ export function Layout() {
                     <Link to="/" className="rounded-md text-lg font-semibold text-primary focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none">
                         Letterboxd
                     </Link>
-                    <MainNavigation layout="bar" className="hidden md:flex" />
+                    <MainNavigation layout="bar" className="hidden lg:flex" />
                     <Button
                         ref={menuButtonRef}
                         variant="ghost"
                         size="icon-lg"
-                        className="size-11 md:hidden"
+                        className="size-11 lg:hidden"
                         aria-expanded={menuOpen}
                         aria-controls="mobile-navigation"
                         aria-label={menuOpen ? "Fermer le menu" : "Ouvrir le menu"}
@@ -54,7 +54,7 @@ export function Layout() {
                     <MainNavigation
                         id="mobile-navigation"
                         layout="panel"
-                        className="border-t px-4 py-2 md:hidden"
+                        className="border-t px-4 py-2 lg:hidden"
                         onNavigate={() => setMenuOpen(false)}
                     />
                 )}

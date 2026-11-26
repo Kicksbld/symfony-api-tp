@@ -42,15 +42,20 @@ export function MainNavigation({ layout, id, className, onNavigate }: MainNaviga
                     Connexion
                 </NavLink>
             ) : (
-                <AccountControls
-                    layout={layout}
-                    session={session}
-                    onLogout={() => {
-                        logout();
-                        onNavigate?.();
-                    }}
-                    onNavigate={onNavigate}
-                />
+                <>
+                    <NavLink to="/feed" className={navigationItemClassName(layout)} onClick={onNavigate}>
+                        Activité
+                    </NavLink>
+                    <AccountControls
+                        layout={layout}
+                        session={session}
+                        onLogout={() => {
+                            logout();
+                            onNavigate?.();
+                        }}
+                        onNavigate={onNavigate}
+                    />
+                </>
             )}
         </nav>
     );

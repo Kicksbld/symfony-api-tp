@@ -16,6 +16,7 @@ export function feedQuery(session: Session, page: number) {
     return queryOptions({
         queryKey: [...feedKey(session), { page }],
         queryFn: ({ signal }) => apiFetch<Paginated<FeedEntry>>(`/feed?${params}`, { signal, session }),
+        networkMode: "always",
         placeholderData: keepPreviousData,
     });
 }
