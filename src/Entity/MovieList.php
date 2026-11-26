@@ -22,6 +22,8 @@ class MovieList
 
     public const int DESCRIPTION_MAX_LENGTH = 1000;
 
+    public const int PREVIEW_MOVIES_COUNT = 4;
+
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
@@ -134,6 +136,19 @@ class MovieList
         $this->public = $public;
 
         return $this;
+    }
+
+    /**
+     * @return list<Movie>
+     */
+    #[Groups(['movieList:read'])]
+    #[Context(normalizationContext: ['groups' => ['movie:list']])]
+    public function getPreviewMovies(): array
+    {
+        return array_map(
+            static fn (MovieListItem $item): Movie => $item->getMovie(),
+            \array_slice($this->getOrderedItems(), 0, self::PREVIEW_MOVIES_COUNT),
+        );
     }
 
     #[Groups(['movieList:read'])]

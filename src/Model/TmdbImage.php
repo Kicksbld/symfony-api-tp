@@ -11,6 +11,8 @@ final class TmdbImage
 
     public const string POSTER_SIZE = 'w500';
 
+    public const string BACKDROP_SIZE = 'w1280';
+
     public const string PROFILE_SIZE = 'w185';
 
     public const string LOGO_SIZE = 'w92';

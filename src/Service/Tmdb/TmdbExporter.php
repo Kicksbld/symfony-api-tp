@@ -51,6 +51,7 @@ final readonly class TmdbExporter
             'release_date' => $movie->getReleaseDate()?->format('Y-m-d'),
             'runtime' => $movie->getRuntime(),
             'poster_path' => $movie->getPosterPath(),
+            'backdrop_path' => $movie->getBackdropPath(),
             'popularity' => $movie->getPopularity(),
             'vote_average' => $movie->getVoteAverage(),
             'vote_count' => $movie->getVoteCount(),

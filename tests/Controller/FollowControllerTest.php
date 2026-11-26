@@ -132,9 +132,11 @@ final class FollowControllerTest extends ApiTestCase
         self::assertResponseIsSuccessful();
         self::assertSame(2, $followers['total']);
         self::assertSame(2, $followers['lastPage']);
-        self::assertSame([['id' => $ariadne->getId(), 'username' => 'ariadne']], $followers['items']);
+        self::assertSame([$ariadne->getId()], array_column($followers['items'], 'id'));
+        self::assertSame(['id', 'username', 'bio', 'favorites', 'watchedCount', 'followersCount', 'followingCount', 'followedByMe'], array_keys($followers['items'][0]));
 
         $following = $this->requestJson('GET', '/api/users/cobb/following');
         self::assertSame(['saito'], array_column($following['items'], 'username'));
+        self::assertSame(1, $following['items'][0]['followersCount']);
     }
 }

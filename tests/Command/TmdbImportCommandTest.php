@@ -22,6 +22,7 @@ final class TmdbImportCommandTest extends TmdbCommandTestCase
         self::assertSame('2010-07-15', $inception->getReleaseDate()->format('Y-m-d'));
         self::assertSame(148, $inception->getRuntime());
         self::assertSame('/aej3LRUga5rhgkmRP6XMFw3ejbl.jpg', $inception->getPosterPath());
+        self::assertSame('/8ZTVqvKDQ8emSGUEMjsS4yHAwrp.jpg', $inception->getBackdropPath());
         self::assertSame(53.9354, $inception->getPopularity());
         self::assertSame(8.373, $inception->getVoteAverage());
         self::assertSame(40812, $inception->getVoteCount());

@@ -7,6 +7,7 @@ export type MovieList = {
     description: string | null;
     public: boolean;
     ranked: boolean;
+    previewMovies: MovieSummary[];
     itemCount: number;
     likeCount: number;
     likedByMe: boolean;

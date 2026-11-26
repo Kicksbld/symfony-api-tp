@@ -12,6 +12,7 @@ use App\Repository\MovieListRepository;
 use App\Repository\MovieRelationshipRepository;
 use App\Repository\UserRepository;
 use App\Serializer\SocialStateNormalizer;
+use App\Service\FollowService;
 use App\Service\LikeService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -31,17 +32,19 @@ final class UserController extends AbstractController
         private readonly MovieRelationshipRepository $movieRelationshipRepository,
         private readonly MovieListRepository $movieListRepository,
         private readonly LikeService $likeService,
+        private readonly FollowService $followService,
     ) {
     }
 
     #[Route('', name: 'list', methods: ['GET'])]
     public function list(
+        #[CurrentUser] ?User $viewer,
         #[MapQueryString(validationFailedStatusCode: Response::HTTP_UNPROCESSABLE_ENTITY)] UserSearchDto $userSearchDto = new UserSearchDto(),
         #[MapQueryString(validationFailedStatusCode: Response::HTTP_UNPROCESSABLE_ENTITY)] PaginationDto $paginationDto = new PaginationDto(),
     ): JsonResponse {
         $users = new Paginator()->paginate($this->userRepository->createSearchQueryBuilder($userSearchDto), $paginationDto);
 
-        return $this->json($users, context: ['groups' => ['paginate', 'user:list']]);
+        return $this->membersResponse($users, $viewer);
     }
 
     #[Route('/{username:user}', name: 'show', methods: ['GET'])]
@@ -49,7 +52,7 @@ final class UserController extends AbstractController
     {
         return $this->json($user, context: [
             'groups' => ['user:read'],
-            SocialStateNormalizer::FOLLOWED_BY_ME => null !== $viewer && $viewer !== $user && $viewer->isFollowing($user),
+            SocialStateNormalizer::FOLLOWED_IDS => $this->followService->getFollowedUserIdSet($viewer, $user),
         ]);
     }
 
@@ -116,20 +119,31 @@ final class UserController extends AbstractController
     #[Route('/{username:user}/followers', name: 'followers', methods: ['GET'])]
     public function followers(
         User $user,
+        #[CurrentUser] ?User $viewer,
         #[MapQueryString(validationFailedStatusCode: Response::HTTP_UNPROCESSABLE_ENTITY)] PaginationDto $paginationDto = new PaginationDto(),
     ): JsonResponse {
         $followers = new Paginator()->paginate($this->userRepository->createFollowersQueryBuilder($user), $paginationDto);
 
-        return $this->json($followers, context: ['groups' => ['paginate', 'user:list']]);
+        return $this->membersResponse($followers, $viewer);
     }
 
     #[Route('/{username:user}/following', name: 'following', methods: ['GET'])]
     public function following(
         User $user,
+        #[CurrentUser] ?User $viewer,
         #[MapQueryString(validationFailedStatusCode: Response::HTTP_UNPROCESSABLE_ENTITY)] PaginationDto $paginationDto = new PaginationDto(),
     ): JsonResponse {
         $following = new Paginator()->paginate($this->userRepository->createFollowingQueryBuilder($user), $paginationDto);
 
-        return $this->json($following, context: ['groups' => ['paginate', 'user:list']]);
+        return $this->membersResponse($following, $viewer);
+    }
+
+    // Les listes de membres servent des cartes complètes (bio, favoris, compteurs), comme le profil public.
+    private function membersResponse(Paginator $members, ?User $viewer): JsonResponse
+    {
+        return $this->json($members, context: [
+            'groups' => ['paginate', 'user:read'],
+            SocialStateNormalizer::FOLLOWED_IDS => $this->followService->getFollowedUserIdSet($viewer, ...$members->items),
+        ]);
     }
 }

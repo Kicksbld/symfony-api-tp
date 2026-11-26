@@ -33,7 +33,7 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
 
     public function createSearchQueryBuilder(UserSearchDto $userSearchDto): QueryBuilder
     {
-        $queryBuilder = $this->createQueryBuilder('user')->orderBy('user.username', 'ASC');
+        $queryBuilder = $this->createMemberQueryBuilder()->orderBy('user.username', 'ASC');
 
         // _ est autorisé dans un username mais sert de joker à LIKE : on l'échappe pour le chercher tel quel.
         if (null !== $userSearchDto->q) {
@@ -47,7 +47,7 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
 
     public function createFollowersQueryBuilder(User $user): QueryBuilder
     {
-        return $this->createQueryBuilder('user')
+        return $this->createMemberQueryBuilder()
             ->innerJoin('user.following', 'followed')
             ->andWhere('followed = :user')
             ->setParameter('user', $user)
@@ -56,10 +56,37 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
 
     public function createFollowingQueryBuilder(User $user): QueryBuilder
     {
-        return $this->createQueryBuilder('user')
+        return $this->createMemberQueryBuilder()
             ->innerJoin('user.followers', 'follower')
             ->andWhere('follower = :user')
             ->setParameter('user', $user)
             ->orderBy('user.username', 'ASC');
+    }
+
+    /**
+     * @param list<int> $ids
+     *
+     * @return list<int>
+     */
+    public function findFollowedIds(User $follower, array $ids): array
+    {
+        return $this->createQueryBuilder('user')
+            ->select('followed.id')
+            ->innerJoin('user.following', 'followed')
+            ->andWhere('user = :follower')
+            ->andWhere('followed.id IN (:ids)')
+            ->setParameter('follower', $follower)
+            ->setParameter('ids', $ids)
+            ->getQuery()
+            ->getSingleColumnResult();
+    }
+
+    // Les cartes de membres affichent les favoris : on les joint pour ne pas faire une requête par membre.
+    private function createMemberQueryBuilder(): QueryBuilder
+    {
+        return $this->createQueryBuilder('user')
+            ->addSelect('favoriteMovie', 'movie')
+            ->leftJoin('user.favoriteMovies', 'favoriteMovie')
+            ->leftJoin('favoriteMovie.movie', 'movie');
     }
 }

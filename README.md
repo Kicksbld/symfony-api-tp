@@ -419,7 +419,7 @@ Paramètres de `GET /api/movies`, tous facultatifs et combinables :
 | `region` | `region=BE` | Pays de diffusion pour le filtre `provider` : `FR` (par défaut), `BE`, `CH`, `CA` ou `US` |
 | `sort` | `sort=title` | `popular` (par défaut, score de popularité TMDB), `trending` (films les plus journalisés par les membres ces 7 derniers jours, puis par popularité TMDB à égalité), `rating` (moyenne des membres, films sans note à la fin), `releaseDate` (plus récents d'abord) ou `title` |
 
-La liste renvoie une vue allégée (titre, titre original, date de sortie, moyenne des membres sur 5 `averageRating`, affiche). La fiche `GET /api/movies/{id}` ajoute le synopsis, la durée en minutes, le nombre de notes des membres (`ratingCount`), la note moyenne TMDB sur 10 (`voteAverage`, à titre indicatif), les genres, les studios, les pays, la distribution avec les rôles (`cast`) et l'équipe avec les postes (`crew`). Les images (`posterUrl`, `profileUrl`, `logoUrl`) sont des URL complètes vers TMDB.
+La liste renvoie une vue allégée (titre, titre original, date de sortie, moyenne des membres sur 5 `averageRating`, affiche). La fiche `GET /api/movies/{id}` ajoute le synopsis, la durée en minutes, le nombre de notes des membres (`ratingCount`), la note moyenne TMDB sur 10 (`voteAverage`, à titre indicatif), les genres, les studios, les pays, la distribution avec les rôles (`cast`) et l'équipe avec les postes (`crew`). La liste et la fiche donnent aussi l'image de fond du film (`backdropUrl`, en 1280 pixels de large), utilisée par les grands bandeaux du front. Les images (`posterUrl`, `backdropUrl`, `profileUrl`, `logoUrl`) sont des URL complètes vers TMDB.
 
 ### Personnes et studios
 
@@ -509,6 +509,9 @@ Une liste a un nom, une description facultative, et peut être classée (`ranked
   "description": null,
   "ranked": false,
   "public": true,
+  "previewMovies": [
+    { "id": 1, "title": "Inception", "originalTitle": "Inception", "releaseDate": "2010-07-15", "averageRating": 4.2, "posterUrl": "https://image.tmdb.org/t/p/w500/...", "backdropUrl": "https://image.tmdb.org/t/p/w1280/..." }
+  ],
   "itemCount": 1,
   "likeCount": 4,
   "commentCount": 2,
@@ -517,7 +520,7 @@ Une liste a un nom, une description facultative, et peut être classée (`ranked
 }
 ```
 
-`likedByMe` indique si le membre connecté a liké la liste. Le champ apparaît aussi sur chaque liste de `GET /api/lists` et `GET /api/users/{username}/lists`. Sans token, il vaut `false`.
+`previewMovies` contient les 4 premiers films de la liste, dans son ordre, pour afficher un aperçu des affiches. `likedByMe` indique si le membre connecté a liké la liste. Le champ apparaît aussi sur chaque liste de `GET /api/lists` et `GET /api/users/{username}/lists`. Sans token, il vaut `false`.
 
 Les films de la liste sont dans `GET /api/lists/{id}/items`.
 
@@ -620,7 +623,7 @@ Le journal (`/diary`) ne contient que les entrées datées (`watchedOn`), de la 
 
 `POST /api/users/{username}/followers` suit un membre et renvoie une `201`, par exemple `{ "id": 3, "username": "jane_doe", "followedByMe": true }`. `DELETE` sur la même route arrête de le suivre et renvoie une `204` sans contenu. Suivre un membre déjà suivi renvoie une `409`, se suivre soi-même une `422`, et ne plus suivre un membre qu'on ne suit pas une `404`.
 
-`/followers` et `/following` renvoient des membres au même format que `GET /api/users` (`id` et `username`).
+`GET /api/users`, `/followers` et `/following` renvoient chaque membre au même format que le profil public (bio, favoris, compteurs et `followedByMe`), pour afficher des cartes complètes sans une requête par membre.
 
 `GET /api/feed` renvoie les entrées de journal des membres que je suis, au même format que `GET /api/log-entries` et dans le même ordre : de la dernière entrée créée à la plus ancienne, quelle que soit la date de visionnage. Mes propres entrées n'y apparaissent pas.
 

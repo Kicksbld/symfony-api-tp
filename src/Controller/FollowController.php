@@ -27,7 +27,7 @@ final class FollowController extends AbstractController
 
         return $this->json($followed, Response::HTTP_CREATED, context: [
             'groups' => ['user:list'],
-            SocialStateNormalizer::FOLLOWED_BY_ME => true,
+            SocialStateNormalizer::FOLLOWED_IDS => [$followed->getId() => true],
         ]);
     }
 

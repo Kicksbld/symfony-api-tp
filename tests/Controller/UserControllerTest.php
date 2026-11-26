@@ -69,7 +69,7 @@ final class UserControllerTest extends ApiTestCase
         $data = $this->requestJson('GET', '/api/users/cobb');
 
         self::assertSame([$pulpFictionId, $inceptionId], array_column($data['favorites'], 'id'));
-        self::assertSame(['id', 'title', 'originalTitle', 'releaseDate', 'averageRating', 'posterUrl'], array_keys($data['favorites'][0]));
+        self::assertSame(['id', 'title', 'originalTitle', 'releaseDate', 'averageRating', 'posterUrl', 'backdropUrl'], array_keys($data['favorites'][0]));
         self::assertSame(2, $data['watchedCount']);
     }
 
@@ -84,7 +84,28 @@ final class UserControllerTest extends ApiTestCase
         self::assertResponseIsSuccessful();
         self::assertSame(2, $data['total']);
         self::assertSame(2, $data['lastPage']);
-        self::assertSame([['id' => $arthur->getId(), 'username' => 'arthur_films']], $data['items']);
+        self::assertSame([[
+            'id' => $arthur->getId(),
+            'username' => 'arthur_films',
+            'bio' => null,
+            'favorites' => [],
+            'watchedCount' => 0,
+            'followersCount' => 0,
+            'followingCount' => 0,
+            'followedByMe' => false,
+        ]], $data['items']);
+    }
+
+    public function testMemberSearchTellsWhichMembersTheViewerFollows(): void
+    {
+        UserFactory::createOne(['username' => 'arthur']);
+        UserFactory::createOne(['username' => 'ariadne']);
+        $this->loginAs(UserFactory::createOne(['username' => 'cobb']));
+        $this->requestJson('POST', '/api/users/arthur/followers');
+
+        $data = $this->requestJson('GET', '/api/users?q=ar');
+
+        self::assertSame(['ariadne' => false, 'arthur' => true], array_column($data['items'], 'followedByMe', 'username'));
     }
 
     public function testSearchMatchesAnUnderscoreLiterally(): void

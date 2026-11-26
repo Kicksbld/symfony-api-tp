@@ -1,7 +1,7 @@
 # Les identifiants (films, genres, studios, personnes, plateformes) dépendent de la base : les récupérer d'abord avec
 # GET /api/movies, GET /api/genres, GET /api/people et GET /api/watch-providers, puis les reporter dans les requêtes.
 
-### Liste des films, les plus populaires d'abord (200)
+### Liste des films, les plus populaires d'abord, avec affiche et image de fond (200)
 GET {{baseURL}}/api/movies
 
 ### Deuxième page de 10 films (200)
