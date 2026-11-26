@@ -13,6 +13,7 @@ type PaginatedListProps<T> = {
     pathForPage: (page: number) => To;
     label: string;
     emptyMessage: string;
+    emptyAction?: ReactNode;
     errorMessage: string;
     children: (items: T[], total: number) => ReactNode;
 };
@@ -34,6 +35,7 @@ export function PaginatedResults<T>({
     pathForPage,
     label,
     emptyMessage,
+    emptyAction,
     errorMessage,
     children,
 }: PaginatedListProps<T> & { result: UseQueryResult<Paginated<T>>; keepPreviousPage: boolean }) {
@@ -70,7 +72,9 @@ export function PaginatedResults<T>({
             {!showingCurrentPage && isFetching && (
                 <p role="status" className="text-sm text-muted-foreground">Mise à jour des résultats…</p>
             )}
-            {showingCurrentPage && visiblePage.total === 0 && <EmptyState message={emptyMessage} />}
+            {requestError === null && showingCurrentPage && visiblePage.total === 0 && (
+                <EmptyState message={emptyMessage}>{emptyAction}</EmptyState>
+            )}
             {showingCurrentPage && visiblePage.total > 0 && page > visiblePage.lastPage && (
                 <EmptyState message={`La page ${page} n'existe pas, la liste s'arrête à la page ${visiblePage.lastPage}.`}>
                     <Button asChild variant="outline" size="sm">

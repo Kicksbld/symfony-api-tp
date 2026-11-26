@@ -68,9 +68,15 @@ export function useFollowMutation(profile: PublicProfile, session: Session) {
             // Une réponse perdue ou un changement dans un autre onglet peut aussi rendre les données obsolètes.
             const reads = refresh.map((queryKey) => client.invalidateQueries({ queryKey }));
             if (error === null && isCurrentSession(session)) {
-                reads.push(client.invalidateQueries({ queryKey: feedKey(session) }).then(() => {
+                const queryKey = feedKey(session);
+                reads.push(client.cancelQueries({ queryKey }).then(async () => {
+                    if (!isCurrentSession(session)) {
+                        return;
+                    }
+
+                    await client.invalidateQueries({ queryKey });
                     if (isCurrentSession(session)) {
-                        return client.prefetchQuery(feedQuery(session, 1));
+                        await client.prefetchQuery(feedQuery(session, 1));
                     }
                 }));
             }

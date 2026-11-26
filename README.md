@@ -214,6 +214,18 @@ Pour vérifier le parcours avec les données de démonstration :
 4. Avec le réseau rétabli, publier un commentaire sur une entrée d’`arthur`, le modifier et vérifier le compteur dans le détail puis dans le fil. Vérifier que Jane peut supprimer son commentaire. Publier un second commentaire, puis ouvrir l’entrée avec `leo@example.com` et vérifier que Léo ne peut ni modifier ni supprimer le commentaire de Jane. Avec `arthur@example.com`, vérifier qu’Arthur peut le supprimer, puis vérifier que le compteur diminue.
 5. Avec au moins 21 critiques, passer à la page 2 puis recharger. Vérifier que le numéro de page ainsi que les éventuels filtres restent dans l’adresse. Avec les seules données de démo, `?page=2` permet de vérifier le retour à la dernière page disponible.
 
+#### Consulter l’activité des membres suivis
+
+Le lien « Activité » ouvre `/feed` après connexion. Les entrées de `GET /api/feed` sont affichées par 20 dans l’ordre de création, de la plus récente à la plus ancienne. Chaque carte permet d’ouvrir le film, le profil de l’auteur ou le détail du visionnage. Les critiques à spoilers restent masquées jusqu’au clic sur « Afficher la critique ».
+
+Pour vérifier le parcours avec les données de démonstration :
+
+1. Sans compte, ouvrir `/feed` et vérifier la redirection vers la connexion. Se connecter avec `jane@example.com` et `demo1234`, puis vérifier le retour au flux. Sur les données de démo initiales, seules les entrées d’`arthur` et de `camille` apparaissent. Vérifier les trois liens d’une carte, le masquage de la critique de `camille` avant de la révéler et l’accès à « Activité » depuis le menu compact.
+2. Depuis « Membres », suivre `leo` et revenir au flux par « Activité ». Vérifier que ses entrées apparaissent sans recharger. Se désabonner, puis revenir au flux pour vérifier qu’elles ont disparu.
+3. Se déconnecter depuis le flux et vérifier le retour à la connexion et la disparition des cartes. Se connecter avec `leo@example.com` et `demo1234`. Sur les données de démo initiales, seules les entrées de `camille` doivent apparaître. Si la critique à spoilers a été révélée avec Jane, vérifier qu’elle est de nouveau masquée.
+4. Avec un nouveau compte, ouvrir « Activité » et vérifier le message de flux vide et son lien vers la recherche de membres. Sur la page « Membres », attendre au moins 30 secondes pour que la prochaine ouverture du flux relance la requête, puis couper le réseau et cliquer sur « Activité ». Vérifier le message d’erreur. Rétablir le réseau et cliquer sur « Réessayer » pour retrouver le message de flux vide.
+5. Avec au moins 21 entrées publiées par les membres suivis, ouvrir la page suivante et recharger `/feed?page=2`. Vérifier que les entrées se suivent dans l’ordre fourni par l’API. Sur les données de démo initiales, ouvrir `/feed?page=2` pour vérifier que la page propose de revenir à la dernière page disponible.
+
 #### Découvrir les listes
 
 Le lien « Listes » de la navigation ouvre l'annuaire public `/lists`, lu avec `GET /api/lists`. Le formulaire combine le nom de la liste (`q`), le pseudo de son auteur (`user`) et un film choisi dans le catalogue (`movie`). Les listes les plus récentes sont affichées par défaut. Le tri « Les plus populaires » (`sort=popular`) affiche les listes par nombre de mentions J'aime. Les filtres et la pagination restent dans l'adresse, par exemple `/lists?user=jane_doe&sort=popular&page=2`.

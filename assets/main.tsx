@@ -6,6 +6,7 @@ import { Layout } from "@/components/Layout";
 import { AuthProvider } from "@/features/auth/AuthProvider";
 import { CompanyPage } from "@/pages/CompanyPage";
 import { EditProfilePage } from "@/pages/EditProfilePage";
+import { FeedPage } from "@/pages/FeedPage";
 import { HomePage } from "@/pages/HomePage";
 import { ListPage } from "@/pages/ListPage";
 import { ListsPage } from "@/pages/ListsPage";
@@ -49,6 +50,7 @@ createRoot(document.getElementById("root")!).render(
                                 <Route path="following" element={<ProfileFollowTab list="following" />} />
                             </Route>
                             <Route path="reviews" element={<ReviewsPage />} />
+                            <Route path="feed" element={<FeedPage />} />
                             <Route path="log-entries/:id" element={<LogEntryPage />} />
                             <Route path="login" element={<LoginPage />} />
                             <Route path="register" element={<RegisterPage />} />
