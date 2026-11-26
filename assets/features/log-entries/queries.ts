@@ -20,7 +20,7 @@ async function refreshLogEntryViews(queryClient: QueryClient, session: Session, 
     await Promise.all([
         queryClient.invalidateQueries({ queryKey: relationshipQuery(session, movieId).queryKey }),
         queryClient.invalidateQueries({ queryKey: movieQuery(movieId).queryKey }),
-        queryClient.invalidateQueries({ queryKey: userQueriesKey(session.user.username) }),
+        ...[session, null].map((viewer) => queryClient.invalidateQueries({ queryKey: userQueriesKey(session.user.username, viewer) })),
     ]);
 }
 

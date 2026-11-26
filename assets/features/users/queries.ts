@@ -4,11 +4,13 @@ import { diaryFilterParams, type DiaryFilters } from "@/features/users/diary-sea
 import { apiFetch } from "@/lib/api";
 import { sessionKey } from "@/lib/query-client";
 import type { Session } from "@/lib/session";
-import type { LogEntry, MovieRelationshipItem, Paginated, UserProfile } from "@/lib/types";
+import type { LogEntry, MovieRelationshipItem, Paginated, PublicProfile, UserSummary } from "@/lib/types";
 
 const PROFILE_PAGE_SIZE = 20;
+export const MAX_USERNAME_LENGTH = 20;
 
 export type MovieRelationshipList = "watched" | "likes" | "watchlist";
+export type FollowList = "followers" | "following";
 
 function userKey<T extends string>(username: string, resource: T): readonly ["users", string, T] {
     return ["users", username, resource];
@@ -25,14 +27,46 @@ function pageParams(page: number): Record<string, string> {
 }
 
 // Préfixe commun au profil et à ses onglets, pour tout relire après un changement du membre.
-export function userQueriesKey(username: string): readonly ["users", string] {
-    return ["users", username];
+export function userQueriesKey(username: string, session: Session | null = null) {
+    const scope = session === null ? [] : sessionKey(session);
+
+    return [...scope, "users", username] as const;
 }
 
-export function profileQuery(username: string) {
+export function profileQuery(username: string, session: Session | null) {
     return queryOptions({
-        queryKey: userKey(username, "profile"),
-        queryFn: ({ signal }) => apiFetch<UserProfile>(userPath(username), { signal, session: null }),
+        queryKey: [...userQueriesKey(username, session), "profile"],
+        queryFn: ({ signal }) => apiFetch<PublicProfile>(userPath(username), { signal, session }),
+    });
+}
+
+export const memberSearchKey = ["member-search"] as const;
+export const followListsKey = ["follow-lists"] as const;
+
+export function membersQuery(username: string, page: number) {
+    const params = new URLSearchParams(pageParams(page));
+    if (username !== "") {
+        params.set("q", username);
+    }
+
+    return queryOptions({
+        queryKey: [...memberSearchKey, { username, page }],
+        queryFn: ({ signal }) => apiFetch<Paginated<UserSummary>>(`/users?${params}`, { signal, session: null }),
+        placeholderData: keepPreviousData,
+    });
+}
+
+export function followListKey(username: string, list: FollowList) {
+    return [...followListsKey, username, list] as const;
+}
+
+export function followListQuery(username: string, list: FollowList, page: number) {
+    const params = new URLSearchParams(pageParams(page));
+
+    return queryOptions({
+        queryKey: [...followListKey(username, list), { page }],
+        queryFn: ({ signal }) => apiFetch<Paginated<UserSummary>>(`${userPath(username, list)}?${params}`, { signal, session: null }),
+        placeholderData: keepPreviousData,
     });
 }
 
@@ -56,9 +90,7 @@ export function movieRelationshipsQuery(username: string, list: MovieRelationshi
 }
 
 export function profileListsKey(username: string, session: Session | null) {
-    const scope = session === null ? [] : sessionKey(session);
-
-    return [...scope, ...userKey(username, "lists")] as const;
+    return [...userQueriesKey(username, session), "lists"] as const;
 }
 
 export function profileListsQuery(username: string, page: number, session: Session | null) {

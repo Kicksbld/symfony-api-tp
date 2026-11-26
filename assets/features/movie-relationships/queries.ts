@@ -45,7 +45,7 @@ export function useRelationshipMutation(session: Session, movieId: number) {
             }
         },
         onSettled: async (_data, _error, patch) => {
-            const refresh = [queryClient.invalidateQueries({ queryKey: userQueriesKey(session.user.username) })];
+            const refresh = [session, null].map((viewer) => queryClient.invalidateQueries({ queryKey: userQueriesKey(session.user.username, viewer) }));
             if (isCurrentSession(session)) {
                 refresh.push(queryClient.invalidateQueries({ queryKey }));
             }
