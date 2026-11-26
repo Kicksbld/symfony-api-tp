@@ -198,3 +198,14 @@
   }
 }
 
+
+/* Progression de la diapositive affichée dans le héros de l'accueil. */
+@keyframes slide-progress {
+  from {
+    transform: scaleX(0);
+  }
+}
+
+@utility animate-slide-progress {
+  animation: slide-progress linear both;
+}

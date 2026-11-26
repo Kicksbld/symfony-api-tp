@@ -7,7 +7,7 @@ import { MoviePoster } from "@/features/movies/MoviePoster";
 import { MovieRelationshipControls } from "@/features/movie-relationships/MovieRelationshipControls";
 import { LogMovieButton } from "@/features/log-entries/LogMovieButton";
 import { reviewsPath } from "@/features/log-entries/reviews";
-import { catalogPathWith } from "@/features/movies/catalog-search";
+import { DEFAULT_CATALOG_SEARCH, catalogPath, catalogPathWith } from "@/features/movies/catalog-search";
 import { formatRuntime, releaseYear } from "@/features/movies/format";
 import { MovieRatings } from "@/features/movies/MovieRatings";
 import { movieQuery } from "@/features/movies/queries";
@@ -194,7 +194,7 @@ function MovieNotFound() {
             <h1 className="text-2xl font-semibold">Film introuvable</h1>
             <p className="text-muted-foreground">Ce film n'existe pas ou n'est plus dans le catalogue.</p>
             <Button asChild variant="outline">
-                <Link to="/">Retour au catalogue</Link>
+                <Link to={catalogPath(DEFAULT_CATALOG_SEARCH)}>Retour au catalogue</Link>
             </Button>
         </section>
     );

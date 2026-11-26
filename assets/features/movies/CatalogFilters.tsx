@@ -1,153 +1,340 @@
-import { Search } from "lucide-react";
-import type { FormEvent, ReactNode } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { cn } from "cn";
+import { ArrowDownUp, Search, SlidersHorizontal, X } from "lucide-react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
-import { DECADES, MAX_TITLE_LENGTH, MOVIE_SORTS, catalogPath, findMovieSort, selectableYears, withDecade, type CatalogSearch } from "@/features/movies/catalog-search";
-import { countryLabel, countryName, isWatchRegion } from "@/features/movies/regions";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuLabel,
+    DropdownMenuRadioGroup,
+    DropdownMenuRadioItem,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { FilterPopover, OptionList } from "@/features/movies/FilterPopover";
+import {
+    DECADES,
+    MAX_TITLE_LENGTH,
+    MOVIE_SORTS,
+    activeFilters,
+    findMovieSort,
+    selectableYears,
+    withDecade,
+    type CatalogSearch,
+} from "@/features/movies/catalog-search";
+import { countryLabel, countryName } from "@/features/movies/regions";
 import type { CatalogReferences } from "@/features/movies/useCatalogReferences";
-import { PersonPicker } from "@/features/people/PersonPicker";
+import { PersonPhoto } from "@/features/people/PersonPhoto";
+import { MAX_PERSON_NAME_LENGTH, peopleQuery } from "@/features/people/queries";
 import { WATCH_REGIONS } from "@/lib/types";
+import { useDebouncedValue } from "@/lib/useDebouncedValue";
+
+export type ChangeSearch = (search: CatalogSearch, options?: { replace: boolean }) => void;
 
 type CatalogFiltersProps = {
     search: CatalogSearch;
     references: CatalogReferences;
-    onChange: (search: CatalogSearch) => void;
+    onChange: ChangeSearch;
 };
 
 export function CatalogFilters({ search, references, onChange }: CatalogFiltersProps) {
-    function submitTitle(event: FormEvent<HTMLFormElement>): void {
-        event.preventDefault();
-        const title = new FormData(event.currentTarget).get("q");
-        onChange({ ...search, q: typeof title === "string" ? title.trim() : "" });
-    }
+    const [sheetOpen, setSheetOpen] = useState(false);
+    // Le titre a son propre champ, le studio se règle depuis sa page : ils ne comptent pas dans le bouton du tiroir.
+    const filterCount = activeFilters(search).filter((filter) => filter !== "q" && filter !== "company").length;
 
     return (
         <div className="space-y-3">
-            <div className="flex flex-wrap items-end gap-3">
-                {/* La clé recrée le champ à chaque changement d'URL (Précédent, autre filtre) : un titre tapé mais pas validé disparaît. */}
-                <form key={catalogPath(search)} role="search" onSubmit={submitTitle} className="flex min-w-60 flex-1 items-end gap-2">
-                    <div className="flex-1 space-y-1.5">
-                        <Label htmlFor="catalog-title">Titre</Label>
-                        <Input id="catalog-title" name="q" type="search" defaultValue={search.q} maxLength={MAX_TITLE_LENGTH} placeholder="Rechercher un film" />
-                    </div>
-                    <Button type="submit" variant="outline" size="icon" aria-label="Rechercher">
-                        <Search aria-hidden="true" />
-                    </Button>
-                </form>
-                <FilterField id="catalog-sort" label="Trier par">
-                    <NativeSelect id="catalog-sort" value={search.sort} onChange={(event) => onChange({ ...search, sort: findMovieSort(event.target.value) ?? search.sort })}>
-                        {MOVIE_SORTS.map((sort) => (
-                            <NativeSelectOption key={sort.value} value={sort.value}>
-                                {sort.label}
-                            </NativeSelectOption>
-                        ))}
-                    </NativeSelect>
-                </FilterField>
+            <div className="flex flex-wrap items-center gap-3">
+                <TitleSearch search={search} onChange={onChange} />
+                <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
+                    <SheetTrigger asChild>
+                        <Button variant="outline" className="h-11 rounded-full px-4 md:hidden">
+                            <SlidersHorizontal aria-hidden="true" />
+                            Filtres
+                            {filterCount > 0 && (
+                                <span className="rounded-full bg-primary px-1.5 text-xs font-bold text-primary-foreground">{filterCount}</span>
+                            )}
+                        </Button>
+                    </SheetTrigger>
+                    <SheetContent side="bottom" className="max-h-[85dvh] overflow-y-auto rounded-t-2xl p-6">
+                        <SheetHeader className="p-0">
+                            <SheetTitle className="text-xl font-bold">Filtres</SheetTitle>
+                            <SheetDescription>Les résultats se mettent à jour à chaque choix.</SheetDescription>
+                        </SheetHeader>
+                        <FilterChips search={search} references={references} onChange={onChange} stacked />
+                        <Button className="h-11 rounded-full" onClick={() => setSheetOpen(false)}>
+                            Voir les films
+                        </Button>
+                    </SheetContent>
+                </Sheet>
+                <SortMenu search={search} onChange={onChange} />
             </div>
-            <div className="flex flex-wrap items-end gap-3">
-                <FilterField id="catalog-genre" label="Genre">
-                    <NativeSelect
-                        id="catalog-genre"
-                        value={search.genre ?? ""}
-                        disabled={references.genres === undefined}
-                        onChange={(event) => onChange({ ...search, genre: optionalNumber(event.target.value) })}
-                    >
-                        <NativeSelectOption value="">Tous les genres</NativeSelectOption>
-                        {references.genres?.map((genre) => (
-                            <NativeSelectOption key={genre.id} value={genre.id}>
-                                {genre.name}
-                            </NativeSelectOption>
-                        ))}
-                    </NativeSelect>
-                </FilterField>
-                <FilterField id="catalog-decade" label="Décennie">
-                    <NativeSelect id="catalog-decade" value={search.decade ?? ""} onChange={(event) => onChange(withDecade(search, optionalNumber(event.target.value)))}>
-                        <NativeSelectOption value="">Toutes</NativeSelectOption>
-                        {DECADES.map((decade) => (
-                            <NativeSelectOption key={decade} value={decade}>
-                                Années {decade}
-                            </NativeSelectOption>
-                        ))}
-                    </NativeSelect>
-                </FilterField>
-                <FilterField id="catalog-year" label="Année">
-                    <NativeSelect id="catalog-year" value={search.year ?? ""} onChange={(event) => onChange({ ...search, year: optionalNumber(event.target.value) })}>
-                        <NativeSelectOption value="">Toutes</NativeSelectOption>
-                        {selectableYears(search.decade).map((year) => (
-                            <NativeSelectOption key={year} value={year}>
-                                {year}
-                            </NativeSelectOption>
-                        ))}
-                    </NativeSelect>
-                </FilterField>
-                <FilterField id="catalog-country" label="Pays de production">
-                    <NativeSelect
-                        id="catalog-country"
-                        value={search.country ?? ""}
-                        disabled={references.countries === undefined}
-                        onChange={(event) => onChange({ ...search, country: event.target.value === "" ? null : event.target.value })}
-                    >
-                        <NativeSelectOption value="">Tous les pays</NativeSelectOption>
-                        {references.countries?.map((country) => (
-                            <NativeSelectOption key={country.code} value={country.code}>
-                                {countryLabel(country)}
-                            </NativeSelectOption>
-                        ))}
-                    </NativeSelect>
-                </FilterField>
-                <FilterField id="catalog-provider" label="Plateforme">
-                    <NativeSelect
-                        id="catalog-provider"
-                        value={search.provider ?? ""}
-                        disabled={references.providers === undefined}
-                        onChange={(event) => onChange({ ...search, provider: optionalNumber(event.target.value) })}
-                    >
-                        <NativeSelectOption value="">Toutes les plateformes</NativeSelectOption>
-                        {references.providers?.map((provider) => (
-                            <NativeSelectOption key={provider.id} value={provider.id}>
-                                {provider.name}
-                            </NativeSelectOption>
-                        ))}
-                    </NativeSelect>
-                </FilterField>
-                <FilterField id="catalog-region" label="Pays de diffusion">
-                    <NativeSelect
-                        id="catalog-region"
-                        value={search.region}
-                        onChange={(event) => {
-                            if (isWatchRegion(event.target.value)) {
-                                onChange({ ...search, region: event.target.value });
-                            }
-                        }}
-                    >
-                        {WATCH_REGIONS.map((region) => (
-                            <NativeSelectOption key={region} value={region}>
-                                {countryName(region)}
-                            </NativeSelectOption>
-                        ))}
-                    </NativeSelect>
-                </FilterField>
-                <PersonPicker
-                    triggerLabel={search.person === null ? "Choisir une personne" : "Changer de personne"}
-                    onSelect={(person) => onChange({ ...search, person: person.id })}
-                />
-            </div>
+            <FilterChips search={search} references={references} onChange={onChange} className="hidden md:flex" />
         </div>
     );
 }
 
-function FilterField({ id, label, children }: { id: string; label: string; children: ReactNode }) {
+function TitleSearch({ search, onChange }: { search: CatalogSearch; onChange: ChangeSearch }) {
+    const [term, setTerm] = useState(search.q);
+    const [syncedTitle, setSyncedTitle] = useState(search.q);
+    const debouncedTerm = useDebouncedValue(term.trim());
+
+    // Le titre de l'URL change sans nous (Précédent, lien, filtre effacé) : le champ le reprend. On compare sans les
+    // espaces de fin pour ne pas effacer celui que le membre vient de taper entre deux mots.
+    if (search.q !== syncedTitle) {
+        setSyncedTitle(search.q);
+        if (search.q !== term.trim()) {
+            setTerm(search.q);
+        }
+    }
+
+    // On attend que la frappe soit finie (le terme retardé rattrape le champ) avant de changer l'URL, en la remplaçant
+    // pour ne pas ajouter une entrée d'historique par mot tapé.
+    useEffect(() => {
+        if (debouncedTerm === term.trim() && debouncedTerm !== search.q) {
+            onChange({ ...search, q: debouncedTerm }, { replace: true });
+        }
+    }, [debouncedTerm, term, search, onChange]);
+
     return (
-        <div className="space-y-1.5">
-            <Label htmlFor={id}>{label}</Label>
-            {children}
+        <div role="search" className="relative min-w-0 flex-1 basis-64">
+            <Search aria-hidden="true" className="pointer-events-none absolute top-1/2 left-4 size-4 -translate-y-1/2 text-muted-foreground" />
+            <input
+                type="search"
+                aria-label="Rechercher un film par titre"
+                value={term}
+                maxLength={MAX_TITLE_LENGTH}
+                placeholder="Rechercher un film…"
+                onChange={(event) => setTerm(event.target.value)}
+                className="h-11 w-full rounded-full border border-white/10 bg-white/5 pr-10 pl-11 text-base transition-colors outline-none placeholder:text-muted-foreground hover:border-white/20 focus-visible:border-primary/60 focus-visible:ring-3 focus-visible:ring-ring/30 [&::-webkit-search-cancel-button]:hidden"
+            />
+            {term !== "" && (
+                <button
+                    type="button"
+                    aria-label="Effacer le titre"
+                    onClick={() => setTerm("")}
+                    className="absolute top-1/2 right-2 flex size-7 -translate-y-1/2 items-center justify-center rounded-full text-muted-foreground hover:bg-white/10 hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
+                >
+                    <X aria-hidden="true" className="size-4" />
+                </button>
+            )}
         </div>
     );
 }
 
-// L'option « Tous » ou « Toutes » a une valeur vide, qui veut dire sans filtre.
-function optionalNumber(value: string): number | null {
-    return value === "" ? null : Number(value);
+function SortMenu({ search, onChange }: { search: CatalogSearch; onChange: ChangeSearch }) {
+    const current = MOVIE_SORTS.find((sort) => sort.value === search.sort);
+
+    return (
+        <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="h-11 rounded-full px-4 text-muted-foreground hover:text-foreground">
+                    <ArrowDownUp aria-hidden="true" />
+                    <span className="sr-only">Trier par :</span>
+                    {current?.label}
+                </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuLabel>Trier par</DropdownMenuLabel>
+                <DropdownMenuRadioGroup value={search.sort} onValueChange={(value) => onChange({ ...search, sort: findMovieSort(value) ?? search.sort })}>
+                    {MOVIE_SORTS.map((sort) => (
+                        <DropdownMenuRadioItem key={sort.value} value={sort.value}>
+                            {sort.label}
+                        </DropdownMenuRadioItem>
+                    ))}
+                </DropdownMenuRadioGroup>
+            </DropdownMenuContent>
+        </DropdownMenu>
+    );
+}
+
+type FilterChipsProps = CatalogFiltersProps & { stacked?: boolean; className?: string };
+
+function FilterChips({ search, references, onChange, stacked = false, className }: FilterChipsProps) {
+    // Dans le tiroir mobile, chaque pastille prend toute la largeur.
+    const chipClassName = stacked ? "w-full max-w-none justify-between" : undefined;
+    const genre = references.genres?.find((candidate) => candidate.id === search.genre);
+    const country = references.countries?.find((candidate) => candidate.code === search.country);
+    const provider = references.providers?.find((candidate) => candidate.id === search.provider);
+    const period = search.year !== null ? String(search.year) : search.decade !== null ? `Années ${search.decade}` : undefined;
+
+    return (
+        <div role="group" aria-label="Filtres" className={cn(stacked ? "grid gap-2" : "flex flex-wrap items-center gap-2", className)}>
+            <FilterPopover
+                label="Genre"
+                value={search.genre === null ? undefined : (genre?.name ?? "…")}
+                onClear={() => onChange({ ...search, genre: null })}
+                disabled={references.genres === undefined}
+                className={chipClassName}
+            >
+                {(close) => (
+                    <OptionList
+                        placeholder="Chercher un genre"
+                        emptyMessage="Aucun genre."
+                        options={(references.genres ?? []).map(({ id, name }) => ({ value: id, label: name }))}
+                        selected={search.genre}
+                        onSelect={(value) => {
+                            onChange({ ...search, genre: value });
+                            close();
+                        }}
+                    />
+                )}
+            </FilterPopover>
+            <FilterPopover
+                label="Période"
+                value={period}
+                onClear={() => onChange(withDecade(search, null))}
+                className={chipClassName}
+                contentClassName="w-80 p-3"
+            >
+                {() => <PeriodPicker search={search} onChange={onChange} />}
+            </FilterPopover>
+            <FilterPopover
+                label="Pays de production"
+                value={search.country === null ? undefined : country === undefined ? "…" : countryLabel(country)}
+                onClear={() => onChange({ ...search, country: null })}
+                disabled={references.countries === undefined}
+                className={chipClassName}
+            >
+                {(close) => (
+                    <OptionList
+                        placeholder="Chercher un pays"
+                        emptyMessage="Aucun pays."
+                        options={(references.countries ?? []).map((candidate) => ({ value: candidate.code, label: countryLabel(candidate) }))}
+                        selected={search.country}
+                        onSelect={(value) => {
+                            onChange({ ...search, country: value });
+                            close();
+                        }}
+                    />
+                )}
+            </FilterPopover>
+            <FilterPopover
+                label="Plateforme"
+                value={search.provider === null ? undefined : `${provider?.name ?? "…"} (${search.region})`}
+                onClear={() => onChange({ ...search, provider: null })}
+                className={chipClassName}
+            >
+                {(close) => (
+                    <>
+                        <div role="radiogroup" aria-label="Pays de diffusion" className="flex gap-1 border-b p-2">
+                            {WATCH_REGIONS.map((region) => (
+                                <button
+                                    key={region}
+                                    type="button"
+                                    role="radio"
+                                    aria-checked={region === search.region}
+                                    title={countryName(region)}
+                                    onClick={() => onChange({ ...search, region })}
+                                    className="flex-1 rounded-md py-1.5 text-xs font-semibold text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none aria-checked:bg-primary aria-checked:text-primary-foreground"
+                                >
+                                    {region}
+                                </button>
+                            ))}
+                        </div>
+                        <OptionList
+                            placeholder={`Plateformes en ${countryName(search.region)}`}
+                            emptyMessage="Aucune plateforme."
+                            options={(references.providers ?? []).map(({ id, name }) => ({ value: id, label: name }))}
+                            selected={search.provider}
+                            onSelect={(value) => {
+                                onChange({ ...search, provider: value });
+                                close();
+                            }}
+                        />
+                    </>
+                )}
+            </FilterPopover>
+            <FilterPopover
+                label="Personne"
+                value={search.person === null ? undefined : (references.person?.name ?? "…")}
+                onClear={() => onChange({ ...search, person: null })}
+                className={chipClassName}
+                contentClassName="w-80"
+            >
+                {(close) => (
+                    <PersonSearch
+                        onSelect={(person) => {
+                            onChange({ ...search, person });
+                            close();
+                        }}
+                    />
+                )}
+            </FilterPopover>
+        </div>
+    );
+}
+
+// Une décennie d'abord, puis éventuellement une année de cette décennie : on ne propose jamais une combinaison vide.
+function PeriodPicker({ search, onChange }: { search: CatalogSearch; onChange: ChangeSearch }) {
+    return (
+        <div className="space-y-3">
+            <p className="eyebrow">Décennie</p>
+            <div className="grid grid-cols-4 gap-1">
+                {DECADES.map((decade) => (
+                    <PeriodButton key={decade} selected={search.decade === decade} onClick={() => onChange(withDecade(search, search.decade === decade ? null : decade))}>
+                        {decade}
+                    </PeriodButton>
+                ))}
+            </div>
+            {search.decade !== null && (
+                <>
+                    <p className="eyebrow pt-1">Année</p>
+                    <div className="grid grid-cols-5 gap-1">
+                        {selectableYears(search.decade).map((year) => (
+                            <PeriodButton key={year} selected={search.year === year} onClick={() => onChange({ ...search, year: search.year === year ? null : year })}>
+                                {year}
+                            </PeriodButton>
+                        ))}
+                    </div>
+                </>
+            )}
+        </div>
+    );
+}
+
+function PeriodButton({ selected, onClick, children }: { selected: boolean; onClick: () => void; children: number }) {
+    return (
+        <button
+            type="button"
+            aria-pressed={selected}
+            onClick={onClick}
+            className="rounded-md py-1.5 text-sm font-medium tabular-nums text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none aria-pressed:bg-primary aria-pressed:text-primary-foreground"
+        >
+            {children}
+        </button>
+    );
+}
+
+// En dessous, la recherche renverrait presque toutes les personnes du catalogue.
+const MIN_PERSON_NAME_LENGTH = 2;
+
+function PersonSearch({ onSelect }: { onSelect: (personId: number) => void }) {
+    const [name, setName] = useState("");
+    const debouncedName = useDebouncedValue(name.trim());
+    const searching = debouncedName.length >= MIN_PERSON_NAME_LENGTH;
+    const { data, isFetching, isError } = useQuery({ ...peopleQuery(debouncedName, 1), enabled: searching });
+
+    return (
+        // Les résultats viennent déjà filtrés de l'API, cmdk ne doit pas les filtrer une seconde fois.
+        <Command shouldFilter={false}>
+            <CommandInput value={name} onValueChange={setName} maxLength={MAX_PERSON_NAME_LENGTH} placeholder="Acteur, réalisatrice, compositeur…" />
+            <CommandList>
+                {searching && <CommandEmpty>{isError ? "La recherche a échoué." : isFetching ? "Recherche en cours…" : "Aucune personne."}</CommandEmpty>}
+                {!searching && <p className="px-3 py-6 text-center text-sm text-muted-foreground">Tapez au moins 2 lettres.</p>}
+                {searching && data !== undefined && (
+                    <CommandGroup>
+                        {data.items.map((person) => (
+                            <CommandItem key={person.id} value={String(person.id)} onSelect={() => onSelect(person.id)} className="gap-3">
+                                <PersonPhoto person={person} alt="" className="w-8 rounded" loading="lazy" />
+                                {person.name}
+                            </CommandItem>
+                        ))}
+                    </CommandGroup>
+                )}
+            </CommandList>
+        </Command>
+    );
 }

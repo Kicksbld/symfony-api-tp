@@ -1,5 +1,6 @@
 import { Menu } from "lucide-react";
-import { useRef, useState, type MouseEvent } from "react";
+import { cn } from "cn";
+import { useEffect, useRef, useState, type MouseEvent } from "react";
 import { Link, Outlet, useLocation } from "react-router";
 import { BrandLogo } from "@/components/BrandLogo";
 import { MainNavigation } from "@/components/MainNavigation";
@@ -10,8 +11,14 @@ import { useAuth } from "@/features/auth/auth";
 import { CommandSearch } from "@/features/search/CommandSearch";
 import { authPath, returnPathFor } from "@/lib/redirect";
 
-export function Layout() {
+type LayoutProps = {
+    // Pages qui s'ouvrent sur une grande image : l'en-tête est posé dessus et le contenu prend toute la largeur.
+    immersive?: boolean;
+};
+
+export function Layout({ immersive = false }: LayoutProps) {
     const { session } = useAuth();
+    const scrolled = useScrolled();
     const location = useLocation();
     const [menuOpen, setMenuOpen] = useState(false);
     const contentRef = useRef<HTMLElement>(null);
@@ -33,7 +40,15 @@ export function Layout() {
             >
                 Aller au contenu
             </a>
-            <header className="sticky top-0 z-40 border-b border-white/5 bg-background/75 backdrop-blur-xl">
+            <header
+                className={cn(
+                    "top-0 z-40 border-b transition-colors duration-300",
+                    immersive ? "fixed inset-x-0" : "sticky",
+                    immersive && !scrolled
+                        ? "border-transparent bg-gradient-to-b from-background/80 to-transparent"
+                        : "border-white/5 bg-background/75 backdrop-blur-xl",
+                )}
+            >
                 <div className="mx-auto flex h-16 max-w-7xl items-center gap-4 px-4 sm:px-6 lg:gap-8">
                     <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
                         <SheetTrigger asChild>
@@ -86,7 +101,12 @@ export function Layout() {
                     </div>
                 </div>
             </header>
-            <main id="content" ref={contentRef} tabIndex={-1} className="mx-auto w-full max-w-7xl flex-1 px-4 py-10 focus:outline-none sm:px-6">
+            <main
+                id="content"
+                ref={contentRef}
+                tabIndex={-1}
+                className={cn("w-full flex-1 focus:outline-none", !immersive && "mx-auto max-w-7xl px-4 py-10 sm:px-6")}
+            >
                 <Outlet />
             </main>
             <footer className="border-t border-white/5">
@@ -98,3 +118,21 @@ export function Layout() {
         </div>
     );
 }
+
+function useScrolled(): boolean {
+    const [scrolled, setScrolled] = useState(false);
+
+    useEffect(() => {
+        function update(): void {
+            setScrolled(window.scrollY > 24);
+        }
+
+        update();
+        window.addEventListener("scroll", update, { passive: true });
+
+        return () => window.removeEventListener("scroll", update);
+    }, []);
+
+    return scrolled;
+}
+

@@ -25,7 +25,13 @@ export function ActiveFilters({ search, references, onChange }: ActiveFiltersPro
 
                     return (
                         <li key={filter}>
-                            <Button variant="secondary" size="sm" aria-label={`Retirer le filtre ${label}`} onClick={() => onChange(withoutFilter(search, filter))}>
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-8 rounded-full bg-white/5 pr-2 pl-3 text-foreground/90 hover:bg-white/10"
+                                aria-label={`Retirer le filtre ${label}`}
+                                onClick={() => onChange(withoutFilter(search, filter))}
+                            >
                                 {label}
                                 <X aria-hidden="true" />
                             </Button>
@@ -33,8 +39,8 @@ export function ActiveFilters({ search, references, onChange }: ActiveFiltersPro
                     );
                 })}
             </ul>
-            <Button variant="ghost" size="sm" onClick={() => onChange(withoutFilters(search))}>
-                Effacer les filtres
+            <Button variant="link" size="sm" className="h-8 text-muted-foreground hover:text-foreground" onClick={() => onChange(withoutFilters(search))}>
+                Tout effacer
             </Button>
         </div>
     );

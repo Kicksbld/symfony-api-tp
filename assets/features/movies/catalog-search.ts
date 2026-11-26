@@ -118,7 +118,7 @@ export function catalogSearchParams(search: CatalogSearch): URLSearchParams {
 export function catalogPath(search: CatalogSearch): string {
     const params = catalogSearchParams(search).toString();
 
-    return params === "" ? "/" : `/?${params}`;
+    return params === "" ? "/films" : `/films?${params}`;
 }
 
 // Lien partagé depuis une fiche (personne, studio, pays) : un seul filtre, le reste par défaut.
