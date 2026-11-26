@@ -3,6 +3,7 @@
 namespace App\Service;
 
 use App\Entity\User;
+use App\Repository\UserRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpKernel\Exception\ConflictHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
@@ -10,8 +11,24 @@ use Symfony\Component\HttpKernel\Exception\UnprocessableEntityHttpException;
 
 final readonly class FollowService
 {
-    public function __construct(private EntityManagerInterface $entityManager)
+    public function __construct(
+        private EntityManagerInterface $entityManager,
+        private UserRepository $userRepository,
+    ) {
+    }
+
+    /**
+     * @return array<int, true>
+     */
+    public function getFollowedUserIdSet(?User $follower, User ...$users): array
     {
+        if (null === $follower || [] === $users) {
+            return [];
+        }
+
+        $ids = array_map(static fn (User $user): int => $user->getId(), $users);
+
+        return array_fill_keys($this->userRepository->findFollowedIds($follower, $ids), true);
     }
 
     public function follow(User $follower, User $followed): void

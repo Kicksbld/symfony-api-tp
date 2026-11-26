@@ -26,11 +26,7 @@ class MovieListRepository extends ServiceEntityRepository
      */
     public function createSearchQueryBuilder(MovieListSearchDto $movieListSearchDto): QueryBuilder
     {
-        // L'auteur est joint pour être sérialisé sans une requête par liste.
-        $queryBuilder = $this->createQueryBuilder('movieList')
-            ->addSelect('user')
-            ->innerJoin('movieList.user', 'user')
-            ->andWhere('movieList.public = true');
+        $queryBuilder = $this->createCardQueryBuilder()->andWhere('movieList.public = true');
 
         // LIKE ignore déjà la casse sous SQLite. LOWER() n'y gère que l'ASCII et casserait les noms accentués.
         if (null !== $movieListSearchDto->q) {
@@ -64,9 +60,7 @@ class MovieListRepository extends ServiceEntityRepository
      */
     public function createByUserQueryBuilder(User $user, bool $withPrivate): QueryBuilder
     {
-        $queryBuilder = $this->createQueryBuilder('movieList')
-            ->addSelect('user')
-            ->innerJoin('movieList.user', 'user')
+        $queryBuilder = $this->createCardQueryBuilder()
             ->andWhere('movieList.user = :user')
             ->setParameter('user', $user);
 
@@ -75,6 +69,16 @@ class MovieListRepository extends ServiceEntityRepository
         }
 
         return $this->orderByMostRecent($queryBuilder);
+    }
+
+    // L'auteur et les films sont joints pour sérialiser l'aperçu des affiches sans une requête par liste.
+    private function createCardQueryBuilder(): QueryBuilder
+    {
+        return $this->createQueryBuilder('movieList')
+            ->addSelect('user', 'previewItem', 'previewMovie')
+            ->innerJoin('movieList.user', 'user')
+            ->leftJoin('movieList.items', 'previewItem')
+            ->leftJoin('previewItem.movie', 'previewMovie');
     }
 
     // Nombre de likes en sous-requête pour ne pas grouper la requête paginée. À égalité, les plus récentes d'abord.

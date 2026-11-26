@@ -12,7 +12,7 @@ use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
 final readonly class SocialStateNormalizer implements NormalizerInterface
 {
     public const string LIKED_IDS = 'social_state_liked_ids';
-    public const string FOLLOWED_BY_ME = 'social_state_followed_by_me';
+    public const string FOLLOWED_IDS = 'social_state_followed_ids';
 
     public function __construct(
         #[Autowire(service: 'serializer.normalizer.object')]
@@ -29,7 +29,7 @@ final readonly class SocialStateNormalizer implements NormalizerInterface
     {
         return match (true) {
             $data instanceof LogEntry, $data instanceof MovieList => isset($context[self::LIKED_IDS]),
-            $data instanceof User => isset($context[self::FOLLOWED_BY_ME]),
+            $data instanceof User => isset($context[self::FOLLOWED_IDS]),
             default => false,
         };
     }
@@ -37,14 +37,14 @@ final readonly class SocialStateNormalizer implements NormalizerInterface
     public function normalize(mixed $data, ?string $format = null, array $context = []): array
     {
         $likedIds = $context[self::LIKED_IDS] ?? [];
-        $followedByMe = $context[self::FOLLOWED_BY_ME] ?? false;
+        $followedIds = $context[self::FOLLOWED_IDS] ?? [];
         // Chaque ressource reçoit son état sans le transmettre à ses objets imbriqués.
-        unset($context[self::LIKED_IDS], $context[self::FOLLOWED_BY_ME]);
+        unset($context[self::LIKED_IDS], $context[self::FOLLOWED_IDS]);
 
         $response = (array) $this->objectNormalizer->normalize($data, $format, $context);
 
         if ($data instanceof User) {
-            $response['followedByMe'] = $followedByMe;
+            $response['followedByMe'] = isset($followedIds[$data->getId()]);
         } else {
             $response['likedByMe'] = isset($likedIds[$data->getId()]);
         }

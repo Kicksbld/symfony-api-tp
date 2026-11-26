@@ -103,6 +103,7 @@ final class TmdbImporter
             ->setReleaseDate(empty($data['release_date']) ? null : new \DateTimeImmutable($data['release_date']))
             ->setRuntime(($data['runtime'] ?? 0) ?: null)
             ->setPosterPath($data['poster_path'] ?? null)
+            ->setBackdropPath($data['backdrop_path'] ?? null)
             ->setPopularity($data['popularity'])
             ->setVoteAverage($data['vote_average'])
             ->setVoteCount($data['vote_count'])

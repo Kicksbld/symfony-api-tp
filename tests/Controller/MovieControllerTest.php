@@ -42,6 +42,7 @@ final class MovieControllerTest extends ApiTestCase
             'releaseDate' => '2010-07-15',
             'averageRating' => null,
             'posterUrl' => 'https://image.tmdb.org/t/p/w500/aej3LRUga5rhgkmRP6XMFw3ejbl.jpg',
+            'backdropUrl' => 'https://image.tmdb.org/t/p/w1280/8ZTVqvKDQ8emSGUEMjsS4yHAwrp.jpg',
         ], $data['items'][0]);
     }
 
@@ -193,6 +194,7 @@ final class MovieControllerTest extends ApiTestCase
         self::assertSame(148, $data['runtime']);
         self::assertStringStartsWith('Dom Cobb est un voleur expérimenté', $data['overview']);
         self::assertSame('https://image.tmdb.org/t/p/w500/aej3LRUga5rhgkmRP6XMFw3ejbl.jpg', $data['posterUrl']);
+        self::assertSame('https://image.tmdb.org/t/p/w1280/8ZTVqvKDQ8emSGUEMjsS4yHAwrp.jpg', $data['backdropUrl']);
         self::assertSame(8.373, $data['voteAverage']);
         self::assertSame(40812, $data['voteCount']);
         self::assertSame(['Action', 'Science-Fiction', 'Crime'], array_column($data['genres'], 'name'));

@@ -1,7 +1,11 @@
 # jane_doe est un compte de démo créé par app:seed-demo.
 
-### Chercher des membres par username (200)
+### Chercher des membres par username, chaque carte a sa bio, ses favoris et ses compteurs (200)
 GET {{baseURL}}/api/users?q=jane&page=1&limit=20
+
+### Chercher des membres avec le token de jane_doe : followedByMe vaut true pour arthur et camille (200)
+GET {{baseURL}}/api/users?q=a
+Authorization: Bearer {{token}}
 
 ### Recherche trop longue, un username fait 20 caractères au plus (422)
 GET {{baseURL}}/api/users?q=aaaaaaaaaaaaaaaaaaaaa
@@ -84,6 +88,10 @@ GET {{baseURL}}/api/users/nobody/lists
 
 ### Abonnés du membre, triés par username (200)
 GET {{baseURL}}/api/users/jane_doe/followers?page=1&limit=20
+
+### Abonnés avec le token de jane_doe, followedByMe dit lesquels elle suit en retour (200)
+GET {{baseURL}}/api/users/jane_doe/followers
+Authorization: Bearer {{token}}
 
 ### Abonnés avec une page invalide (422)
 GET {{baseURL}}/api/users/jane_doe/followers?page=0

@@ -278,6 +278,21 @@ final class MovieListControllerTest extends ApiTestCase
 
         self::assertSame([$withDarkKnight, $withBoth], array_column($data['items'], 'id'));
         self::assertSame([1, 2], array_column($data['items'], 'itemCount'));
+        self::assertSame([$inceptionId, $darkKnightId], array_column($data['items'][1]['previewMovies'], 'id'));
+    }
+
+    public function testListsShowAPreviewOfTheirFirstMovies(): void
+    {
+        $this->importMovieCatalog();
+        $listId = $this->createList();
+        foreach ([155, 27205, 680] as $tmdbId) {
+            $this->requestJson('POST', '/api/lists/'.$listId.'/items', ['movie' => $this->findId(Movie::class, ['tmdbId' => $tmdbId])]);
+        }
+
+        $data = $this->requestJson('GET', '/api/lists');
+
+        self::assertSame(['The Dark Knight', 'Inception', 'Pulp Fiction'], array_column($data['items'][0]['previewMovies'], 'originalTitle'));
+        self::assertArrayHasKey('posterUrl', $data['items'][0]['previewMovies'][0]);
     }
 
     public function testPopularListsAreSortedByLikeCount(): void

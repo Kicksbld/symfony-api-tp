@@ -57,6 +57,9 @@ class Movie
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $posterPath = null;
 
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $backdropPath = null;
+
     #[ORM\Column]
     private float $popularity = 0;
 
@@ -217,6 +220,24 @@ class Movie
     public function getPosterUrl(): ?string
     {
         return TmdbImage::url($this->posterPath, TmdbImage::POSTER_SIZE);
+    }
+
+    public function getBackdropPath(): ?string
+    {
+        return $this->backdropPath;
+    }
+
+    public function setBackdropPath(?string $backdropPath): static
+    {
+        $this->backdropPath = $backdropPath;
+
+        return $this;
+    }
+
+    #[Groups(['movie:list', 'movie:read'])]
+    public function getBackdropUrl(): ?string
+    {
+        return TmdbImage::url($this->backdropPath, TmdbImage::BACKDROP_SIZE);
     }
 
     public function getPopularity(): float

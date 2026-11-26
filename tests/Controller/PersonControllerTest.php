@@ -53,7 +53,7 @@ final class PersonControllerTest extends ApiTestCase
         self::assertSame(['Director', 'Writer', 'Screenplay'], array_keys($data['crew']));
         self::assertSame(['Inception', 'The Dark Knight : Le Chevalier noir'], array_column($data['crew']['Director'], 'title'));
         self::assertSame(['Inception'], array_column($data['crew']['Writer'], 'title'));
-        self::assertSame(['id', 'title', 'originalTitle', 'releaseDate', 'averageRating', 'posterUrl'], array_keys($data['crew']['Director'][0]));
+        self::assertSame(['id', 'title', 'originalTitle', 'releaseDate', 'averageRating', 'posterUrl', 'backdropUrl'], array_keys($data['crew']['Director'][0]));
     }
 
     public function testShowListsTheRolesPlayedInTheCast(): void

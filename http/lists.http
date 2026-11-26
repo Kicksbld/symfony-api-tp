@@ -44,7 +44,7 @@ Content-Type: application/json
   "name": "Ma liste"
 }
 
-### Listes publiques sans token, likedByMe vaut false pour chaque liste (200)
+### Listes publiques sans token, avec l'aperçu des 4 premiers films (previewMovies) et likedByMe à false (200)
 GET {{baseURL}}/api/lists
 
 ### Listes publiques avec token, likedByMe indique mes likes pour chaque liste (200)

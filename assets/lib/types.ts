@@ -11,6 +11,7 @@ export type MovieSummary = {
     releaseDate: string | null;
     averageRating: number | null;
     posterUrl: string | null;
+    backdropUrl: string | null;
 };
 
 export type Genre = {
@@ -109,6 +110,7 @@ export type UserProfile = UserSummary & {
     followingCount: number;
 };
 
+// Profil public, aussi renvoyé pour chaque membre de l'annuaire et des listes d'abonnés.
 export type PublicProfile = UserProfile & { followedByMe: boolean };
 
 export type CurrentUser = UserProfile & { email: string };
