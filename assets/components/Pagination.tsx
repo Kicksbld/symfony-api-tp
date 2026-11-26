@@ -1,5 +1,8 @@
+import { cn } from "cn";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import type { ReactNode } from "react";
 import { Link, type To } from "react-router";
-import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
 
 type PaginationProps = {
     page: number;
@@ -9,30 +12,81 @@ type PaginationProps = {
     disabled?: boolean;
 };
 
+// Pages voisines de la page courante affichées de chaque côté, en plus de la première et de la dernière.
+const SIBLING_COUNT = 1;
+
 export function Pagination({ page, lastPage, pathForPage, label, disabled = false }: PaginationProps) {
     return (
-        <nav className="flex items-center justify-center gap-4 text-sm" aria-label={label}>
-            <PageLink to={pathForPage(page - 1)} disabled={disabled || page <= 1} label="Précédent" />
-            <span>
-                Page {page} sur {lastPage}
-            </span>
-            <PageLink to={pathForPage(page + 1)} disabled={disabled || page >= lastPage} label="Suivant" />
+        <nav className="flex items-center justify-center gap-1 pt-2" aria-label={label}>
+            <PageLink to={pathForPage(page - 1)} disabled={disabled || page <= 1} label="Page précédente">
+                <ChevronLeft aria-hidden="true" />
+            </PageLink>
+            {visiblePages(page, lastPage).map((item, index) =>
+                item === null ? (
+                    <span key={`gap-${index}`} aria-hidden="true" className="w-6 text-center text-muted-foreground">
+                        …
+                    </span>
+                ) : (
+                    <PageLink key={item} to={pathForPage(item)} disabled={disabled} current={item === page} label={`Page ${item}`}>
+                        {item}
+                    </PageLink>
+                ),
+            )}
+            <PageLink to={pathForPage(page + 1)} disabled={disabled || page >= lastPage} label="Page suivante">
+                <ChevronRight aria-hidden="true" />
+            </PageLink>
         </nav>
     );
 }
 
-function PageLink({ to, disabled, label }: { to: To; disabled: boolean; label: string }) {
+// null marque un trou entre deux groupes de pages.
+function visiblePages(page: number, lastPage: number): (number | null)[] {
+    const pages: (number | null)[] = [];
+    for (let candidate = 1; candidate <= lastPage; candidate++) {
+        const isEdge = candidate === 1 || candidate === lastPage;
+        if (isEdge || Math.abs(candidate - page) <= SIBLING_COUNT) {
+            pages.push(candidate);
+        } else if (pages.at(-1) !== null) {
+            pages.push(null);
+        }
+    }
+
+    return pages;
+}
+
+type PageLinkProps = {
+    to: To;
+    disabled: boolean;
+    current?: boolean;
+    label: string;
+    children: ReactNode;
+};
+
+function PageLink({ to, disabled, current = false, label, children }: PageLinkProps) {
+    const className = cn(
+        buttonVariants({ variant: current ? "default" : "ghost", size: "icon-lg" }),
+        "rounded-full font-semibold tabular-nums",
+        disabled && !current && "pointer-events-none opacity-40",
+    );
+
+    if (current) {
+        return (
+            <span aria-current="page" aria-label={label} className={className}>
+                {children}
+            </span>
+        );
+    }
     if (disabled) {
         return (
-            <Button variant="outline" size="sm" disabled>
-                {label}
-            </Button>
+            <span aria-disabled="true" aria-label={label} className={className}>
+                {children}
+            </span>
         );
     }
 
     return (
-        <Button asChild variant="outline" size="sm">
-            <Link to={to}>{label}</Link>
-        </Button>
+        <Link to={to} aria-label={label} className={className}>
+            {children}
+        </Link>
     );
 }

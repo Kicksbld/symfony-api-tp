@@ -19,10 +19,11 @@ export function FormField({ id, label, hint, type = "text", autoComplete, value,
 
     return (
         <div className="space-y-2">
-            <Label htmlFor={id}>{label}</Label>
+            <Label htmlFor={id} className="text-sm text-muted-foreground">{label}</Label>
             <Input
                 id={id}
                 type={type}
+                className="h-11 rounded-xl px-4 text-base"
                 autoComplete={autoComplete}
                 required
                 value={value}

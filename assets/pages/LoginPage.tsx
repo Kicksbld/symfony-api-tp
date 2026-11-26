@@ -1,10 +1,8 @@
 import { useState, type FormEvent } from "react";
 import { Link, Navigate, useLocation, useSearchParams } from "react-router";
+import { FormField } from "@/components/FormField";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { ApiError } from "@/lib/api";
 import { useAuth } from "@/features/auth/auth";
 import { authPath, redirectTarget } from "@/lib/redirect";
@@ -39,44 +37,29 @@ export function LoginPage() {
     }
 
     return (
-        <Card className="mx-auto max-w-sm">
-            <CardHeader>
-                <CardTitle>Connexion</CardTitle>
-                <CardDescription>Compte de démo : jane@example.com, mot de passe demo1234.</CardDescription>
-            </CardHeader>
-            <CardContent>
-                <form onSubmit={handleSubmit} className="space-y-4">
-                    {error !== null && (
-                        <Alert variant="destructive">
-                            <AlertDescription>{error}</AlertDescription>
-                        </Alert>
-                    )}
-                    <div className="space-y-2">
-                        <Label htmlFor="email">Email</Label>
-                        <Input id="email" type="email" autoComplete="email" required value={email} onChange={(event) => setEmail(event.target.value)} />
-                    </div>
-                    <div className="space-y-2">
-                        <Label htmlFor="password">Mot de passe</Label>
-                        <Input
-                            id="password"
-                            type="password"
-                            autoComplete="current-password"
-                            required
-                            value={password}
-                            onChange={(event) => setPassword(event.target.value)}
-                        />
-                    </div>
-                    <Button type="submit" className="w-full" disabled={submitting}>
-                        Se connecter
-                    </Button>
-                </form>
-                <p className="mt-4 text-center text-sm text-muted-foreground">
-                    Pas encore de compte ?{" "}
-                    <Link to={authPath("/register", target)} className="text-primary underline-offset-4 hover:underline">
-                        Créer un compte
-                    </Link>
-                </p>
-            </CardContent>
-        </Card>
+        <section className="space-y-8">
+            <header className="space-y-2">
+                <h1 className="text-4xl font-extrabold">Bon retour.</h1>
+                <p className="text-muted-foreground">Connectez-vous pour reprendre votre journal là où vous l'avez laissé.</p>
+            </header>
+            <form onSubmit={handleSubmit} className="space-y-5">
+                {error !== null && (
+                    <Alert variant="destructive">
+                        <AlertDescription>{error}</AlertDescription>
+                    </Alert>
+                )}
+                <FormField id="email" label="Email" type="email" autoComplete="email" value={email} onChange={setEmail} />
+                <FormField id="password" label="Mot de passe" type="password" autoComplete="current-password" value={password} onChange={setPassword} />
+                <Button type="submit" size="lg" className="h-11 w-full rounded-full text-base" disabled={submitting}>
+                    {submitting ? "Connexion…" : "Se connecter"}
+                </Button>
+            </form>
+            <p className="text-center text-sm text-muted-foreground">
+                Pas encore de compte ?{" "}
+                <Link to={authPath("/register", target)} className="font-medium text-primary underline-offset-4 hover:underline">
+                    Créer un compte
+                </Link>
+            </p>
+        </section>
     );
 }
