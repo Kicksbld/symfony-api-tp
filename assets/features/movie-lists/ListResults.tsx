@@ -1,5 +1,6 @@
-import { Heart, LockKeyhole } from "lucide-react";
+import { LockKeyhole } from "lucide-react";
 import { Link } from "react-router";
+import { ListLikeButton } from "@/features/movie-lists/ListLikeButton";
 import type { MovieList } from "@/features/movie-lists/types";
 import { TEXT_LINK_CLASS_NAME } from "@/lib/utils";
 
@@ -30,10 +31,7 @@ export function ListResults({ lists, showAuthor = false }: { lists: MovieList[];
                     </div>
                     <div className="flex items-center gap-4 text-sm text-muted-foreground">
                         <span>{list.itemCount} {list.itemCount === 1 ? "film" : "films"}</span>
-                        <span className="inline-flex items-center gap-1">
-                            <Heart className="size-4" aria-hidden="true" />
-                            {list.likeCount}<span className="sr-only"> {list.likeCount === 1 ? "mention J’aime" : "mentions J’aime"}</span>
-                        </span>
+                        <ListLikeButton list={list} />
                     </div>
                 </li>
             ))}

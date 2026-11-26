@@ -55,19 +55,19 @@ export function movieRelationshipsQuery(username: string, list: MovieRelationshi
     });
 }
 
-export function profileListsKey(username: string, ownerSession: Session | null) {
-    const scope = ownerSession === null ? [] : sessionKey(ownerSession);
+export function profileListsKey(username: string, session: Session | null) {
+    const scope = session === null ? [] : sessionKey(session);
 
     return [...scope, ...userKey(username, "lists")] as const;
 }
 
-export function profileListsQuery(username: string, page: number, ownerSession: Session | null) {
+export function profileListsQuery(username: string, page: number, session: Session | null) {
     const params = new URLSearchParams(pageParams(page));
 
     return queryOptions({
-        queryKey: [...profileListsKey(username, ownerSession), { page }],
+        queryKey: [...profileListsKey(username, session), { page }],
         queryFn: ({ signal }) =>
-            apiFetch<Paginated<MovieList>>(`${userPath(username, "lists")}?${params}`, { signal, session: ownerSession }),
+            apiFetch<Paginated<MovieList>>(`${userPath(username, "lists")}?${params}`, { signal, session }),
         placeholderData: keepPreviousData,
     });
 }

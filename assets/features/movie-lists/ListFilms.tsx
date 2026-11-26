@@ -1,7 +1,7 @@
 import { useIsMutating, type UseQueryResult } from "@tanstack/react-query";
 import { ArrowDown, ArrowUp } from "lucide-react";
 import { useLayoutEffect, useRef, useState, type ReactNode, type Ref } from "react";
-import { Navigate } from "react-router";
+import { Navigate, type To } from "react-router";
 import { PaginatedResults } from "@/components/PaginatedList";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -14,7 +14,6 @@ import { MoviePicker } from "@/features/movies/MoviePicker";
 import { MoviePoster } from "@/features/movies/MoviePoster";
 import { releaseYear } from "@/features/movies/format";
 import { ApiError } from "@/lib/api";
-import { pageSearch } from "@/lib/pagination";
 import type { Session } from "@/lib/session";
 import type { MovieSummary, Paginated } from "@/lib/types";
 import { TEXT_LINK_CLASS_NAME } from "@/lib/utils";
@@ -24,10 +23,11 @@ const NOT_UNIQUE_VIOLATION = "urn:uuid:23bd9dbf-6b9b-41cd-a99e-4844bcf3077f";
 type ListFilmsProps = {
     list: MovieList;
     page: number;
+    pathForPage: (page: number) => To;
     result: UseQueryResult<Paginated<MovieListItem>>;
 };
 
-export function EditableListFilms({ list, page, result, session }: ListFilmsProps & { session: Session }) {
+export function EditableListFilms({ list, page, pathForPage, result, session }: ListFilmsProps & { session: Session }) {
     const changeItem = useChangeListItemMutation(session, list.id);
     const busy = useIsMutating({ mutationKey: listDetailKey(list.id, session) }) > 0;
     const [message, setMessage] = useState("");
@@ -90,13 +90,14 @@ export function EditableListFilms({ list, page, result, session }: ListFilmsProp
 
     const lastPage = Math.max(1, current?.lastPage ?? page);
     if (current !== undefined && !result.isError && page > lastPage) {
-        return <Navigate to={pageSearch(lastPage)} replace />;
+        return <Navigate to={pathForPage(lastPage)} replace />;
     }
 
     return (
         <ListFilms
             list={list}
             page={page}
+            pathForPage={pathForPage}
             result={result}
             headingRef={heading}
             toolbar={(
@@ -159,7 +160,7 @@ export function EditableListFilms({ list, page, result, session }: ListFilmsProp
     );
 }
 
-export function ListFilms({ list, page, result, headingRef, toolbar, actions }: ListFilmsProps & {
+export function ListFilms({ list, page, pathForPage, result, headingRef, toolbar, actions }: ListFilmsProps & {
     headingRef?: Ref<HTMLHeadingElement>;
     toolbar?: ReactNode;
     actions?: (item: MovieListItem, total: number) => ReactNode;
@@ -174,7 +175,7 @@ export function ListFilms({ list, page, result, headingRef, toolbar, actions }: 
                 result={result}
                 keepPreviousPage
                 page={page}
-                pathForPage={pageSearch}
+                pathForPage={pathForPage}
                 label="Pagination des films de la liste"
                 emptyMessage="Cette liste ne contient encore aucun film."
                 errorMessage="Impossible de charger les films de la liste."
