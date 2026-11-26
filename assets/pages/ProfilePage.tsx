@@ -157,8 +157,8 @@ export function ProfileListsTab() {
         <div className="space-y-4">
             {ownerSession !== null && <CreateListButton session={ownerSession} />}
             <PaginatedList
-                key={`${username}:${ownerSession?.cacheId ?? "public"}`}
-                query={profileListsQuery(username, page, ownerSession)}
+                key={`${username}:${session?.cacheId ?? "public"}`}
+                query={profileListsQuery(username, page, session)}
                 page={page}
                 pathForPage={pageSearch}
                 label="Pagination des listes du profil"

@@ -32,7 +32,8 @@ export function ListsPage() {
                 onSubmit={(next) => setSearchParams(listFilterParams(next))}
             />
             <PaginatedList
-                query={publicListsQuery(filters, page)}
+                key={session?.cacheId ?? "public"}
+                query={publicListsQuery(filters, page, session)}
                 page={page}
                 pathForPage={(nextPage) => pageSearch(nextPage, params)}
                 label="Pagination des listes publiques"

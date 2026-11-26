@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient, type QueryClient } from "@tanstack/react-query";
-import { listDetailKey, listDirectoryKey } from "@/features/movie-lists/queries";
+import { listViewKeys } from "@/features/movie-lists/list-view-keys";
+import { listDetailKey } from "@/features/movie-lists/queries";
 import type { MovieList, MovieListItem } from "@/features/movie-lists/types";
-import { profileListsKey } from "@/features/users/queries";
 import { apiFetch } from "@/lib/api";
 import { sessionKey } from "@/lib/query-client";
 import type { Session } from "@/lib/session";
@@ -14,8 +14,9 @@ type ItemChange =
     | { type: "remove"; id: number };
 
 async function refreshListViews(client: QueryClient, session: Session, id: number, deleted = false) {
-    const detailKeys = [listDetailKey(id, session), listDetailKey(id, null)];
-    const collectionKeys = [listDirectoryKey, profileListsKey(session.user.username, session), profileListsKey(session.user.username, null)];
+    const views = [session, null].map((viewer) => listViewKeys(id, session.user.username, viewer));
+    const detailKeys = views.map(({ detail }) => detail);
+    const collectionKeys = views.flatMap(({ collections }) => collections);
     const keys = [...detailKeys, ...collectionKeys];
 
     // Une requête lancée avant l'écriture peut encore renvoyer l'ancien état.

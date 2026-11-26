@@ -199,6 +199,21 @@ Une fois connecté, le bouton « Créer une liste » est disponible dans l’ann
 
 Sur la fiche, le propriétaire peut rechercher un film à ajouter, écrire une note de texte, l’effacer en laissant le champ vide ou retirer le film. Les boutons « Monter » et « Descendre » fonctionnent au clavier et déplacent le film d’une position dans la liste entière, y compris entre deux pages.
 
+#### Aimer et commenter une liste
+
+Le cœur permet d’ajouter ou de retirer une mention J’aime depuis la fiche, l’annuaire ou le profil de l’auteur. Le compteur change tout de suite et revient à sa valeur précédente si la requête échoue. Depuis la fiche, les commentaires sont affichés du plus ancien au plus récent, par pages de 20. Le paramètre `commentsPage` conserve la page des commentaires indépendamment de la page des films.
+
+Le formulaire accepte de 1 à 1 000 caractères. Chaque membre peut modifier ou supprimer ses propres commentaires. Le propriétaire d’une liste peut aussi supprimer les commentaires des autres membres sur sa liste. Les actions disponibles sans compte ouvrent la connexion, puis ramènent à la page d’origine.
+
+Pour vérifier le parcours avec les comptes de démonstration :
+
+1. Sans compte, ouvrir « Les incontournables » depuis `/lists`. Lire les commentaires, cliquer sur le cœur ou sur « Se connecter pour commenter », puis se connecter avec `jane_doe`. La fiche doit se rouvrir.
+2. Retirer puis remettre la mention J’aime de `jane_doe`. Comparer le cœur et le compteur sur la fiche, dans `/lists` et dans `/users/arthur/lists`. Couper la connexion réseau après le chargement de la fiche et retenter l’action pour observer le retour au compteur précédent et le message d’erreur.
+3. Essayer de publier un texte vide et un texte de plus de 1 000 caractères, puis publier un commentaire valide et le modifier. Vérifier que `jane_doe` peut supprimer ses propres commentaires mais qu’elle ne peut ni modifier ni supprimer celui de `camille`.
+4. Avec `arthur`, vérifier qu’il peut supprimer le commentaire ajouté par `jane_doe` sur sa liste et que le bouton « Modifier » est absent pour ce commentaire.
+5. Avec `jane_doe`, ouvrir sa liste privée « À revoir un jour » et copier son adresse. La fiche doit afficher « Liste introuvable » avec `arthur` ou sans compte.
+6. Sur la liste « Les incontournables », ajouter des commentaires de test jusqu’à en avoir 21 (la démo en fournit deux au départ). Ouvrir la deuxième page des commentaires, vérifier que la page des films reste la même et que recharger la fiche conserve la page de commentaires.
+
 #### Modification du profil
 
 Depuis son propre profil, le membre connecté peut ouvrir « Modifier mon profil » (`/settings/profile`). Le pseudo et la bio sont enregistrés avec `PATCH /api/me`. Une bio vide efface la bio existante. Si le pseudo change, la navigation et le lien « Voir mon profil public » utilisent la nouvelle adresse.

@@ -9,6 +9,15 @@ export type MovieList = {
     ranked: boolean;
     itemCount: number;
     likeCount: number;
+    likedByMe: boolean;
+};
+
+export type ListComment = {
+    id: number;
+    user: UserSummary;
+    content: string;
+    createdAt: string;
+    updatedAt: string;
 };
 
 export type MovieListItem = {
