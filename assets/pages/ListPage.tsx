@@ -3,7 +3,7 @@ import { LockKeyhole } from "lucide-react";
 import { Link, Navigate, useParams, useSearchParams } from "react-router";
 import { QueryError } from "@/components/QueryError";
 import { SectionSkeleton } from "@/components/SectionSkeleton";
-import { Button } from "@/components/ui/button";
+import { NotFoundMessage } from "@/components/NotFoundMessage";
 import { useAuth } from "@/features/auth/auth";
 import { ListActions } from "@/features/movie-lists/ListActions";
 import { Comments } from "@/features/comments/Comments";
@@ -11,11 +11,12 @@ import { commentsQuery, type CommentThread } from "@/features/comments/queries";
 import { EditableListFilms, ListFilms } from "@/features/movie-lists/ListFilms";
 import { ListLikeButton } from "@/features/movie-lists/ListLikeButton";
 import { listDetailQuery, listItemsQuery } from "@/features/movie-lists/queries";
+import { MoviePoster } from "@/features/movies/MoviePoster";
+import { UserAvatar } from "@/features/users/UserAvatar";
 import { ApiError } from "@/lib/api";
 import { parsePositiveInteger } from "@/lib/numbers";
 import { pageSearch, parsePage } from "@/lib/pagination";
 import type { Session } from "@/lib/session";
-import { TEXT_LINK_CLASS_NAME } from "@/lib/utils";
 
 export function ListPage() {
     const { id = "" } = useParams();
@@ -53,7 +54,7 @@ function ListDetails({ id, page, commentsPage, session }: { id: number; page: nu
         return <QueryError message="Impossible de charger la liste." error={error} onRetry={() => void refetch()} retrying={isFetching} />;
     }
     if (list === undefined) {
-        return <SectionSkeleton label="Chargement de la liste…" className="h-32 w-full" />;
+        return <SectionSkeleton label="Chargement de la liste…" className="h-64 w-full rounded-3xl" />;
     }
 
     const author = list.user.username;
@@ -61,24 +62,46 @@ function ListDetails({ id, page, commentsPage, session }: { id: number; page: nu
     const pathForFilms = (next: number) => listPaginationSearch(next, commentsPage);
 
     return (
-        <article className="space-y-8">
-            <header className="space-y-3 border-b pb-6">
-                <Link to="/lists" className={`text-sm text-muted-foreground ${TEXT_LINK_CLASS_NAME}`}>Toutes les listes publiques</Link>
-                <h1 className="text-3xl font-semibold wrap-break-word">{list.name}</h1>
-                <div className="flex flex-wrap gap-x-4 gap-y-2 text-sm text-muted-foreground">
-                    <span>Par <Link to={`/users/${author}/lists`} className={TEXT_LINK_CLASS_NAME}>{author}</Link></span>
-                    {list.ranked && <span>Liste classée</span>}
-                    {!list.public && (
-                        <span className="inline-flex items-center gap-1 text-foreground">
-                            <LockKeyhole className="size-4" aria-hidden="true" />
-                            Liste privée
-                        </span>
+        <article className="space-y-12">
+            <header className="relative isolate overflow-hidden rounded-3xl border border-white/5 bg-card/40 p-6 sm:p-10">
+                {list.previewMovies[0]?.backdropUrl != null && (
+                    <img src={list.previewMovies[0].backdropUrl} alt="" className="absolute inset-0 -z-10 size-full scale-110 object-cover opacity-30 blur-2xl" />
+                )}
+                <div className="absolute inset-0 -z-10 bg-gradient-to-t from-background/95 to-background/40" />
+                <div className="flex flex-col gap-8 md:flex-row md:items-end">
+                    {list.previewMovies.length > 0 && (
+                        <div aria-hidden="true" className="flex w-56 shrink-0">
+                            {list.previewMovies.map((movie, position) => (
+                                <div key={movie.id} className="-mr-[14%] w-1/3 overflow-hidden rounded-md shadow-[4px_0_12px_rgb(0_0_0/0.6)] ring-1 ring-white/10" style={{ zIndex: list.previewMovies.length - position }}>
+                                    <MoviePoster movie={movie} alt="" className="text-[0.5rem]" />
+                                </div>
+                            ))}
+                        </div>
                     )}
-                </div>
-                {list.description && <p className="max-w-prose wrap-break-word whitespace-pre-wrap">{list.description}</p>}
-                <div className="flex flex-wrap items-start gap-2">
-                    <ListLikeButton list={list} />
-                    {ownerSession !== null && <ListActions session={ownerSession} list={list} />}
+                    <div className="min-w-0 flex-1 space-y-4">
+                        <p className="eyebrow flex flex-wrap items-center gap-x-3 gap-y-1">
+                            <span>{list.ranked ? "Liste classée" : "Liste"}</span>
+                            {!list.public && (
+                                <span className="inline-flex items-center gap-1 text-foreground">
+                                    <LockKeyhole className="size-3.5" aria-hidden="true" />
+                                    Privée
+                                </span>
+                            )}
+                        </p>
+                        <h1 className="text-4xl font-extrabold wrap-break-word sm:text-5xl">{list.name}</h1>
+                        <p className="flex items-center gap-2 text-sm text-muted-foreground">
+                            <UserAvatar username={author} className="size-7 text-[0.65rem]" />
+                            Par{" "}
+                            <Link to={`/users/${author}/lists`} className="font-semibold text-foreground underline-offset-4 hover:underline">
+                                {author}
+                            </Link>
+                        </p>
+                        {list.description && <p className="max-w-prose leading-relaxed wrap-break-word whitespace-pre-wrap text-foreground/80">{list.description}</p>}
+                        <div className="flex flex-wrap items-start gap-2">
+                            <ListLikeButton list={list} />
+                            {ownerSession !== null && <ListActions session={ownerSession} list={list} />}
+                        </div>
+                    </div>
                 </div>
             </header>
             {ownerSession === null
@@ -90,12 +113,5 @@ function ListDetails({ id, page, commentsPage, session }: { id: number; page: nu
 }
 
 function ListNotFound() {
-    return (
-        <section className="space-y-4 text-center">
-            <h1 className="text-2xl font-semibold">Liste introuvable</h1>
-            <Button asChild variant="outline">
-                <Link to="/lists">Voir les listes publiques</Link>
-            </Button>
-        </section>
-    );
+    return <NotFoundMessage title="Liste introuvable" message="Cette liste n'existe pas ou son auteur l'a rendue privée." action={{ to: "/lists", label: "Voir les listes publiques" }} />;
 }

@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link, Navigate, useLocation } from "react-router";
+import { PageHeader } from "@/components/PageHeader";
 import { QueryError } from "@/components/QueryError";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/features/auth/auth";
@@ -27,12 +28,11 @@ function EditProfileLoader({ session }: { session: Session }) {
 
     return (
         <div className="mx-auto max-w-2xl space-y-6">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-                <h1 className="text-3xl font-semibold">Modifier mon profil</h1>
-                <Button asChild variant="outline">
+            <PageHeader eyebrow="Paramètres" title="Modifier mon profil">
+                <Button asChild variant="outline" className="h-10 rounded-full px-5">
                     <Link to={`/users/${encodeURIComponent(data?.username ?? session.user.username)}`}>Voir mon profil public</Link>
                 </Button>
-            </div>
+            </PageHeader>
             {data !== undefined ? (
                 <ProfileEditor session={session} user={data} />
             ) : error !== null ? (
@@ -44,18 +44,22 @@ function EditProfileLoader({ session }: { session: Session }) {
     );
 }
 
+const PANEL_CLASS_NAME = "rounded-2xl border border-white/5 bg-card/50 p-6 sm:p-8";
+
 function ProfileEditor({ session, user }: { session: Session; user: CurrentUser }) {
     const { isPending, mutateAsync } = useProfileMutation(session, user);
 
     return (
         <div className="space-y-6">
-            <ProfileDetailsForm
-                username={user.username}
-                bio={user.bio ?? ""}
-                saving={isPending}
-                onSave={(fields) => mutateAsync({ type: "profile", fields })}
-            />
-            <div className="border-t pt-6">
+            <div className={PANEL_CLASS_NAME}>
+                <ProfileDetailsForm
+                    username={user.username}
+                    bio={user.bio ?? ""}
+                    saving={isPending}
+                    onSave={(fields) => mutateAsync({ type: "profile", fields })}
+                />
+            </div>
+            <div className={PANEL_CLASS_NAME}>
                 <FavoriteMoviesForm
                     favorites={user.favorites}
                     saving={isPending}

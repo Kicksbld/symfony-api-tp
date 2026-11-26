@@ -1,15 +1,14 @@
-import { Search } from "lucide-react";
-import type { FormEvent } from "react";
 import { Navigate, useNavigate, useSearchParams } from "react-router";
+import { PageHeader } from "@/components/PageHeader";
 import { PaginatedList } from "@/components/PaginatedList";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { MemberResults } from "@/features/users/MemberResults";
+import { SearchField } from "@/components/SearchField";
+import { useAuth } from "@/features/auth/auth";
+import { MemberCard } from "@/features/users/MemberCard";
 import { MAX_USERNAME_LENGTH, membersQuery } from "@/features/users/queries";
 import { pageSearch, parsePage } from "@/lib/pagination";
 
 export function MembersPage() {
+    const { session } = useAuth();
     const [searchParams] = useSearchParams();
     const navigate = useNavigate();
     const rawUsername = searchParams.get("q");
@@ -21,41 +20,39 @@ export function MembersPage() {
         return <Navigate to={pageSearch(page ?? 1, params)} replace />;
     }
 
-    function submitUsername(event: FormEvent<HTMLFormElement>): void {
-        event.preventDefault();
-        const value = new FormData(event.currentTarget).get("q");
-        const nextUsername = typeof value === "string" ? value.trim() : "";
-        void navigate(pageSearch(1, nextUsername === "" ? {} : { q: nextUsername }));
+    function search(nextUsername: string): void {
+        void navigate(pageSearch(1, nextUsername === "" ? {} : { q: nextUsername }), { replace: true });
     }
 
     return (
-        <section className="space-y-6">
-            <h1 className="text-2xl font-semibold">Membres</h1>
-            <form key={username} role="search" onSubmit={submitUsername} className="flex max-w-xl items-end gap-2">
-                <div className="flex-1 space-y-1.5">
-                    <Label htmlFor="member-username">Pseudo</Label>
-                    <Input
-                        id="member-username"
-                        name="q"
-                        type="search"
-                        defaultValue={username}
-                        maxLength={MAX_USERNAME_LENGTH}
-                        placeholder="Rechercher un membre…"
-                    />
-                </div>
-                <Button type="submit" variant="outline" size="icon" aria-label="Rechercher">
-                    <Search aria-hidden="true" />
-                </Button>
-            </form>
+        <section className="space-y-8">
+            <PageHeader eyebrow="Communauté" title="Membres" description="Trouvez des cinéphiles à suivre et découvrez leurs films favoris." />
+            <SearchField
+                value={username}
+                onSearch={search}
+                label="Rechercher un membre par son pseudo"
+                placeholder="Rechercher un membre…"
+                maxLength={MAX_USERNAME_LENGTH}
+                className="max-w-xl"
+            />
             <PaginatedList
-                query={membersQuery(username, page)}
+                key={session?.cacheId ?? "public"}
+                query={membersQuery(username, page, session)}
                 page={page}
                 pathForPage={(nextPage) => pageSearch(nextPage, params)}
                 label="Pagination des membres"
                 emptyMessage={username === "" ? "Aucun membre pour l’instant." : `Aucun membre ne correspond à « ${username} ».`}
                 errorMessage="Impossible de charger les membres."
             >
-                {(members) => <MemberResults members={members} />}
+                {(members) => (
+                    <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                        {members.map((member) => (
+                            <li key={member.id}>
+                                <MemberCard member={member} />
+                            </li>
+                        ))}
+                    </ul>
+                )}
             </PaginatedList>
         </section>
     );

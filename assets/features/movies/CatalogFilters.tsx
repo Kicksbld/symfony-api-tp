@@ -1,7 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
 import { cn } from "cn";
-import { ArrowDownUp, Search, SlidersHorizontal, X } from "lucide-react";
-import { useEffect, useState } from "react";
+import { ArrowDownUp, SlidersHorizontal } from "lucide-react";
+import { useState } from "react";
+import { SearchField } from "@/components/SearchField";
 import { Button } from "@/components/ui/button";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import {
@@ -31,7 +32,7 @@ import { MAX_PERSON_NAME_LENGTH, peopleQuery } from "@/features/people/queries";
 import { WATCH_REGIONS } from "@/lib/types";
 import { useDebouncedValue } from "@/lib/useDebouncedValue";
 
-export type ChangeSearch = (search: CatalogSearch, options?: { replace: boolean }) => void;
+type ChangeSearch = (search: CatalogSearch, options?: { replace: boolean }) => void;
 
 type CatalogFiltersProps = {
     search: CatalogSearch;
@@ -47,7 +48,15 @@ export function CatalogFilters({ search, references, onChange }: CatalogFiltersP
     return (
         <div className="space-y-3">
             <div className="flex flex-wrap items-center gap-3">
-                <TitleSearch search={search} onChange={onChange} />
+                {/* L'URL est remplacée pendant la frappe : pas une entrée d'historique par mot tapé. */}
+                <SearchField
+                    value={search.q}
+                    onSearch={(q) => onChange({ ...search, q }, { replace: true })}
+                    label="Rechercher un film par titre"
+                    placeholder="Rechercher un film…"
+                    maxLength={MAX_TITLE_LENGTH}
+                    className="flex-1 basis-64"
+                />
                 <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
                     <SheetTrigger asChild>
                         <Button variant="outline" className="h-11 rounded-full px-4 md:hidden">
@@ -72,54 +81,6 @@ export function CatalogFilters({ search, references, onChange }: CatalogFiltersP
                 <SortMenu search={search} onChange={onChange} />
             </div>
             <FilterChips search={search} references={references} onChange={onChange} className="hidden md:flex" />
-        </div>
-    );
-}
-
-function TitleSearch({ search, onChange }: { search: CatalogSearch; onChange: ChangeSearch }) {
-    const [term, setTerm] = useState(search.q);
-    const [syncedTitle, setSyncedTitle] = useState(search.q);
-    const debouncedTerm = useDebouncedValue(term.trim());
-
-    // Le titre de l'URL change sans nous (Précédent, lien, filtre effacé) : le champ le reprend. On compare sans les
-    // espaces de fin pour ne pas effacer celui que le membre vient de taper entre deux mots.
-    if (search.q !== syncedTitle) {
-        setSyncedTitle(search.q);
-        if (search.q !== term.trim()) {
-            setTerm(search.q);
-        }
-    }
-
-    // On attend que la frappe soit finie (le terme retardé rattrape le champ) avant de changer l'URL, en la remplaçant
-    // pour ne pas ajouter une entrée d'historique par mot tapé.
-    useEffect(() => {
-        if (debouncedTerm === term.trim() && debouncedTerm !== search.q) {
-            onChange({ ...search, q: debouncedTerm }, { replace: true });
-        }
-    }, [debouncedTerm, term, search, onChange]);
-
-    return (
-        <div role="search" className="relative min-w-0 flex-1 basis-64">
-            <Search aria-hidden="true" className="pointer-events-none absolute top-1/2 left-4 size-4 -translate-y-1/2 text-muted-foreground" />
-            <input
-                type="search"
-                aria-label="Rechercher un film par titre"
-                value={term}
-                maxLength={MAX_TITLE_LENGTH}
-                placeholder="Rechercher un film…"
-                onChange={(event) => setTerm(event.target.value)}
-                className="h-11 w-full rounded-full border border-white/10 bg-white/5 pr-10 pl-11 text-base transition-colors outline-none placeholder:text-muted-foreground hover:border-white/20 focus-visible:border-primary/60 focus-visible:ring-3 focus-visible:ring-ring/30 [&::-webkit-search-cancel-button]:hidden"
-            />
-            {term !== "" && (
-                <button
-                    type="button"
-                    aria-label="Effacer le titre"
-                    onClick={() => setTerm("")}
-                    className="absolute top-1/2 right-2 flex size-7 -translate-y-1/2 items-center justify-center rounded-full text-muted-foreground hover:bg-white/10 hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
-                >
-                    <X aria-hidden="true" className="size-4" />
-                </button>
-            )}
         </div>
     );
 }

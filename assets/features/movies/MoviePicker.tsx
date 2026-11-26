@@ -1,16 +1,16 @@
 import { useQuery } from "@tanstack/react-query";
 import { Plus } from "lucide-react";
-import { useState, type FormEvent } from "react";
+import { useState } from "react";
 import { QueryError } from "@/components/QueryError";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { MoviePoster } from "@/features/movies/MoviePoster";
 import { DEFAULT_CATALOG_SEARCH, MAX_TITLE_LENGTH } from "@/features/movies/catalog-search";
 import { releaseYear } from "@/features/movies/format";
 import { moviesQuery } from "@/features/movies/queries";
 import type { MovieSummary } from "@/lib/types";
+import { useDebouncedValue } from "@/lib/useDebouncedValue";
 
 type MoviePickerProps = {
     selected: MovieSummary[];
@@ -20,18 +20,11 @@ type MoviePickerProps = {
     title?: string;
 };
 
+// En dessous, presque tous les titres correspondent : la liste n'aiderait pas à choisir.
+const MIN_TITLE_LENGTH = 2;
+
 export function MoviePicker({ selected, disabled, onSelect, triggerLabel = "Ajouter un film", title = "Ajouter un film favori" }: MoviePickerProps) {
     const [open, setOpen] = useState(false);
-    const [search, setSearch] = useState({ title: "", page: 1 });
-    const { data, error, isFetching, isPlaceholderData, refetch } = useQuery(
-        moviesQuery({ ...DEFAULT_CATALOG_SEARCH, q: search.title, page: search.page }, open && search.title !== ""),
-    );
-
-    function submit(event: FormEvent<HTMLFormElement>): void {
-        event.preventDefault();
-        const title = String(new FormData(event.currentTarget).get("q") ?? "").trim();
-        setSearch({ title, page: 1 });
-    }
 
     function changeOpen(next: boolean): void {
         if (!next || !disabled) {
@@ -42,70 +35,77 @@ export function MoviePicker({ selected, disabled, onSelect, triggerLabel = "Ajou
     return (
         <Dialog open={open} onOpenChange={changeOpen}>
             <DialogTrigger asChild>
-                <Button type="button" variant="outline" aria-disabled={disabled} className="aria-disabled:opacity-50">
+                <Button type="button" variant="outline" aria-disabled={disabled} className="h-10 rounded-full px-4 aria-disabled:opacity-50">
                     <Plus aria-hidden="true" />
                     {triggerLabel}
                 </Button>
             </DialogTrigger>
-            <DialogContent className="max-h-[90dvh] overflow-y-auto sm:max-w-lg">
-                <DialogHeader>
+            <DialogContent className="gap-0 overflow-hidden p-0 sm:max-w-lg">
+                <DialogHeader className="p-5 pb-3">
                     <DialogTitle>{title}</DialogTitle>
-                    <DialogDescription>Recherchez un film par son titre dans le catalogue.</DialogDescription>
+                    <DialogDescription>Tapez un titre, les films du catalogue s'affichent pendant la frappe.</DialogDescription>
                 </DialogHeader>
-                <form role="search" onSubmit={submit} className="flex items-end gap-2">
-                    <div className="min-w-0 flex-1 space-y-2">
-                        <Label htmlFor="movie-picker-title">Titre</Label>
-                        <Input id="movie-picker-title" name="q" type="search" defaultValue={search.title} maxLength={MAX_TITLE_LENGTH} />
-                    </div>
-                    <Button type="submit" variant="outline">Rechercher</Button>
-                </form>
-                {search.title !== "" && (
-                    error !== null ? (
-                        <QueryError message="Impossible de charger les films." error={error} onRetry={() => void refetch()} retrying={isFetching} />
-                    ) : data === undefined || isPlaceholderData ? (
-                        <p role="status" className="text-sm text-muted-foreground">Recherche en cours…</p>
-                    ) : data.movies.items.length === 0 ? (
-                        <p role="status" className="text-sm text-muted-foreground">Aucun film ne correspond à « {search.title} ».</p>
-                    ) : (
-                        <div className="space-y-3">
-                            <ul className="space-y-1">
-                                {data.movies.items.map((movie) => {
-                                    const alreadySelected = selected.some(({ id }) => id === movie.id);
-                                    const year = releaseYear(movie.releaseDate);
-
-                                    return (
-                                        <li key={movie.id}>
-                                            <Button
-                                                variant="ghost"
-                                                className="h-auto w-full justify-start whitespace-normal px-2 py-1.5 text-left"
-                                                disabled={disabled || alreadySelected}
-                                                onClick={() => {
-                                                    onSelect(movie);
-                                                    setOpen(false);
-                                                }}
-                                            >
-                                                <MoviePoster movie={movie} alt="" className="w-8 shrink-0 overflow-hidden rounded text-[0.5rem]" loading="lazy" />
-                                                <span>{movie.title}{year && ` (${year})`}{alreadySelected && " · Déjà ajouté"}</span>
-                                            </Button>
-                                        </li>
-                                    );
-                                })}
-                            </ul>
-                            {data.movies.lastPage > 1 && (
-                                <nav aria-label="Pagination de la recherche de films" className="flex flex-wrap items-center justify-between gap-2">
-                                    <Button variant="outline" disabled={search.page === 1} onClick={() => setSearch({ ...search, page: search.page - 1 })}>
-                                        Précédente
-                                    </Button>
-                                    <span className="text-sm text-muted-foreground">Page {search.page} sur {data.movies.lastPage}</span>
-                                    <Button variant="outline" disabled={search.page >= data.movies.lastPage} onClick={() => setSearch({ ...search, page: search.page + 1 })}>
-                                        Suivante
-                                    </Button>
-                                </nav>
-                            )}
-                        </div>
-                    )
+                {/* Le contenu est recréé à chaque ouverture : la recherche repart d'un champ vide. */}
+                {open && (
+                    <MovieResults
+                        selected={selected}
+                        disabled={disabled}
+                        onSelect={(movie) => {
+                            onSelect(movie);
+                            setOpen(false);
+                        }}
+                    />
                 )}
             </DialogContent>
         </Dialog>
+    );
+}
+
+type MovieResultsProps = Pick<MoviePickerProps, "selected" | "disabled" | "onSelect">;
+
+function MovieResults({ selected, disabled, onSelect }: MovieResultsProps) {
+    const [term, setTerm] = useState("");
+    const debouncedTerm = useDebouncedValue(term.trim());
+    const searching = debouncedTerm.length >= MIN_TITLE_LENGTH;
+    const { data, error, isFetching, refetch } = useQuery(moviesQuery({ ...DEFAULT_CATALOG_SEARCH, q: debouncedTerm }, searching));
+
+    return (
+        // Les résultats viennent déjà filtrés de l'API, cmdk ne doit pas les filtrer une seconde fois.
+        <Command shouldFilter={false} className="rounded-none border-t">
+            <CommandInput value={term} onValueChange={setTerm} maxLength={MAX_TITLE_LENGTH} placeholder="Titre du film…" className="h-11 text-base" />
+            <CommandList className="max-h-[min(24rem,55dvh)]">
+                {!searching && <p className="px-3 py-6 text-center text-sm text-muted-foreground">Tapez au moins 2 lettres.</p>}
+                {searching && error !== null && (
+                    <div className="p-3">
+                        <QueryError message="Impossible de charger les films." error={error} onRetry={() => void refetch()} retrying={isFetching} />
+                    </div>
+                )}
+                {searching && error === null && <CommandEmpty>{isFetching ? "Recherche en cours…" : "Aucun film ne correspond."}</CommandEmpty>}
+                {searching && data !== undefined && (
+                    <CommandGroup>
+                        {data.movies.items.map((movie) => {
+                            const alreadySelected = selected.some(({ id }) => id === movie.id);
+
+                            return (
+                                <CommandItem
+                                    key={movie.id}
+                                    value={String(movie.id)}
+                                    disabled={disabled || alreadySelected}
+                                    onSelect={() => onSelect(movie)}
+                                    className="gap-3"
+                                >
+                                    <MoviePoster movie={movie} alt="" className="w-8 shrink-0 rounded text-[0.5rem]" loading="lazy" />
+                                    <span className="min-w-0 flex-1 truncate font-medium">{movie.title}</span>
+                                    <span className="text-xs text-muted-foreground">{alreadySelected ? "Déjà ajouté" : releaseYear(movie.releaseDate)}</span>
+                                </CommandItem>
+                            );
+                        })}
+                    </CommandGroup>
+                )}
+                {searching && data !== undefined && data.movies.lastPage > 1 && (
+                    <p className="px-3 py-2 text-xs text-muted-foreground">Seuls les premiers résultats sont affichés, précisez le titre.</p>
+                )}
+            </CommandList>
+        </Command>
     );
 }

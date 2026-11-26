@@ -1,3 +1,4 @@
+import { cn } from "cn";
 import { Link, useLocation } from "react-router";
 import { Button } from "@/components/ui/button";
 import { useFollowMutation } from "@/features/users/follows";
@@ -5,12 +6,14 @@ import { authPath, returnPathFor } from "@/lib/redirect";
 import type { Session } from "@/lib/session";
 import type { PublicProfile } from "@/lib/types";
 
-export function FollowButton({ profile, session }: { profile: PublicProfile; session: Session | null }) {
+const BUTTON_CLASS_NAME = "h-10 rounded-full px-5";
+
+export function FollowButton({ profile, session, className }: { profile: PublicProfile; session: Session | null; className?: string }) {
     const location = useLocation();
 
     if (session === null) {
         return (
-            <Button asChild>
+            <Button asChild className={cn(BUTTON_CLASS_NAME, className)}>
                 <Link to={authPath("/login", returnPathFor(location))} aria-label={`Se connecter pour suivre ${profile.username}`}>
                     Suivre
                 </Link>
@@ -18,16 +21,17 @@ export function FollowButton({ profile, session }: { profile: PublicProfile; ses
         );
     }
 
-    return <ConnectedFollowButton key={`${session.cacheId}:${profile.id}`} profile={profile} session={session} />;
+    return <ConnectedFollowButton key={`${session.cacheId}:${profile.id}`} profile={profile} session={session} className={className} />;
 }
 
-function ConnectedFollowButton({ profile, session }: { profile: PublicProfile; session: Session }) {
+function ConnectedFollowButton({ profile, session, className }: { profile: PublicProfile; session: Session; className?: string }) {
     const { error, pending, toggle } = useFollowMutation(profile, session);
 
     return (
         <div className="space-y-1">
             <Button
                 variant={profile.followedByMe ? "outline" : "default"}
+                className={cn(BUTTON_CLASS_NAME, className)}
                 aria-disabled={pending}
                 onClick={toggle}
             >

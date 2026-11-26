@@ -1,16 +1,18 @@
 import { useQuery } from "@tanstack/react-query";
 import { QueryError } from "@/components/QueryError";
 import { SectionSkeleton } from "@/components/SectionSkeleton";
-import { formatRating, formatStarCount } from "@/features/movies/format";
+import { formatStarCount } from "@/features/movies/format";
 import { movieRatingsQuery } from "@/features/movies/queries";
 import type { RatingDistribution } from "@/lib/types";
+
+const AVERAGE_FORMAT = new Intl.NumberFormat("fr-FR", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
 
 export function MovieRatings({ movieId }: { movieId: number }) {
     const { data: ratings, error, isFetching, refetch } = useQuery(movieRatingsQuery(movieId));
 
     return (
         <section className="space-y-3" aria-labelledby="ratings-title">
-            <h2 id="ratings-title" className="text-lg font-semibold">
+            <h2 id="ratings-title" className="eyebrow">
                 Notes des membres
             </h2>
             {/* Une relecture ratée après un journal garde la répartition déjà affichée sous le message d'erreur. */}
@@ -33,13 +35,13 @@ function RatingHistogram({ ratings, average }: { ratings: RatingDistribution; av
     const maxCount = Math.max(...ratings.histogram.map((bar) => bar.count));
 
     return (
-        <div className="flex flex-wrap items-end gap-6">
-            <figure className="w-full max-w-sm">
-                <div className="flex h-24 items-end gap-1" aria-hidden="true">
+        <div className="flex items-end gap-5">
+            <figure className="min-w-0 flex-1">
+                <div className="flex h-20 items-end gap-0.5" aria-hidden="true">
                     {ratings.histogram.map((bar) => (
                         <div
                             key={bar.rating}
-                            className="flex-1 rounded-t-sm bg-primary/80"
+                            className="flex-1 rounded-t-sm bg-primary/70 transition-colors hover:bg-primary"
                             style={{ height: `${Math.max((bar.count / maxCount) * 100, 2)}%` }}
                             title={`${formatStarCount(bar.rating)} : ${bar.count}`}
                         />
@@ -67,11 +69,10 @@ function RatingHistogram({ ratings, average }: { ratings: RatingDistribution; av
                     </tbody>
                 </table>
             </figure>
-            <p className="text-sm">
-                <span className="text-2xl font-semibold">{formatRating(average)}</span>
-                <br />
-                <span className="text-muted-foreground">
-                    moyenne sur {ratings.count} {ratings.count > 1 ? "notes" : "note"}
+            <p className="shrink-0 text-right">
+                <span className="block font-heading text-4xl font-extrabold tracking-tight">{AVERAGE_FORMAT.format(average)}</span>
+                <span className="text-xs text-muted-foreground">
+                    sur 5, {ratings.count} {ratings.count > 1 ? "notes" : "note"}
                 </span>
             </p>
         </div>

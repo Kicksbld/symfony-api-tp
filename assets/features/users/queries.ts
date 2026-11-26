@@ -4,7 +4,7 @@ import { diaryFilterParams, type DiaryFilters } from "@/features/users/diary-sea
 import { apiFetch } from "@/lib/api";
 import { sessionKey } from "@/lib/query-client";
 import type { Session } from "@/lib/session";
-import type { LogEntry, MovieRelationshipItem, Paginated, PublicProfile, UserSummary } from "@/lib/types";
+import type { LogEntry, MovieRelationshipItem, Paginated, PublicProfile } from "@/lib/types";
 
 const PROFILE_PAGE_SIZE = 20;
 export const MAX_USERNAME_LENGTH = 20;
@@ -43,15 +43,20 @@ export function profileQuery(username: string, session: Session | null) {
 export const memberSearchKey = ["member-search"] as const;
 export const followListsKey = ["follow-lists"] as const;
 
-export function membersQuery(username: string, page: number) {
+// followedByMe dépend du membre connecté : chaque session a ses propres résultats.
+function viewerScope(session: Session | null): number | "public" {
+    return session?.cacheId ?? "public";
+}
+
+export function membersQuery(username: string, page: number, session: Session | null) {
     const params = new URLSearchParams(pageParams(page));
     if (username !== "") {
         params.set("q", username);
     }
 
     return queryOptions({
-        queryKey: [...memberSearchKey, { username, page }],
-        queryFn: ({ signal }) => apiFetch<Paginated<UserSummary>>(`/users?${params}`, { signal, session: null }),
+        queryKey: [...memberSearchKey, viewerScope(session), { username, page }],
+        queryFn: ({ signal }) => apiFetch<Paginated<PublicProfile>>(`/users?${params}`, { signal, session }),
         placeholderData: keepPreviousData,
     });
 }
@@ -60,12 +65,12 @@ export function followListKey(username: string, list: FollowList) {
     return [...followListsKey, username, list] as const;
 }
 
-export function followListQuery(username: string, list: FollowList, page: number) {
+export function followListQuery(username: string, list: FollowList, page: number, session: Session | null) {
     const params = new URLSearchParams(pageParams(page));
 
     return queryOptions({
-        queryKey: [...followListKey(username, list), { page }],
-        queryFn: ({ signal }) => apiFetch<Paginated<UserSummary>>(`${userPath(username, list)}?${params}`, { signal, session: null }),
+        queryKey: [...followListKey(username, list), viewerScope(session), { page }],
+        queryFn: ({ signal }) => apiFetch<Paginated<PublicProfile>>(`${userPath(username, list)}?${params}`, { signal, session }),
         placeholderData: keepPreviousData,
     });
 }

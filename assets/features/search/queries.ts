@@ -7,7 +7,7 @@ const SUGGESTION_COUNT = 5;
 
 const NO_MEMBERS: Paginated<UserSummary> = { items: [], total: 0, lastPage: 1 };
 
-export type SearchSuggestions = {
+type SearchSuggestions = {
     movies: Paginated<MovieSummary>;
     people: Paginated<PersonSummary>;
     members: Paginated<UserSummary>;

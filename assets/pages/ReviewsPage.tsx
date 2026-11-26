@@ -1,4 +1,5 @@
 import { Link, Navigate, useSearchParams } from "react-router";
+import { PageHeader } from "@/components/PageHeader";
 import { PaginatedList } from "@/components/PaginatedList";
 import { useAuth } from "@/features/auth/auth";
 import { LogEntryCard } from "@/features/log-entries/LogEntryCard";
@@ -7,7 +8,7 @@ import { reviewsPath, reviewsQuery } from "@/features/log-entries/reviews";
 import { USERNAME_PATTERN } from "@/features/users/username";
 import { parsePositiveInteger } from "@/lib/numbers";
 import { pageSearch, parsePage } from "@/lib/pagination";
-import { TEXT_LINK_CLASS_NAME } from "@/lib/utils";
+import { CHIP_LINK_CLASS_NAME } from "@/lib/utils";
 
 export function ReviewsPage() {
     const { session } = useAuth();
@@ -25,17 +26,19 @@ export function ReviewsPage() {
     }
 
     return (
-        <section className="max-w-3xl space-y-6">
-            <header className="space-y-2">
-                <h1 className="text-3xl font-semibold">{user === null ? "Critiques" : `Critiques de ${user}`}</h1>
-                {(movie !== null || user !== null) && (
-                    <div className="flex flex-wrap gap-x-4 gap-y-2 text-sm">
-                        <Link to={reviewsPath()} className={TEXT_LINK_CLASS_NAME}>Toutes les critiques</Link>
-                        {movie !== null && <Link to={`/movies/${movie}`} className={TEXT_LINK_CLASS_NAME}>Retour au film</Link>}
-                        {user !== null && <Link to={`/users/${user}`} className={TEXT_LINK_CLASS_NAME}>Voir le profil</Link>}
-                    </div>
-                )}
-            </header>
+        <section className="mx-auto max-w-3xl space-y-8">
+            <PageHeader
+                eyebrow="Ce qu'en pensent les membres"
+                title={user === null ? "Critiques" : `Critiques de ${user}`}
+                description={movie === null && user === null ? "Les dernières critiques écrites par les membres, de la plus récente à la plus ancienne." : undefined}
+            />
+            {(movie !== null || user !== null) && (
+                <nav aria-label="Autres critiques" className="flex flex-wrap gap-2">
+                    <Link to={reviewsPath()} className={CHIP_LINK_CLASS_NAME}>Toutes les critiques</Link>
+                    {movie !== null && <Link to={`/movies/${movie}`} className={CHIP_LINK_CLASS_NAME}>Retour au film</Link>}
+                    {user !== null && <Link to={`/users/${user}`} className={CHIP_LINK_CLASS_NAME}>Voir le profil</Link>}
+                </nav>
+            )}
             <PaginatedList
                 key={session?.cacheId ?? "public"}
                 query={reviewsQuery(filters, page, session)}

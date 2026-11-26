@@ -1,8 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
+import { ArrowLeft } from "lucide-react";
 import { Link, Navigate, useParams, useSearchParams } from "react-router";
 import { QueryError } from "@/components/QueryError";
 import { SectionSkeleton } from "@/components/SectionSkeleton";
-import { Button } from "@/components/ui/button";
+import { NotFoundMessage } from "@/components/NotFoundMessage";
 import { useAuth } from "@/features/auth/auth";
 import { Comments } from "@/features/comments/Comments";
 import { commentsQuery, type CommentThread } from "@/features/comments/queries";
@@ -14,7 +15,7 @@ import { ApiError } from "@/lib/api";
 import { parsePositiveInteger } from "@/lib/numbers";
 import { pageSearch, parsePage } from "@/lib/pagination";
 import type { Session } from "@/lib/session";
-import { TEXT_LINK_CLASS_NAME } from "@/lib/utils";
+import { CHIP_LINK_CLASS_NAME } from "@/lib/utils";
 
 export function LogEntryPage() {
     const { id = "" } = useParams();
@@ -52,8 +53,11 @@ function LogEntryDetails({ id, page, session }: { id: number; page: number; sess
     }
 
     return (
-        <div className="max-w-3xl space-y-6">
-            <Link to={reviewsPath()} className={`text-sm ${TEXT_LINK_CLASS_NAME}`}>Toutes les critiques</Link>
+        <div className="mx-auto max-w-3xl space-y-6">
+            <Link to={reviewsPath()} className={CHIP_LINK_CLASS_NAME}>
+                <ArrowLeft aria-hidden="true" className="mr-1.5 size-4" />
+                Toutes les critiques
+            </Link>
             {error !== null && <QueryError message="Impossible d’actualiser l’entrée." error={error} onRetry={() => void refetch()} retrying={isFetching} />}
             <LogEntryCard entry={entry} heading="h1">
                 <div className="flex flex-wrap items-start gap-2">
@@ -75,12 +79,5 @@ function LogEntryDetails({ id, page, session }: { id: number; page: number; sess
 }
 
 function EntryNotFound() {
-    return (
-        <section className="space-y-4 text-center">
-            <h1 className="text-2xl font-semibold">Entrée introuvable</h1>
-            <Button asChild variant="outline">
-                <Link to={reviewsPath()}>Voir les critiques</Link>
-            </Button>
-        </section>
-    );
+    return <NotFoundMessage title="Entrée introuvable" message="Ce visionnage n'existe pas ou a été supprimé." action={{ to: reviewsPath(), label: "Voir les critiques" }} />;
 }

@@ -1,8 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
-import { Link, Navigate, useParams, useSearchParams } from "react-router";
+import { Navigate, useParams, useSearchParams } from "react-router";
+import { PageHeader } from "@/components/PageHeader";
 import { PaginatedList } from "@/components/PaginatedList";
 import { QueryError } from "@/components/QueryError";
-import { Button } from "@/components/ui/button";
+import { NotFoundMessage } from "@/components/NotFoundMessage";
 import { Skeleton } from "@/components/ui/skeleton";
 import { companyMoviesQuery, companyQuery } from "@/features/companies/queries";
 import { CatalogLink } from "@/features/movies/CatalogLink";
@@ -51,10 +52,12 @@ function CompanyDetails({ companyId }: { companyId: number }) {
     }
 
     return (
-        <article className="space-y-8">
+        <article className="space-y-12">
             <CompanyHeader company={company} />
-            <section className="space-y-6">
-                <h2 className="text-lg font-semibold">Films</h2>
+            <section aria-labelledby="company-movies-title" className="space-y-6">
+                <h2 id="company-movies-title" className="text-2xl font-bold sm:text-3xl">
+                    Films
+                </h2>
                 <PaginatedList
                     query={companyMoviesQuery(company.id, page)}
                     page={page}
@@ -79,30 +82,22 @@ function CompanyDetails({ companyId }: { companyId: number }) {
 
 function CompanyHeader({ company }: { company: Company }) {
     return (
-        <header className="space-y-4">
+        <div className="flex flex-wrap items-end gap-6">
             {/* Les logos TMDB sont souvent sombres sur fond transparent : un fond clair les garde lisibles en thème sombre. */}
             {company.logoUrl !== null && (
-                <div className="inline-flex rounded-lg bg-white p-3">
+                <div className="flex h-24 items-center rounded-2xl bg-white px-5">
                     <img src={company.logoUrl} alt={`Logo de ${company.name}`} className="h-12 w-auto object-contain" />
                 </div>
             )}
-            <div className="space-y-1">
-                <p className="text-sm text-muted-foreground">Studio</p>
-                <h1 className="text-3xl font-semibold">{company.name}</h1>
+            <div className="flex-1">
+                <PageHeader eyebrow="Studio" title={company.name}>
+                    <CatalogLink to={catalogPathWith({ company: company.id })} />
+                </PageHeader>
             </div>
-            <CatalogLink to={catalogPathWith({ company: company.id })} />
-        </header>
+        </div>
     );
 }
 
 function CompanyNotFound() {
-    return (
-        <section className="space-y-4 text-center">
-            <h1 className="text-2xl font-semibold">Studio introuvable</h1>
-            <p className="text-muted-foreground">Ce studio n'existe pas ou n'est plus dans le catalogue.</p>
-            <Button asChild variant="outline">
-                <Link to={catalogPath(DEFAULT_CATALOG_SEARCH)}>Retour au catalogue</Link>
-            </Button>
-        </section>
-    );
+    return <NotFoundMessage title="Studio introuvable" message="Ce studio n'existe pas ou n'est plus dans le catalogue." action={{ to: catalogPath(DEFAULT_CATALOG_SEARCH), label: "Retour au catalogue" }} />;
 }

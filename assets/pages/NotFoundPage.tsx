@@ -1,13 +1,5 @@
-import { Link } from "react-router";
-import { Button } from "@/components/ui/button";
+import { NotFoundMessage } from "@/components/NotFoundMessage";
 
 export function NotFoundPage() {
-    return (
-        <section className="space-y-4 text-center">
-            <h1 className="text-2xl font-semibold">Page introuvable</h1>
-            <Button asChild variant="outline">
-                <Link to="/">Retour à l'accueil</Link>
-            </Button>
-        </section>
-    );
+    return <NotFoundMessage title="Page introuvable" message="Cette adresse ne mène à aucune page du site." action={{ to: "/", label: "Retour à l'accueil" }} />;
 }

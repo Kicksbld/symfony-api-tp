@@ -1,15 +1,14 @@
 import { useIsMutating, useQuery } from "@tanstack/react-query";
 import { BookmarkCheck, BookmarkPlus, Eye, Heart } from "lucide-react";
-import { useId } from "react";
+import type { ReactNode } from "react";
 import { Link, useLocation } from "react-router";
 import { QueryError } from "@/components/QueryError";
 import { SectionSkeleton } from "@/components/SectionSkeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
 import { useAuth } from "@/features/auth/auth";
 import { relationshipQuery, useRelationshipMutation } from "@/features/movie-relationships/queries";
-import { RatingSelect } from "@/features/movies/RatingSelect";
+import { StarRatingInput } from "@/features/movies/StarRatingInput";
 import { authPath, returnPathFor } from "@/lib/redirect";
 import type { Session } from "@/lib/session";
 import type { MovieRelationship } from "@/lib/types";
@@ -20,7 +19,7 @@ export function MovieRelationshipControls({ movieId }: { movieId: number }) {
 
     if (session === null) {
         return (
-            <Button asChild variant="outline" className="h-11 px-4">
+            <Button asChild variant="outline" className="h-11 w-full rounded-full px-4">
                 <Link to={authPath("/login", returnPathFor(location))}>
                     <BookmarkPlus aria-hidden="true" />
                     Ajouter à ma watchlist
@@ -37,7 +36,6 @@ function MemberRelationshipControls({ session, movieId }: { session: Session; mo
     const relationship = useQuery(options);
     const mutation = useRelationshipMutation(session, movieId);
     const pending = useIsMutating({ mutationKey: options.queryKey }) > 0;
-    const ratingId = useId();
 
     if (relationship.data === undefined && relationship.error === null) {
         return <SectionSkeleton label="Chargement de mon suivi…" className="h-11 w-48" />;
@@ -62,43 +60,23 @@ function MemberRelationshipControls({ session, movieId }: { session: Session; mo
                 />
             )}
             {state !== undefined && (
-                <div role="group" aria-label="Mon suivi du film" aria-busy={pending} className="flex flex-wrap items-center gap-2 aria-busy:opacity-70">
-                    <Button
-                        variant={state.watched ? "secondary" : "outline"}
-                        className="h-11"
-                        aria-pressed={state.watched}
-                        aria-disabled={pending}
-                        onClick={() => update({ watched: !state.watched })}
-                    >
-                        <Eye aria-hidden="true" /> Vu
-                    </Button>
-                    <Button
-                        variant={state.liked ? "secondary" : "outline"}
-                        className="h-11"
-                        aria-pressed={state.liked}
-                        aria-disabled={pending}
-                        onClick={() => update({ liked: !state.liked })}
-                    >
-                        <Heart aria-hidden="true" className={state.liked ? "fill-current" : undefined} /> Aimé
-                    </Button>
-                    <Button
-                        variant={state.inWatchlist ? "secondary" : "outline"}
-                        className="h-11"
-                        aria-disabled={pending}
-                        onClick={() => update({ inWatchlist: !state.inWatchlist })}
-                    >
-                        {state.inWatchlist ? <BookmarkCheck aria-hidden="true" /> : <BookmarkPlus aria-hidden="true" />}
-                        {state.inWatchlist ? "Retirer de ma watchlist" : "Ajouter à ma watchlist"}
-                    </Button>
-                    <div className="flex items-center gap-2">
-                        <Label htmlFor={ratingId}>Ma note</Label>
-                        <RatingSelect
-                            id={ratingId}
-                            className="[&_select]:h-11"
-                            value={state.rating ?? ""}
-                            aria-disabled={pending}
-                            onChange={(event) => update({ rating: event.target.value === "" ? null : Number(event.target.value) })}
-                        />
+                <div role="group" aria-label="Mon suivi du film" aria-busy={pending} className="space-y-4 aria-busy:opacity-70">
+                    <div className="grid grid-cols-3 gap-2">
+                        <ToggleAction label="Vu" pressed={state.watched} pending={pending} onToggle={() => update({ watched: !state.watched })}>
+                            <Eye aria-hidden="true" />
+                        </ToggleAction>
+                        <ToggleAction label="Aimé" pressed={state.liked} pending={pending} onToggle={() => update({ liked: !state.liked })}>
+                            <Heart aria-hidden="true" className={state.liked ? "fill-current" : undefined} />
+                        </ToggleAction>
+                        <ToggleAction label="Watchlist" pressed={state.inWatchlist} pending={pending} onToggle={() => update({ inWatchlist: !state.inWatchlist })}>
+                            {state.inWatchlist ? <BookmarkCheck aria-hidden="true" /> : <BookmarkPlus aria-hidden="true" />}
+                        </ToggleAction>
+                    </div>
+                    <div className="flex flex-col items-center gap-1 border-t border-white/10 pt-3">
+                        <span aria-hidden="true" className="eyebrow">
+                            Ma note
+                        </span>
+                        <StarRatingInput label="Ma note" value={state.rating} disabled={pending} onChange={(rating) => update({ rating })} />
                     </div>
                 </div>
             )}
@@ -110,3 +88,27 @@ function MemberRelationshipControls({ session, movieId }: { session: Session; mo
         </div>
     );
 }
+
+type ToggleActionProps = {
+    label: string;
+    pressed: boolean;
+    pending: boolean;
+    onToggle: () => void;
+    children: ReactNode;
+};
+
+function ToggleAction({ label, pressed, pending, onToggle, children }: ToggleActionProps) {
+    return (
+        <button
+            type="button"
+            aria-pressed={pressed}
+            aria-disabled={pending}
+            onClick={onToggle}
+            className="flex flex-col items-center gap-1.5 rounded-xl py-3 text-xs font-semibold text-muted-foreground transition-colors hover:bg-white/5 hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none aria-pressed:text-primary [&_svg]:size-6"
+        >
+            {children}
+            {label}
+        </button>
+    );
+}
+

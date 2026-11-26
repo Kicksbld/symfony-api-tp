@@ -57,7 +57,7 @@ export function FilterPopover({ label, value, onClear, disabled = false, classNa
     );
 }
 
-export type FilterOption<T> = { value: T; label: string };
+type FilterOption<T> = { value: T; label: string };
 
 type OptionListProps<T> = {
     placeholder: string;

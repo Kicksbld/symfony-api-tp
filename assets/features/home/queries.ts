@@ -2,7 +2,7 @@ import { queryOptions } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/api";
 import type { MovieSummary, Paginated } from "@/lib/types";
 
-export const FEATURED_MOVIE_COUNT = 5;
+const FEATURED_MOVIE_COUNT = 5;
 
 // Le tri « tendances » départage par popularité TMDB : sans activité récente, on obtient les films populaires.
 export function featuredMoviesQuery() {

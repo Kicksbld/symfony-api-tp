@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-export const SEARCH_DEBOUNCE_DELAY = 300;
+const SEARCH_DEBOUNCE_DELAY = 300;
 
 // Les recherches partent quand la frappe s'arrête, pas à chaque lettre.
 export function useDebouncedValue<T>(value: T, delay = SEARCH_DEBOUNCE_DELAY): T {

@@ -167,7 +167,7 @@ export function ListFilms({ list, page, pathForPage, result, headingRef, toolbar
 }) {
     return (
         <section aria-labelledby="list-films" className="space-y-4">
-            <h2 id="list-films" ref={headingRef} tabIndex={actions === undefined ? undefined : -1} className="text-lg font-semibold">
+            <h2 id="list-films" ref={headingRef} tabIndex={actions === undefined ? undefined : -1} className="text-2xl font-bold sm:text-3xl">
                 {list.itemCount} {list.itemCount === 1 ? "film" : "films"}
             </h2>
             {toolbar}
@@ -181,7 +181,7 @@ export function ListFilms({ list, page, pathForPage, result, headingRef, toolbar
                 errorMessage="Impossible de charger les films de la liste."
             >
                 {(entries, total) => (
-                    <ul className="divide-y border-y">
+                    <ul className="divide-y divide-white/5">
                         {entries.map((item) => (
                             <ListMovie key={item.id} item={item} ranked={list.ranked}>{actions?.(item, total)}</ListMovie>
                         ))}
@@ -197,15 +197,15 @@ function ListMovie({ item, ranked, children }: { item: MovieListItem; ranked: bo
     const year = releaseYear(movie.releaseDate);
 
     return (
-        <li className="flex items-start gap-3 py-4 sm:gap-5">
+        <li className="flex items-center gap-4 py-4 sm:gap-6">
             {ranked && (
-                <span className="min-w-8 pt-1 text-sm font-medium text-muted-foreground tabular-nums">
+                <span className="w-12 shrink-0 text-right font-heading text-4xl font-extrabold tracking-tighter text-transparent tabular-nums [-webkit-text-stroke:1.5px_var(--color-primary)] sm:w-16 sm:text-5xl">
                     <span className="sr-only">Position </span>{position}
                 </span>
             )}
-            <MoviePoster movie={movie} alt="" className="w-12 shrink-0 rounded-md text-xs sm:w-16" loading="lazy" />
+            <MoviePoster movie={movie} alt="" className="w-14 shrink-0 rounded-md text-xs ring-1 ring-white/10 sm:w-20" loading="lazy" />
             <div className="min-w-0 space-y-1.5">
-                <h3 className="wrap-break-word">
+                <h3 className="text-lg font-bold wrap-break-word">
                     <MovieLink movieId={movie.id} className={TEXT_LINK_CLASS_NAME}>{movie.title}</MovieLink>
                     {year && <span className="ml-2 text-sm text-muted-foreground">{year}</span>}
                 </h3>
