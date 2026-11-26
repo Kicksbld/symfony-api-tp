@@ -37,13 +37,14 @@ function ConnectedLikeButton({ target, title, path, viewsFor, session }: LikeBut
     const toggle = useLikeMutation(target, session, path, viewsFor);
     const mutationKey = likeMutationKey(viewsFor(session).detail);
     const countId = useId();
-    const pendingChanges = useMutationState({
-        filters: { mutationKey, exact: true, status: "pending" },
-        select: ({ state }) => state.variables === true,
+    const changes = useMutationState({
+        filters: { mutationKey, exact: true },
+        select: ({ state }) => ({ status: state.status, liked: state.variables === true }),
     });
-    // Une seule mise à jour en attente est affichée sur toutes les vues.
-    const pending = pendingChanges.at(-1);
-    const liked = pending ?? target.likedByMe;
+    // Toutes les vues affichent le même état pendant la requête et après un échec.
+    const latest = changes.at(-1);
+    const pending = latest?.status === "pending";
+    const liked = pending ? latest.liked : target.likedByMe;
     const count = likeCountFor(target, liked);
 
     return (
@@ -54,7 +55,7 @@ function ConnectedLikeButton({ target, title, path, viewsFor, session }: LikeBut
                 aria-label={`J’aime ${title}`}
                 aria-describedby={countId}
                 aria-pressed={liked}
-                aria-disabled={pending !== undefined}
+                aria-disabled={pending}
                 onClick={() => {
                     if (client.isMutating({ mutationKey, exact: true }) === 0) {
                         toggle.mutate(!liked);
@@ -64,7 +65,7 @@ function ConnectedLikeButton({ target, title, path, viewsFor, session }: LikeBut
                 <LikeCount count={count} liked={liked} />
             </Button>
             <span id={countId} className="sr-only">{count} {count === 1 ? "mention J’aime" : "mentions J’aime"}</span>
-            {toggle.isError && <p role="alert" className="text-sm text-destructive">Impossible de modifier la mention J’aime. Réessayez.</p>}
+            {latest?.status === "error" && <p role="alert" className="text-sm text-destructive">Impossible de modifier la mention J’aime. Réessayez.</p>}
         </div>
     );
 }
