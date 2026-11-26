@@ -3,20 +3,22 @@ import { useState } from "react";
 import { Link, Navigate, useLocation, type To } from "react-router";
 import { PaginatedResults } from "@/components/PaginatedList";
 import { Button } from "@/components/ui/button";
-import { ListCommentForm } from "@/features/movie-lists/ListCommentForm";
-import { ListCommentRow } from "@/features/movie-lists/ListCommentRow";
-import type { ListComment, MovieList } from "@/features/movie-lists/types";
+import { CommentForm } from "@/features/comments/CommentForm";
+import { CommentRow } from "@/features/comments/CommentRow";
+import type { Comment, CommentThread } from "@/features/comments/queries";
 import { authPath, returnPathFor } from "@/lib/redirect";
 import type { Session } from "@/lib/session";
 import type { Paginated } from "@/lib/types";
 import { TEXT_LINK_CLASS_NAME } from "@/lib/utils";
 
-export function ListComments({ list, page, pathForPage, result, session }: {
-    list: MovieList;
+export function Comments({ thread, ownerId, page, pathForPage, result, session, total }: {
+    thread: CommentThread;
+    ownerId: number;
     page: number;
     pathForPage: (page: number) => To;
-    result: UseQueryResult<Paginated<ListComment>>;
+    result: UseQueryResult<Paginated<Comment>>;
     session: Session | null;
+    total?: number;
 }) {
     const location = useLocation();
     const [published, setPublished] = useState(false);
@@ -27,14 +29,14 @@ export function ListComments({ list, page, pathForPage, result, session }: {
     }
 
     return (
-        <section aria-labelledby="list-comments" className="space-y-4">
-            <h2 id="list-comments" className="text-lg font-semibold">Commentaires</h2>
+        <section aria-labelledby="comments" className="space-y-4">
+            <h2 id="comments" className="text-lg font-semibold">Commentaires{total !== undefined && ` (${total})`}</h2>
             {session === null ? (
                 <Button asChild variant="outline" size="sm">
                     <Link to={authPath("/login", returnPathFor(location))}>Se connecter pour commenter</Link>
                 </Button>
             ) : (
-                <ListCommentForm listId={list.id} session={session} onSaved={() => setPublished(true)} />
+                <CommentForm thread={thread} session={session} onSaved={() => setPublished(true)} />
             )}
             <p role="status" className={published ? "text-sm text-muted-foreground" : "sr-only"}>{published && "Commentaire publié."}</p>
             {published && page < lastPage && (
@@ -45,13 +47,13 @@ export function ListComments({ list, page, pathForPage, result, session }: {
                 keepPreviousPage={false}
                 page={page}
                 pathForPage={pathForPage}
-                label="Pagination des commentaires de la liste"
+                label="Pagination des commentaires"
                 emptyMessage="Aucun commentaire pour le moment."
                 errorMessage="Impossible de charger les commentaires."
             >
                 {(comments) => (
                     <ul className="divide-y border-y">
-                        {comments.map((comment) => <ListCommentRow key={comment.id} comment={comment} list={list} session={session} />)}
+                        {comments.map((comment) => <CommentRow key={comment.id} comment={comment} thread={thread} ownerId={ownerId} session={session} />)}
                     </ul>
                 )}
             </PaginatedResults>

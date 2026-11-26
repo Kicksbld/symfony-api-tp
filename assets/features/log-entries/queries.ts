@@ -1,5 +1,6 @@
 import { useMutation, useQueryClient, type QueryClient } from "@tanstack/react-query";
 import type { LogEntryPayload } from "@/features/log-entries/draft";
+import { refreshReviewViews } from "@/features/log-entries/reviews";
 import { relationshipQuery } from "@/features/movie-relationships/queries";
 import { movieQuery } from "@/features/movies/queries";
 import { userQueriesKey } from "@/features/users/queries";
@@ -12,12 +13,13 @@ import type { LogEntry } from "@/lib/types";
  * Une entrée de journal change plusieurs vues côté serveur : mon état sur le film (vu, note, coup de cœur, watchlist),
  * la moyenne du film, et les onglets et compteurs de mon profil. On les relit toutes au lieu de deviner le résultat.
  */
-async function refreshLogEntryViews(queryClient: QueryClient, session: Session, movieId: number): Promise<void> {
+async function refreshLogEntryViews(queryClient: QueryClient, session: Session, movieId: number, entryId?: number): Promise<void> {
     if (!isCurrentSession(session)) {
         return;
     }
 
     await Promise.all([
+        refreshReviewViews(queryClient, session, entryId),
         queryClient.invalidateQueries({ queryKey: relationshipQuery(session, movieId).queryKey }),
         queryClient.invalidateQueries({ queryKey: movieQuery(movieId).queryKey }),
         ...[session, null].map((viewer) => queryClient.invalidateQueries({ queryKey: userQueriesKey(session.user.username, viewer) })),
@@ -42,7 +44,7 @@ export function useUpdateLogEntryMutation(session: Session, entry: LogEntry) {
         mutationKey: [...sessionKey(session), "log-entries", entry.id, "update"],
         mutationFn: (payload: LogEntryPayload) =>
             apiFetch<LogEntry>(`/log-entries/${entry.id}`, { session, method: "PATCH", body: JSON.stringify(payload) }),
-        onSuccess: () => refreshLogEntryViews(queryClient, session, entry.movie.id),
+        onSuccess: () => refreshLogEntryViews(queryClient, session, entry.movie.id, entry.id),
     });
 }
 
@@ -52,6 +54,6 @@ export function useDeleteLogEntryMutation(session: Session, entry: LogEntry) {
     return useMutation({
         mutationKey: [...sessionKey(session), "log-entries", entry.id, "delete"],
         mutationFn: () => apiFetch<void>(`/log-entries/${entry.id}`, { session, method: "DELETE" }),
-        onSuccess: () => refreshLogEntryViews(queryClient, session, entry.movie.id),
+        onSuccess: () => refreshLogEntryViews(queryClient, session, entry.movie.id, entry.id),
     });
 }

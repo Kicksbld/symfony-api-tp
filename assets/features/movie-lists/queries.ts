@@ -1,6 +1,6 @@
 import { keepPreviousData, queryOptions } from "@tanstack/react-query";
 import { listFilterParams, type ListFilters } from "@/features/movie-lists/list-search";
-import type { ListComment, MovieList, MovieListItem } from "@/features/movie-lists/types";
+import type { MovieList, MovieListItem } from "@/features/movie-lists/types";
 import { apiFetch } from "@/lib/api";
 import { sessionKey } from "@/lib/query-client";
 import type { Session } from "@/lib/session";
@@ -48,18 +48,5 @@ export function listItemsQuery(id: number, page: number, session: Session | null
         queryKey: [...listDetailKey(id, session), "items", { page }],
         queryFn: ({ signal }) => apiFetch<Paginated<MovieListItem>>(`/lists/${id}/items?${params}`, { signal, session }),
         placeholderData: keepPreviousData,
-    });
-}
-
-export function listCommentsKey(id: number, session: Session | null) {
-    return [...listDetailKey(id, session), "comments"] as const;
-}
-
-export function listCommentsQuery(id: number, page: number, session: Session | null) {
-    const params = new URLSearchParams(pageParams(page));
-
-    return queryOptions({
-        queryKey: [...listCommentsKey(id, session), { page }],
-        queryFn: ({ signal }) => apiFetch<Paginated<ListComment>>(`/lists/${id}/comments?${params}`, { signal, session }),
     });
 }

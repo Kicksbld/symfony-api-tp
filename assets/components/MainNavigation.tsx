@@ -31,6 +31,9 @@ export function MainNavigation({ layout, id, className, onNavigate }: MainNaviga
             <NavLink to="/lists" className={navigationItemClassName(layout)} onClick={onNavigate}>
                 Listes
             </NavLink>
+            <NavLink to="/reviews" className={navigationItemClassName(layout)} onClick={onNavigate}>
+                Critiques
+            </NavLink>
             <NavLink to="/users" end className={navigationItemClassName(layout)} onClick={onNavigate}>
                 Membres
             </NavLink>

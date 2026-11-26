@@ -1,13 +1,18 @@
 import { Heart, Repeat } from "lucide-react";
+import type { ReactNode } from "react";
 import { Link } from "react-router";
-import { LogEntryActions } from "@/features/log-entries/LogEntryActions";
 import { LogEntryReview } from "@/features/log-entries/LogEntryReview";
 import { formatDate } from "@/features/log-entries/format";
 import { MoviePoster } from "@/features/movies/MoviePoster";
 import { formatRating, releaseYear } from "@/features/movies/format";
 import type { LogEntry } from "@/lib/types";
+import { TEXT_LINK_CLASS_NAME } from "@/lib/utils";
 
-export function DiaryEntry({ entry }: { entry: LogEntry }) {
+export function LogEntryCard({ entry, heading: Heading, children }: {
+    entry: LogEntry;
+    heading: "h1" | "h2" | "h3";
+    children: ReactNode;
+}) {
     const { movie } = entry;
     const year = releaseYear(movie.releaseDate);
 
@@ -18,12 +23,15 @@ export function DiaryEntry({ entry }: { entry: LogEntry }) {
             </Link>
             <div className="min-w-0 flex-1 space-y-2">
                 <header className="space-y-1">
-                    <h3 className="font-medium">
-                        <Link to={`/movies/${movie.id}`} className="hover:underline">
+                    <Heading className={Heading === "h1" ? "text-2xl font-semibold sm:text-3xl" : "font-medium"}>
+                        <Link to={`/movies/${movie.id}`} className="wrap-break-word hover:underline">
                             {movie.title}
                         </Link>
                         {year !== undefined && <span className="ml-2 text-sm font-normal text-muted-foreground">{year}</span>}
-                    </h3>
+                    </Heading>
+                    <p className="text-sm text-muted-foreground">
+                        Par <Link to={`/users/${entry.user.username}`} className={TEXT_LINK_CLASS_NAME}>{entry.user.username}</Link>
+                    </p>
                     <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted-foreground">
                         {entry.watchedOn === null ? <span>Date non précisée</span> : <time dateTime={entry.watchedOn}>Vu le {formatDate(entry.watchedOn)}</time>}
                         {entry.rating !== null && <span className="font-medium text-foreground">{formatRating(entry.rating)}</span>}
@@ -41,8 +49,8 @@ export function DiaryEntry({ entry }: { entry: LogEntry }) {
                         )}
                     </p>
                 </header>
-                {entry.review !== null && entry.review !== "" && <LogEntryReview review={entry.review} containsSpoilers={entry.containsSpoilers} />}
-                <LogEntryActions entry={entry} />
+                {entry.review !== null && entry.review !== "" && <LogEntryReview key={entry.review} review={entry.review} containsSpoilers={entry.containsSpoilers} />}
+                {children}
             </div>
         </article>
     );
