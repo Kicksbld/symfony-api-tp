@@ -1,6 +1,7 @@
 import { Link, NavLink } from "react-router";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/features/auth/auth";
+import { reviewsPath } from "@/features/log-entries/reviews";
 import { MovieCard } from "@/features/movies/MovieCard";
 import { FollowButton } from "@/features/users/FollowButton";
 import type { PublicProfile } from "@/lib/types";
@@ -38,6 +39,7 @@ export function ProfileHeader({ profile }: { profile: PublicProfile }) {
                             {formatCount(profile.followingCount, "abonnement", "abonnements")}
                         </NavLink>
                     </li>
+                    <li><Link to={reviewsPath({ user: profile.username })} className={COUNT_LINK_CLASS}>Critiques</Link></li>
                 </ul>
             </div>
             <section className="space-y-3">

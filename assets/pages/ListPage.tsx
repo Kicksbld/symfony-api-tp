@@ -6,10 +6,11 @@ import { SectionSkeleton } from "@/components/SectionSkeleton";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/features/auth/auth";
 import { ListActions } from "@/features/movie-lists/ListActions";
-import { ListComments } from "@/features/movie-lists/ListComments";
+import { Comments } from "@/features/comments/Comments";
+import { commentsQuery, type CommentThread } from "@/features/comments/queries";
 import { EditableListFilms, ListFilms } from "@/features/movie-lists/ListFilms";
 import { ListLikeButton } from "@/features/movie-lists/ListLikeButton";
-import { listCommentsQuery, listDetailQuery, listItemsQuery } from "@/features/movie-lists/queries";
+import { listDetailQuery, listItemsQuery } from "@/features/movie-lists/queries";
 import { ApiError } from "@/lib/api";
 import { parsePositiveInteger } from "@/lib/numbers";
 import { pageSearch, parsePage } from "@/lib/pagination";
@@ -42,7 +43,8 @@ function listPaginationSearch(filmsPage: number, commentsPage: number) {
 function ListDetails({ id, page, commentsPage, session }: { id: number; page: number; commentsPage: number; session: Session | null }) {
     const { data: list, error, isFetching, refetch } = useQuery(listDetailQuery(id, session));
     const items = useQuery(listItemsQuery(id, page, session));
-    const comments = useQuery(listCommentsQuery(id, commentsPage, session));
+    const thread: CommentThread = { resource: "lists", id };
+    const comments = useQuery(commentsQuery(thread, commentsPage, session));
 
     if ([error, items.error, comments.error].some((failure) => failure instanceof ApiError && failure.status === 404)) {
         return <ListNotFound />;
@@ -82,7 +84,7 @@ function ListDetails({ id, page, commentsPage, session }: { id: number; page: nu
             {ownerSession === null
                 ? <ListFilms list={list} page={page} pathForPage={pathForFilms} result={items} />
                 : <EditableListFilms list={list} page={page} pathForPage={pathForFilms} result={items} session={ownerSession} />}
-            <ListComments list={list} page={commentsPage} pathForPage={(next) => listPaginationSearch(page, next)} result={comments} session={session} />
+            <Comments thread={thread} ownerId={list.user.id} page={commentsPage} pathForPage={(next) => listPaginationSearch(page, next)} result={comments} session={session} />
         </article>
     );
 }

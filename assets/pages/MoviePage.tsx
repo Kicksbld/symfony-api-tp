@@ -6,6 +6,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { MoviePoster } from "@/features/movies/MoviePoster";
 import { MovieRelationshipControls } from "@/features/movie-relationships/MovieRelationshipControls";
 import { LogMovieButton } from "@/features/log-entries/LogMovieButton";
+import { reviewsPath } from "@/features/log-entries/reviews";
 import { catalogPathWith } from "@/features/movies/catalog-search";
 import { formatRuntime, releaseYear } from "@/features/movies/format";
 import { MovieRatings } from "@/features/movies/MovieRatings";
@@ -83,6 +84,7 @@ function MovieSheet({ movie }: { movie: MovieDetail }) {
                     <LogMovieButton movie={movie} />
                     <MovieRelationshipControls movieId={movie.id} />
                 </div>
+                <Link to={reviewsPath({ movie: String(movie.id) })} className={`text-sm ${TEXT_LINK_CLASS_NAME}`}>Voir les critiques du film</Link>
                 <MovieRatings movieId={movie.id} />
                 {movie.overview !== null && movie.overview !== "" && (
                     <section className="space-y-2">

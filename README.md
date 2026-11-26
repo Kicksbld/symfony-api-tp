@@ -202,6 +202,18 @@ Pour vérifier le parcours avec les comptes de démonstration :
 
 Avec au moins 21 résultats dans l'annuaire ou dans une liste du profil, passer à la deuxième page et recharger. Vérifier que la page et, dans l'annuaire, le pseudo recherché restent dans l'adresse.
 
+#### Lire les critiques et répondre
+
+« Critiques » ouvre le fil public `/reviews`, paginé par 20 via `GET /api/log-entries?withReview=true`. Depuis une fiche film ou un profil, le lien ouvre ce fil filtré avec `?movie={id}` ou `?user={username}`. « Voir le détail » ouvre `/log-entries/{id}` depuis une critique ou le journal. Les commentaires sont publics et paginés.
+
+Pour vérifier le parcours avec les données de démonstration :
+
+1. Sans compte, ouvrir « Critiques », puis une fiche film et le profil d’un auteur. Depuis chacun, revenir au fil par le lien « Critiques » et vérifier le filtre. Depuis le fil, ouvrir « Voir le détail », recharger cette adresse et vérifier les liens vers le film et le profil. Essayer aussi depuis une entrée du journal sans critique.
+2. Ouvrir la critique de `camille` qui contient des spoilers. Vérifier que le texte apparaît uniquement après « Afficher la critique », séparément dans le fil et dans le détail.
+3. Depuis la critique d’`arthur` qui a deux commentaires, cliquer sur le cœur en tant que visiteur. Se connecter avec `jane@example.com` et `demo1234`, vérifier le retour à la même adresse puis retirer et remettre le like. Comparer le cœur et le compteur dans le fil et le détail. Couper le réseau avant de cliquer une nouvelle fois, puis vérifier que le cœur et le compteur reprennent leur état précédent et qu’un message d’erreur apparaît.
+4. Avec le réseau rétabli, publier un commentaire sur une entrée d’`arthur`, le modifier et vérifier le compteur dans le détail puis dans le fil. Vérifier que Jane peut supprimer son commentaire. Publier un second commentaire, puis ouvrir l’entrée avec `leo@example.com` et vérifier que Léo ne peut ni modifier ni supprimer le commentaire de Jane. Avec `arthur@example.com`, vérifier qu’Arthur peut le supprimer, puis vérifier que le compteur diminue.
+5. Avec au moins 21 critiques, passer à la page 2 puis recharger. Vérifier que le numéro de page ainsi que les éventuels filtres restent dans l’adresse. Avec les seules données de démo, `?page=2` permet de vérifier le retour à la dernière page disponible.
+
 #### Découvrir les listes
 
 Le lien « Listes » de la navigation ouvre l'annuaire public `/lists`, lu avec `GET /api/lists`. Le formulaire combine le nom de la liste (`q`), le pseudo de son auteur (`user`) et un film choisi dans le catalogue (`movie`). Les listes les plus récentes sont affichées par défaut. Le tri « Les plus populaires » (`sort=popular`) affiche les listes par nombre de mentions J'aime. Les filtres et la pagination restent dans l'adresse, par exemple `/lists?user=jane_doe&sort=popular&page=2`.

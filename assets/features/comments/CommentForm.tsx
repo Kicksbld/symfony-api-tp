@@ -2,23 +2,22 @@ import { useId, useState, type FormEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { useListCommentMutation } from "@/features/movie-lists/comments";
-import type { ListComment } from "@/features/movie-lists/types";
+import { useCommentMutation, type CommentThread, type Comment } from "@/features/comments/queries";
 import { ApiError } from "@/lib/api";
 import type { Session } from "@/lib/session";
 
 const MAX_CONTENT_LENGTH = 1000;
 const CONTENT_LENGTH_HINT = `${MAX_CONTENT_LENGTH.toLocaleString("fr-FR")} caractères maximum`;
 
-export function ListCommentForm({ listId, session, comment, onCancel, onSaved }: {
-    listId: number;
+export function CommentForm({ thread, session, comment, onCancel, onSaved }: {
+    thread: CommentThread;
     session: Session;
-    comment?: ListComment;
+    comment?: Comment;
     onCancel?: () => void;
     onSaved: () => void;
 }) {
     const id = useId();
-    const save = useListCommentMutation(listId, session);
+    const save = useCommentMutation(thread, session);
     const [content, setContent] = useState(comment?.content ?? "");
     const [error, setError] = useState("");
     const editing = comment !== undefined;

@@ -12,18 +12,22 @@ import {
     AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
-import { ListCommentForm } from "@/features/movie-lists/ListCommentForm";
-import { useListCommentMutation } from "@/features/movie-lists/comments";
-import type { ListComment, MovieList } from "@/features/movie-lists/types";
+import { CommentForm } from "@/features/comments/CommentForm";
+import { useCommentMutation, type CommentThread, type Comment } from "@/features/comments/queries";
 import type { Session } from "@/lib/session";
 import { TEXT_LINK_CLASS_NAME } from "@/lib/utils";
 
 const COMMENT_DATE = new Intl.DateTimeFormat("fr-FR", { dateStyle: "medium", timeStyle: "short" });
 
-export function ListCommentRow({ comment, list, session }: { comment: ListComment; list: MovieList; session: Session | null }) {
+export function CommentRow({ comment, thread, ownerId, session }: {
+    comment: Comment;
+    thread: CommentThread;
+    ownerId: number;
+    session: Session | null;
+}) {
     const [editing, setEditing] = useState(false);
     const canEdit = session !== null && session.user.id === comment.user.id;
-    const canDelete = session !== null && (canEdit || session.user.id === list.user.id);
+    const canDelete = session !== null && (canEdit || session.user.id === ownerId);
 
     return (
         <li className="space-y-2 py-4">
@@ -33,8 +37,8 @@ export function ListCommentRow({ comment, list, session }: { comment: ListCommen
                 {comment.updatedAt !== comment.createdAt && <span className="text-xs text-muted-foreground">Modifié</span>}
             </div>
             {editing && canEdit ? (
-                <ListCommentForm
-                    listId={list.id}
+                <CommentForm
+                    thread={thread}
                     session={session}
                     comment={comment}
                     onCancel={() => setEditing(false)}
@@ -46,7 +50,7 @@ export function ListCommentRow({ comment, list, session }: { comment: ListCommen
                     {canDelete && (
                         <div className="flex flex-wrap items-center gap-2">
                             {canEdit && <Button variant="ghost" size="sm" onClick={() => setEditing(true)}>Modifier</Button>}
-                            <DeleteCommentButton listId={list.id} comment={comment} session={session} />
+                            <DeleteCommentButton thread={thread} comment={comment} session={session} />
                         </div>
                     )}
                 </>
@@ -55,9 +59,9 @@ export function ListCommentRow({ comment, list, session }: { comment: ListCommen
     );
 }
 
-function DeleteCommentButton({ listId, comment, session }: { listId: number; comment: ListComment; session: Session }) {
+function DeleteCommentButton({ thread, comment, session }: { thread: CommentThread; comment: Comment; session: Session }) {
     const [open, setOpen] = useState(false);
-    const remove = useListCommentMutation(listId, session);
+    const remove = useCommentMutation(thread, session);
 
     return (
         <AlertDialog open={open} onOpenChange={(next) => {

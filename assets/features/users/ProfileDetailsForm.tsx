@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { profileErrors, type ProfileErrors, type ProfileFields } from "@/features/users/profile-editing";
+import { USERNAME_PATTERN } from "@/features/users/username";
 
 type ProfileDetailsFormProps = {
     username: string;
@@ -36,7 +37,7 @@ export function ProfileDetailsForm({ username, bio, saving, onSave }: ProfileDet
 
         const fields: Partial<ProfileFields> = {};
         if (values.username !== username) {
-            if (!/^[a-z0-9_]{3,20}$/.test(values.username)) {
+            if (!USERNAME_PATTERN.test(values.username)) {
                 setErrors({ fields: { username: "Choisissez un pseudo de 3 à 20 caractères." }, others: [] });
                 return;
             }

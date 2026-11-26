@@ -9,6 +9,7 @@ import { EditProfilePage } from "@/pages/EditProfilePage";
 import { HomePage } from "@/pages/HomePage";
 import { ListPage } from "@/pages/ListPage";
 import { ListsPage } from "@/pages/ListsPage";
+import { LogEntryPage } from "@/pages/LogEntryPage";
 import { LoginPage } from "@/pages/LoginPage";
 import { MembersPage } from "@/pages/MembersPage";
 import { MoviePage } from "@/pages/MoviePage";
@@ -17,6 +18,7 @@ import { PeoplePage } from "@/pages/PeoplePage";
 import { PersonPage } from "@/pages/PersonPage";
 import { DiaryTab, MovieRelationshipsTab, ProfileFollowTab, ProfileIndex, ProfileListsTab, ProfilePage } from "@/pages/ProfilePage";
 import { RegisterPage } from "@/pages/RegisterPage";
+import { ReviewsPage } from "@/pages/ReviewsPage";
 import { queryClient } from "@/lib/query-client";
 import "./app.css";
 
@@ -46,6 +48,8 @@ createRoot(document.getElementById("root")!).render(
                                 <Route path="followers" element={<ProfileFollowTab list="followers" />} />
                                 <Route path="following" element={<ProfileFollowTab list="following" />} />
                             </Route>
+                            <Route path="reviews" element={<ReviewsPage />} />
+                            <Route path="log-entries/:id" element={<LogEntryPage />} />
                             <Route path="login" element={<LoginPage />} />
                             <Route path="register" element={<RegisterPage />} />
                             <Route path="*" element={<NotFoundPage />} />

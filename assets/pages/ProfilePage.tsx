@@ -5,7 +5,9 @@ import { QueryError } from "@/components/QueryError";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/features/auth/auth";
-import { DiaryEntry } from "@/features/log-entries/DiaryEntry";
+import { LogEntryActions } from "@/features/log-entries/LogEntryActions";
+import { LogEntryCard } from "@/features/log-entries/LogEntryCard";
+import { LogEntryLink } from "@/features/log-entries/LogEntryInteractions";
 import { CreateListButton } from "@/features/movie-lists/CreateListButton";
 import { ListResults } from "@/features/movie-lists/ListResults";
 import { MovieGrid } from "@/features/movies/MovieGrid";
@@ -145,7 +147,10 @@ export function DiaryTab() {
                     <ul className="space-y-3">
                         {entries.map((entry) => (
                             <li key={entry.id}>
-                                <DiaryEntry entry={entry} />
+                                <LogEntryCard entry={entry} heading="h3">
+                                    <LogEntryLink entry={entry} />
+                                    <LogEntryActions entry={entry} />
+                                </LogEntryCard>
                             </li>
                         ))}
                     </ul>
